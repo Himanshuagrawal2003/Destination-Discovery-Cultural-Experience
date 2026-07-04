@@ -17,9 +17,9 @@ if (!isMockMode) {
 
 /**
  * Get a Gemini model instance
- * @param {string} model - Model name (default: gemini-2.5-flash)
+ * @param {string} model - Model name (default: gemini-1.5-flash)
  */
-const getModel = (model = 'gemini-2.5-flash') => {
+const getModel = (model = 'gemini-1.5-flash') => {
   if (isMockMode || !genAI) return null;
   return genAI.getGenerativeModel({ model });
 };
@@ -30,7 +30,7 @@ const getModel = (model = 'gemini-2.5-flash') => {
  * @param {string} model  - Model name
  * @returns {string} - Generated text response
  */
-const generateContent = async (prompt, model = 'gemini-2.5-flash') => {
+const generateContent = async (prompt, model = 'gemini-1.5-flash') => {
   if (isMockMode || !genAI) {
     console.log(`🤖 [MOCK AI] Generating response for prompt keywords: "${prompt.slice(0, 150)}..."`);
     // Wait a brief simulated latency
@@ -38,10 +38,17 @@ const generateContent = async (prompt, model = 'gemini-2.5-flash') => {
     return getMockResponse(prompt);
   }
 
-  const geminiModel = getModel(model);
-  const result      = await geminiModel.generateContent(prompt);
-  const response    = result.response;
-  return response.text();
+  try {
+    const geminiModel = getModel(model);
+    const result      = await geminiModel.generateContent(prompt);
+    const response    = result.response;
+    return response.text();
+  } catch (err) {
+    console.warn(`⚠️ Gemini API call failed (${err.message}). Falling back to Mock Mode.`);
+    // Fallback to mock data on any API error (invalid key, rate limit, quota, etc.)
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    return getMockResponse(prompt);
+  }
 };
 
 /**
@@ -385,7 +392,7 @@ const getMockResponse = (prompt) => {
 /**
  * Generate a chat session for contextual conversations
  */
-const createChatSession = (history = [], model = 'gemini-2.5-flash') => {
+const createChatSession = (history = [], model = 'gemini-1.5-flash') => {
   const geminiModel = getModel(model);
   return geminiModel.startChat({
     history,
