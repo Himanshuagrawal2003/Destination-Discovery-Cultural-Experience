@@ -41,10 +41,12 @@ exports.register = asyncHandler(async (req, res, next) => {
 
   const user = await User.create({ name, email, password, role: safeRole });
 
-  // Send welcome email (non-blocking)
-  sendWelcomeEmail(email, name).catch((err) =>
-    console.error('Welcome email failed:', err.message)
-  );
+  // Send welcome email (with strict timeout safety)
+  try {
+    await sendWelcomeEmail(email, name);
+  } catch (err) {
+    console.error('Welcome email failed:', err.message);
+  }
 
   createSendToken(user, 201, res);
 });

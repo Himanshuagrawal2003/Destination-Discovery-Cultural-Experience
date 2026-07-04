@@ -7,6 +7,40 @@ const HiddenGem = require('./models/HiddenGem');
 const Experience = require('./models/Experience');
 const Event = require('./models/Event');
 const Review = require('./models/Review');
+const { cloudinary } = require('./config/cloudinary');
+
+// Dynamic Cloudinary Uploader Helper
+const uploadToCloudinary = async (url, folder = 'culturequest/seed') => {
+  if (!url) return '';
+  if (url.includes('res.cloudinary.com')) return url;
+  try {
+    const isCloudinaryConfigured = 
+      process.env.CLOUDINARY_API_SECRET && 
+      !process.env.CLOUDINARY_API_SECRET.startsWith('your_');
+    if (!isCloudinaryConfigured) {
+      return url; // Skip upload and keep the unsplash link if Cloudinary is not configured
+    }
+    console.log(`📤 Uploading to Cloudinary: ${url.substring(0, 60)}...`);
+    const res = await cloudinary.uploader.upload(url, {
+      folder: folder,
+      resource_type: 'image'
+    });
+    return res.secure_url;
+  } catch (err) {
+    console.error(`⚠️ Cloudinary upload failed for ${url}:`, err.message);
+    return url;
+  }
+};
+
+const uploadMultipleToCloudinary = async (urls, folder = 'culturequest/seed') => {
+  if (!urls || !Array.isArray(urls)) return [];
+  const results = [];
+  for (const url of urls) {
+    const resUrl = await uploadToCloudinary(url, folder);
+    results.push(resUrl);
+  }
+  return results;
+};
 
 const seedData = async () => {
   try {
@@ -64,7 +98,7 @@ const seedData = async () => {
 
     // ─── 2. Create Destinations ────────────────────────────────────────────────
     console.log('🗺️ Seeding destinations...');
-    const destinations = await Destination.create([
+    const destinationData = [
       {
         name: 'Kyoto Imperial Heritage',
         country: 'Japan',
@@ -169,7 +203,15 @@ const seedData = async () => {
         isTrending: true,
         createdBy: admin._id
       }
-    ]);
+    ];
+
+    // Upload Destination Images to Cloudinary
+    for (const d of destinationData) {
+      d.coverImage = await uploadToCloudinary(d.coverImage, 'culturequest/destinations');
+      d.images = await uploadMultipleToCloudinary(d.images, 'culturequest/destinations');
+    }
+
+    const destinations = await Destination.create(destinationData);
     console.log(`✅ ${destinations.length} Destinations seeded.`);
 
     // Link some nearby attractions (Florence and Kyoto)
@@ -178,7 +220,7 @@ const seedData = async () => {
 
     // ─── 3. Create Hidden Gems ────────────────────────────────────────────────
     console.log('💎 Seeding hidden gems...');
-    const gems = await HiddenGem.create([
+    const gemData = [
       {
         name: 'Otagi Nenbutsu-ji Temple',
         description: 'A whimsical and serene Buddhist temple on the outskirts of Arashiyama, Kyoto. It is famous for its collection of 1,200 stone statues representing the Rakan (disciples of Buddha), each with a unique, often humorous facial expression.',
@@ -194,6 +236,11 @@ const seedData = async () => {
         howToGet: 'Take Kyoto City Bus 94 from Hankyu Arashiyama Station, getting off at Otagi-dera-mae.',
         tags: ['temple', 'sculpture', 'quirky', 'zen'],
         travelTips: ['Walk from Adashino Nenbutsu-ji Temple down the preserved historic street.', 'Look for the statues holding a tennis racket or sake cup.'],
+        image: 'https://images.unsplash.com/photo-1601042879364-f3947d3f9c16?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1601042879364-f3947d3f9c16?q=80&w=1200',
+          'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1200'
+        ],
         createdBy: admin._id
       },
       {
@@ -211,6 +258,11 @@ const seedData = async () => {
         howToGet: 'Take a passenger van (colectivo) from Nochixtlán (a town 1.5 hours from Oaxaca City) directly into Apoala.',
         tags: ['waterfall', 'canyon', 'nature', 'hiking'],
         travelTips: ['Hire a local indigenous guide at the tourist office.', 'Bring warm layers as nights in the canyon are cold.', 'Cash only.'],
+        image: 'https://images.unsplash.com/photo-1508873696983-2df519f0397e?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1508873696983-2df519f0397e?q=80&w=1200',
+          'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200'
+        ],
         createdBy: admin._id
       },
       {
@@ -228,14 +280,27 @@ const seedData = async () => {
         howToGet: 'Take a ferry or hydrofoil from Naples (Molo Beverello) or Pozzuoli.',
         tags: ['island', 'pastel', 'seaside', 'calm'],
         travelTips: ['Climb up to Terra Murata for the iconic postcard view of Marina Corricella.', 'Try the local lemon salad (insalata di limone) or lemon pastries.'],
+        image: 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1200',
+          'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1200'
+        ],
         createdBy: admin._id
       }
-    ]);
+    ];
+
+    // Upload Hidden Gem Images to Cloudinary
+    for (const g of gemData) {
+      g.image = await uploadToCloudinary(g.image, 'culturequest/gems');
+      g.images = await uploadMultipleToCloudinary(g.images, 'culturequest/gems');
+    }
+
+    const gems = await HiddenGem.create(gemData);
     console.log(`✅ ${gems.length} Hidden Gems seeded.`);
 
     // ─── 4. Create Experiences ────────────────────────────────────────────────
     console.log('🏛️ Seeding cultural experiences...');
-    const experiences = await Experience.create([
+    const experienceData = [
       {
         title: 'Zen Tea Ceremony & Calligraphy in Kyoto Garden',
         type: 'temple-tour',
@@ -259,6 +324,11 @@ const seedData = async () => {
         includes: ['Matcha Tea & Seasonal Wagashi Sweets', 'Calligraphy Brush and Paper to keep', 'Kimono dressing trial'],
         requirements: ['Please wear clean white socks for sitting on tatami mats.', 'Inability to sit on knees is okay (chairs provided).'],
         isFeatured: true,
+        coverImage: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=1200',
+          'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1200'
+        ],
         createdBy: admin._id
       },
       {
@@ -284,6 +354,11 @@ const seedData = async () => {
         includes: ['Guided market shopping tour', '4-course lunch with homemade mezcal pairing', 'Printed recipe book'],
         requirements: ['Comfortable walking shoes for market tour.', 'Inform host in advance of food allergies.'],
         isFeatured: true,
+        coverImage: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=1200',
+          'https://images.unsplash.com/photo-1512813583145-acaa58633afe?q=80&w=1200'
+        ],
         createdBy: admin._id
       },
       {
@@ -294,7 +369,7 @@ const seedData = async () => {
         duration: { value: 3, unit: 'hours' },
         host: {
           name: 'Maestro Alan Pascuzzi',
-          bio: 'Art historian, sculptor, and painter specializing in reproducing classical Renaissance arts using historic methods.',
+          bio: 'Art historian, sculptor, and painter specializing in reproducing visual arts using historic methods.',
           contact: '+39-055-987-6543'
         },
         location: {
@@ -306,12 +381,25 @@ const seedData = async () => {
         },
         maxGroupSize: 8,
         languages: ['English', 'Italian'],
-        includes: ['All plaster and pigment materials', 'Your finished wood-backed fresco block to take home', 'Art history lecture'],
-        requirements: ['Wear clothing you do not mind getting dusty with lime powder.'],
+        includes: ['All plaster and pigment materials', 'Your finished fresco block to take home', 'Art history lecture'],
+        requirements: ['Wear clothing you do not mind getting plaster on.'],
         isFeatured: false,
+        coverImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=1200',
+          'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200'
+        ],
         createdBy: admin._id
       }
-    ]);
+    ];
+
+    // Upload Experience Images to Cloudinary
+    for (const exp of experienceData) {
+      exp.coverImage = await uploadToCloudinary(exp.coverImage, 'culturequest/experiences');
+      exp.images = await uploadMultipleToCloudinary(exp.images, 'culturequest/experiences');
+    }
+
+    const experiences = await Experience.create(experienceData);
     console.log(`✅ ${experiences.length} Experiences seeded.`);
 
     // ─── 5. Create Events ─────────────────────────────────────────────────────
@@ -325,11 +413,11 @@ const seedData = async () => {
       return result;
     };
 
-    const events = await Event.create([
+    const eventData = [
       {
         title: 'Día de los Muertos (Day of the Dead)',
         type: 'festival',
-        description: 'The Day of the Dead is a beautiful, deeply spiritual Mexican festival celebrating the memory of deceased ancestors. Families build home altars (ofrendas) decorated with yellow marigolds, sugar skulls, and favorite meals, and gather in candlelit local cemeteries to play music and welcome spirits home.',
+        description: 'The Day of the Dead is a beautiful, deeply spiritual Mexican festival celebrating the memory of deceased ancestors. Families build home altars decorated with yellow marigolds, sugar skulls, and favorite meals.',
         startDate: new Date(today.getFullYear(), 9, 31), // October 31
         endDate: new Date(today.getFullYear(), 10, 2),   // November 2
         time: 'All Day & Night',
@@ -347,16 +435,21 @@ const seedData = async () => {
           website: 'https://oaxaca.travel'
         },
         tags: ['day of the dead', 'tradition', 'spiritual', 'parades'],
-        highlights: ['Panteón General graveyard vigils', 'Comparsas (colorful neighborhood night parades)', 'Exhibition of giant carpets made of sand and flower petals'],
-        dressCode: 'Casual. Face painting is welcome, but avoid wearing disrespectful costumes.',
-        culturalNote: 'Remember that this is not Halloween. It is a celebratory but intimate reunion with lost loved ones. Act respectfully in cemeteries and do not touch graves.',
+        highlights: ['Panteón General graveyard vigils', 'Comparsas neighborhood night parades'],
+        dressCode: 'Casual. Face painting is welcome.',
+        culturalNote: 'Remember that this is a celebratory but intimate reunion with lost loved ones.',
         isFeatured: true,
+        coverImage: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?q=80&w=1200',
+          'https://images.unsplash.com/photo-1512813583145-acaa58633afe?q=80&w=1200'
+        ],
         createdBy: admin._id
       },
       {
         title: 'Kyoto Gion Matsuri Festival',
         type: 'festival',
-        description: 'Dating back to 869 AD, Gion Matsuri is Japan\'s most famous festival, held throughout July. The highlight is the Yamaboko Junko, a majestic parade of massive, hand-built wooden floats decorated with historic tapestries, parading through downtown Kyoto.',
+        description: 'Dating back to 869 AD, Gion Matsuri is Japan\'s famous festival, held throughout July. Floats decorated with historic tapestries parade through downtown Kyoto.',
         startDate: new Date(today.getFullYear(), 6, 1),  // July 1
         endDate: new Date(today.getFullYear(), 6, 31), // July 31
         time: 'Float parade starts at 9:00 AM',
@@ -374,16 +467,21 @@ const seedData = async () => {
           website: 'https://gionmatsuri.or.jp'
         },
         tags: ['matsuri', 'floats', 'parade', 'summer'],
-        highlights: ['Yamaboko Junko Float Parade (July 17 & 24)', 'Yoiyama Festive Nights (street stalls, lanterns, traditional yukatas)'],
-        dressCode: 'Light summer clothing. Many locals and tourists wear traditional Yukata (summer kimonos).',
-        culturalNote: 'Yoiyama nights can get incredibly crowded. Watch your belongings and be patient in crowds.',
+        highlights: ['Yamaboko Junko Float Parade (July 17 & 24)', 'Yoiyama Festive Nights (street food, lanterns, yukatas)'],
+        dressCode: 'Light summer clothing. Traditional Yukata is popular.',
+        culturalNote: 'Yoiyama nights can get crowded. Keep track of belongings.',
         isFeatured: true,
+        coverImage: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1200',
+          'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=1200'
+        ],
         createdBy: admin._id
       },
       {
         title: 'Florence Biennale Art & Design Expo',
         type: 'cultural',
-        description: 'Florence Biennale is a major international contemporary art and design exhibition held in the historic Fortezza da Basso. It hosts hundreds of painters, sculptors, digital artists, and designers from over 70 countries showing their work and competing for the "Lorenzo il Magnifico" lifetime achievement awards.',
+        description: 'Florence Biennale is a major international contemporary art and design exhibition held in the historic Fortezza da Basso.',
         startDate: addDays(today, 10), // Starts in 10 days
         endDate: addDays(today, 18),   // Ends in 18 days
         time: '10:00 AM - 7:00 PM',
@@ -401,13 +499,26 @@ const seedData = async () => {
           website: 'https://www.florencebiennale.org'
         },
         tags: ['art', 'exhibition', 'contemporary', 'design'],
-        highlights: ['International art gallery walk', 'Artist roundtables and talks', 'Interactive digital installations'],
+        highlights: ['International art gallery walk', 'Artist roundtables and talks'],
         dressCode: 'Smart casual / Art chic.',
-        culturalNote: 'Photography of art pieces is allowed unless indicated otherwise. Respect the artists.',
+        culturalNote: 'Photography of art pieces is allowed unless indicated otherwise.',
         isFeatured: false,
+        coverImage: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=1200',
+        images: [
+          'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=1200',
+          'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200'
+        ],
         createdBy: admin._id
       }
-    ]);
+    ];
+
+    // Upload Event Images to Cloudinary
+    for (const ev of eventData) {
+      ev.coverImage = await uploadToCloudinary(ev.coverImage, 'culturequest/events');
+      ev.images = await uploadMultipleToCloudinary(ev.images, 'culturequest/events');
+    }
+
+    const events = await Event.create(eventData);
     console.log(`✅ ${events.length} Events seeded.`);
 
     // ─── 6. Create Reviews ────────────────────────────────────────────────────

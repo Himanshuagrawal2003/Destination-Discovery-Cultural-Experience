@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
  */
 const transporter = nodemailer.createTransport({
   host:   process.env.EMAIL_HOST,
-  port:   parseInt(process.env.EMAIL_PORT, 10),
+  port:   parseInt(process.env.EMAIL_PORT, 10) || 587,
   secure: parseInt(process.env.EMAIL_PORT, 10) === 465,
   auth: {
     user: process.env.EMAIL_USER,
@@ -19,13 +19,40 @@ const transporter = nodemailer.createTransport({
  * @param {Object} options - { to, subject, html }
  */
 const sendEmail = async ({ to, subject, html }) => {
-  const info = await transporter.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to,
-    subject,
-    html,
+  const isEmailConfigured = 
+    process.env.EMAIL_HOST &&
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASS;
+
+  if (!isEmailConfigured) {
+    console.log('ℹ️ SMTP Email service not configured. Skipping email send.');
+    return { skipped: true };
+  }
+
+  // Create a timeout promise to prevent freezing/timing out deployed serverless functions
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ timedOut: true });
+    }, 2500); // 2.5 seconds strict limit
   });
-  return info;
+
+  try {
+    const mailPromise = transporter.sendMail({
+      from:    process.env.EMAIL_FROM || `"CultureQuest AI" <noreply@culturequest.ai>`,
+      to,
+      subject,
+      html,
+    });
+
+    const result = await Promise.race([mailPromise, timeoutPromise]);
+    if (result && result.timedOut) {
+      console.warn('⚠️ SMTP email sending timed out after 2.5 seconds.');
+    }
+    return result;
+  } catch (err) {
+    console.error('⚠️ SMTP email sending error:', err.message);
+    return { error: err.message };
+  }
 };
 
 /**
