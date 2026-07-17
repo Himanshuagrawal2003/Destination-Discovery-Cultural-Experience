@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MdKeyboardArrowDown } from 'react-icons/md';
+import { LuChevronDown } from 'react-icons/lu';
 
 const FAQ_ITEMS = [
   {
@@ -33,23 +33,23 @@ export default function FAQ() {
   };
 
   return (
-    <div className="py-12 bg-slate-50 dark:bg-slate-900/40 min-h-screen">
+    <div className="py-12 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
       <div className="container-cq max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="card p-8 md:p-12 space-y-8"
+          className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-8 md:p-12 space-y-8 rounded-3xl shadow-sm"
         >
           <div className="text-center space-y-3">
-            <span className="text-5xl">❔</span>
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-white font-display">Frequently Asked Questions</h1>
-            <p className="text-sm text-slate-500 dark:text-dark-muted">
+            <span className="text-5xl animate-float block">❔</span>
+            <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Frequently Asked Questions</h1>
+            <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium">
               Get quick answers to common questions about CultureQuest AI.
             </p>
           </div>
 
-          <div className="divider" />
+          <div className="border-t border-primary-100 dark:border-dark-border" />
 
           <div className="space-y-4">
             {FAQ_ITEMS.map((item, idx) => {
@@ -57,16 +57,16 @@ export default function FAQ() {
               return (
                 <div
                   key={idx}
-                  className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+                  className="border border-primary-100 dark:border-dark-border rounded-2xl overflow-hidden"
                 >
                   <button
                     onClick={() => toggle(idx)}
-                    className="w-full flex items-center justify-between p-5 text-left font-semibold text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    className="w-full flex items-center justify-between p-5 text-left font-bold text-primary-900 dark:text-white hover:bg-primary-50 dark:hover:bg-primary-950/20 transition-all cursor-pointer"
                   >
-                    <span>{item.question}</span>
-                    <MdKeyboardArrowDown
-                      className={`text-xl text-slate-400 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-teal-500' : ''
+                    <span className="text-sm">{item.question}</span>
+                    <LuChevronDown
+                      className={`text-xl text-primary-950/40 dark:text-dark-muted transition-transform duration-200 shrink-0 ${
+                        isOpen ? 'rotate-180 text-accent' : ''
                       }`}
                     />
                   </button>
@@ -75,7 +75,7 @@ export default function FAQ() {
                     animate={{ height: isOpen ? 'auto' : 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="p-5 pt-0 text-sm text-slate-650 dark:text-slate-350 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/20">
+                    <div className="p-5 pt-0 text-xs text-primary-900/60 dark:text-dark-muted leading-relaxed border-t border-primary-50 dark:border-dark-border bg-primary-50/20 dark:bg-primary-950/10 font-semibold">
                       {item.answer}
                     </div>
                   </motion.div>

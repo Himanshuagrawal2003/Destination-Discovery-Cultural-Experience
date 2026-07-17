@@ -30,14 +30,25 @@ const parseJSON = (text) => {
 
 // ─── @POST /api/ai/recommend-destinations ────────────────────────────────────
 exports.recommendDestinations = asyncHandler(async (req, res) => {
-  const { budget, travelStyle, season, interests, country, duration } = req.body;
-  if (!budget || !season) throw new AppError('Budget and season are required', 400);
+  const { budget, travelStyle, season, interests, country, duration, experienceDescription } = req.body;
+  
+  if (!experienceDescription && (!budget || !season)) {
+    throw new AppError('Preferences details are required', 400);
+  }
 
-  const prompt   = prompts.recommendDestinations({ budget, travelStyle, season, interests: interests || [], country, duration: duration || 7 });
+  const prompt   = prompts.recommendDestinations({ 
+    budget: budget || 'mid-range', 
+    travelStyle: travelStyle || 'solo', 
+    season: season || 'any season', 
+    interests: interests || [], 
+    country, 
+    duration: duration || 7,
+    experienceDescription
+  });
   const rawText  = await generateContent(prompt);
   const data     = parseJSON(rawText);
 
-  await saveHistory(req.user._id, 'recommendation', prompt, rawText, { budget, travelStyle, season });
+  await saveHistory(req.user._id, 'recommendation', prompt, rawText, { budget, travelStyle, season, experienceDescription });
   sendSuccess(res, { recommendations: data, rawText }, 'Destinations recommended by AI');
 });
 

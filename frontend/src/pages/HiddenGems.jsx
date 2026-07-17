@@ -1,31 +1,26 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { MdPlace, MdAutoAwesome, MdLightbulb } from 'react-icons/md';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { 
+  LuMapPin, 
+  LuSparkles, 
+  LuBus, 
+  LuKey, 
+  LuCoins, 
+  LuActivity,
+  LuBookmark
+} from 'react-icons/lu';
 import api from '../services/api';
+import { selectUser } from '../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 
 export default function HiddenGems() {
-  const [gems, setGems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const user = useSelector(selectUser);
   // AI gem states
   const [aiGems, setAiGems] = useState([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiCountry, setAiCountry] = useState('');
-
-  useEffect(() => {
-    const fetchGems = async () => {
-      try {
-        const res = await api.get('/hidden-gems');
-        setGems(res.data.data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchGems();
-  }, []);
+  const [bookmarkedGems, setBookmarkedGems] = useState({}); // { index: bookmarkId }
+  const [savingGem, setSavingGem] = useState(null); // index of gem being saved
 
   const handleAskAI = async (e) => {
     e.preventDefault();
@@ -34,6 +29,7 @@ export default function HiddenGems() {
       return;
     }
     setIsAiLoading(true);
+    setBookmarkedGems({});
     try {
       const res = await api.post('/ai/hidden-gems', {
         country: aiCountry.trim(),
@@ -47,13 +43,67 @@ export default function HiddenGems() {
     }
   };
 
+  const handleGemBookmark = async (gem, idx) => {
+    if (!user) { toast.error('Please login to bookmark'); return; }
+
+    // If already bookmarked, remove it
+    if (bookmarkedGems[idx]) {
+      try {
+        await api.delete(`/bookmarks/${bookmarkedGems[idx]}`);
+        setBookmarkedGems(prev => { const n = {...prev}; delete n[idx]; return n; });
+        toast.success('Removed from bookmarks');
+      } catch { toast.error('Failed to remove bookmark'); }
+      return;
+    }
+
+    // First save the AI gem to DB as a HiddenGem, then bookmark it
+    setSavingGem(idx);
+    try {
+      // Create HiddenGem in DB
+      const gemData = {
+        name: gem.name,
+        description: gem.whySpecial || gem.description || '',
+        difficulty: (gem.difficulty || 'easy').toLowerCase(),
+        location: {
+          country: aiCountry,
+          city: gem.location || '',
+        },
+        howToGet: gem.howToGetThere || '',
+        whyUnique: gem.whySpecial || '',
+      };
+
+      const createRes = await api.post('/hidden-gems', gemData);
+      const savedGemId = createRes.data.data?._id || createRes.data.hiddenGem?._id;
+
+      if (!savedGemId) {
+        toast.error('Could not save hidden gem');
+        setSavingGem(null);
+        return;
+      }
+
+      // Now create a bookmark for it
+      const bRes = await api.post('/bookmarks', { itemType: 'hidden-gem', hiddenGemId: savedGemId });
+      setBookmarkedGems(prev => ({ ...prev, [idx]: bRes.data.bookmark._id }));
+      toast.success('Hidden gem saved to bookmarks!');
+    } catch (err) {
+      // If the gem already exists, try to find it and bookmark it
+      if (err.response?.status === 400 || err.response?.status === 409 || err.response?.status === 500) {
+        toast.error('Could not save gem. It may already exist.');
+      } else {
+        toast.error('Bookmark failed');
+      }
+    } finally {
+      setSavingGem(null);
+    }
+  };
+
   return (
-    <div className="container-cq py-8 space-y-10 min-h-screen">
+    <div className="container-cq py-8 space-y-10 min-h-screen bg-[#FAF7FF] dark:bg-dark-bg">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-primary-100 dark:border-dark-border pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white font-display">Cultural Hidden Gems</h1>
-          <p className="text-sm text-slate-500 dark:text-dark-muted font-medium mt-1">Discover off-the-beaten-path locations with authentic heritage.</p>
+          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Cultural Hidden Gems</h1>
+          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Discover off-the-beaten-path locations with authentic heritage.</p>
         </div>
 
         {/* AI Gems Search Trigger */}
@@ -63,10 +113,14 @@ export default function HiddenGems() {
             placeholder="Ask AI for hidden gems in (Country)..."
             value={aiCountry}
             onChange={(e) => setAiCountry(e.target.value)}
-            className="input md:w-64"
+            className="w-full md:w-64 px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
           />
-          <button type="submit" disabled={isAiLoading} className="btn btn-accent flex items-center gap-1.5 shrink-0">
-            <MdAutoAwesome className="text-lg animate-pulse" />
+          <button
+            type="submit"
+            disabled={isAiLoading}
+            className="btn bg-accent hover:bg-accent/90 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50 hover:shadow-glow"
+          >
+            <LuSparkles className="text-lg animate-pulse" />
             {isAiLoading ? 'Searching...' : 'AI Find'}
           </button>
         </form>
@@ -75,96 +129,55 @@ export default function HiddenGems() {
       {/* AI Recommendations Section */}
       {aiGems.length > 0 && (
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <MdAutoAwesome className="text-amber-500 animate-bounce" /> AI Insiders recommendations for {aiCountry}
+          <h2 className="text-xl font-bold text-primary-900 dark:text-white flex items-center gap-2 font-display">
+            <LuSparkles className="text-accent animate-bounce" /> AI Insider Recommendations for {aiCountry}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {aiGems.map((gem, idx) => (
-              <div key={idx} className="card p-6 border-l-4 border-amber-500 bg-amber-50/10 dark:bg-amber-900/10 space-y-3">
+              <div key={idx} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 border-l-4 border-l-accent space-y-4 rounded-2xl shadow-sm hover:shadow-md transition-all">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">{gem.name}</h3>
-                    <p className="text-xs text-slate-500 dark:text-dark-muted flex items-center gap-0.5 mt-0.5 font-medium">
-                      <MdPlace className="text-slate-400" /> {gem.location}
+                    <h3 className="font-bold text-lg text-primary-900 dark:text-white font-display">{gem.name}</h3>
+                    <p className="text-xs text-primary-900/60 dark:text-dark-muted flex items-center gap-1 mt-1 font-semibold">
+                      <LuMapPin className="text-accent" /> {gem.location}
                     </p>
                   </div>
-                  <span className="badge badge-accent bg-amber-100 text-amber-800 text-2xs font-bold rounded-lg capitalize">
-                    ⚡ {gem.difficulty || 'Easy'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {user && (
+                      <button
+                        onClick={() => handleGemBookmark(gem, idx)}
+                        disabled={savingGem === idx}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/20 shadow-sm border border-primary-100/50 dark:border-dark-border cursor-pointer hover:scale-110 transition-transform disabled:opacity-50"
+                      >
+                        <LuBookmark className={`text-sm ${bookmarkedGems[idx] ? 'text-accent fill-accent' : 'text-primary-900/40 dark:text-dark-muted'}`} />
+                      </button>
+                    )}
+                    <span className="px-2.5 py-1 bg-primary-100/50 dark:bg-primary-900/20 text-accent text-[10px] font-extrabold rounded-lg capitalize flex items-center gap-1">
+                      <LuActivity className="text-xs" /> {gem.difficulty || 'Easy'}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{gem.whySpecial}</p>
-                <div className="text-2xs space-y-1 border-t border-slate-100 dark:border-slate-800/80 pt-2 text-slate-500 dark:text-dark-muted">
-                  <p>🚗 <strong>How to get there:</strong> {gem.howToGetThere}</p>
-                  <p>🔑 <strong>Insider secret:</strong> {gem.localSecret}</p>
-                  <p>💰 <strong>Estimated daily cost:</strong> {gem.estimatedCostPerDay}</p>
+                <p className="text-xs text-primary-900/70 dark:text-slate-350 leading-relaxed font-semibold">{gem.whySpecial}</p>
+                <div className="text-xs space-y-2 border-t border-primary-100 dark:border-dark-border pt-3 text-primary-900/60 dark:text-dark-muted font-semibold">
+                  <p className="flex items-start gap-1.5">
+                    <LuBus className="text-accent shrink-0 mt-0.5" /> 
+                    <span><strong>How to get there:</strong> {gem.howToGetThere}</span>
+                  </p>
+                  <p className="flex items-start gap-1.5">
+                    <LuKey className="text-accent shrink-0 mt-0.5" /> 
+                    <span><strong>Insider secret:</strong> {gem.localSecret}</span>
+                  </p>
+                  <p className="flex items-start gap-1.5">
+                    <LuCoins className="text-accent shrink-0 mt-0.5" /> 
+                    <span><strong>Estimated daily cost:</strong> ₹{gem.estimatedCostPerDay}</span>
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="divider" />
+          <div className="divider border-primary-100 dark:border-dark-border" />
         </div>
       )}
-
-      {/* Database gems list */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white font-display">Local Insider Picks</h2>
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-72 skeleton" />
-            ))}
-          </div>
-        ) : gems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {gems.map((item) => (
-              <div key={item._id} className="card overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300">
-                <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-800">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                      <MdPlace className="text-4xl" />
-                    </div>
-                  )}
-                  <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-slate-900/95 text-amber-700 dark:text-amber-400 font-bold text-2xs rounded-lg shadow-sm capitalize">
-                    {item.difficulty}
-                  </span>
-                </div>
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-white">{item.name}</h3>
-                    <p className="text-xs text-slate-500 dark:text-dark-muted flex items-center gap-0.5 mt-0.5">
-                      <MdPlace className="text-slate-400 shrink-0" />
-                      {item.location?.city}, {item.location?.country}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-350 line-clamp-3 mt-3 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                  {item.travelTips?.length > 0 && (
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-2xs space-y-1">
-                      <p className="font-bold text-amber-600 flex items-center gap-0.5">
-                        <MdLightbulb /> Insider Tip:
-                      </p>
-                      <p className="text-slate-500 dark:text-dark-muted italic">"{item.travelTips[0]}"</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="card p-12 text-center text-slate-500 space-y-4">
-            <span className="text-6xl block">🗺️</span>
-            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">No Hidden Gems Found</h3>
-            <p className="text-sm max-w-md mx-auto">Be the first to ask the AI assistant above for unique recommendation gems in your region.</p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

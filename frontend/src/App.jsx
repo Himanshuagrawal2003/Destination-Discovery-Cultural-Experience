@@ -9,12 +9,10 @@ import { selectDarkMode } from './redux/slices/uiSlice';
 // Layouts
 import MainLayout      from './layouts/MainLayout';
 import DashboardLayout from './layouts/DashboardLayout';
-import AdminLayout     from './layouts/AdminLayout';
 import AuthLayout      from './layouts/AuthLayout';
 
 // Guards
 import ProtectedRoute from './components/common/ProtectedRoute';
-import AdminRoute     from './components/common/AdminRoute';
 
 // ─── Pages ──────────────────────────────────────────────────────────────────
 import Home              from './pages/Home';
@@ -53,13 +51,9 @@ import Profile         from './pages/dashboard/Profile';
 import MyTrips         from './pages/dashboard/MyTrips';
 import MyReviews       from './pages/dashboard/MyReviews';
 import Notifications   from './pages/dashboard/Notifications';
+import ManageDestinations from './pages/dashboard/ManageDestinations';
 
-// Admin Dashboard
-import AdminDashboard      from './pages/admin/AdminDashboard';
-import AdminDestinations   from './pages/admin/AdminDestinations';
-import AdminUsers          from './pages/admin/AdminUsers';
-import AdminEvents         from './pages/admin/AdminEvents';
-import AdminExperiences    from './pages/admin/AdminExperiences';
+
 
 // ─── App Component ───────────────────────────────────────────────────────────
 export default function App() {
@@ -112,6 +106,7 @@ export default function App() {
             <Route path="my-reviews"       element={<MyReviews />} />
             <Route path="notifications"    element={<Notifications />} />
             <Route path="bookmarks"        element={<Bookmarks />} />
+            <Route path="manage-destinations" element={<ManageDestinations />} />
             <Route path="trip-planner"     element={<TripPlanner />} />
             <Route path="trip-planner/:id" element={<TripDetail />} />
 
@@ -125,16 +120,7 @@ export default function App() {
           </Route>
         </Route>
 
-        {/* ─ Admin Routes (AdminLayout) ─ */}
-        <Route element={<AdminRoute />}>
-          <Route element={<AdminLayout />}>
-            <Route path="admin"                element={<AdminDashboard />} />
-            <Route path="admin/destinations"   element={<AdminDestinations />} />
-            <Route path="admin/users"          element={<AdminUsers />} />
-            <Route path="admin/events"         element={<AdminEvents />} />
-            <Route path="admin/experiences"    element={<AdminExperiences />} />
-          </Route>
-        </Route>
+
 
         {/* ─ 404 ─ */}
         <Route path="*" element={<NotFound />} />

@@ -31,15 +31,12 @@ exports.register = asyncHandler(async (req, res, next) => {
     return sendError(res, 'Validation failed', 400, errors.array());
   }
 
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) return next(new AppError('Email already registered. Please log in.', 400));
 
-  // Prevent self-assigning admin role
-  const safeRole = role === 'admin' ? 'user' : (role || 'user');
-
-  const user = await User.create({ name, email, password, role: safeRole });
+  const user = await User.create({ name, email, password });
 
   // Send welcome email (with strict timeout safety)
   try {

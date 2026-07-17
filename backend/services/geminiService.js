@@ -1,415 +1,97 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
-// Initialize Gemini client safely
-let genAI = null;
-const apiKey = process.env.GEMINI_API_KEY;
+// Initialize Groq client safely
+let groq = null;
+const apiKey = process.env.GROQ_API_KEY;
 const isMockMode = !apiKey || apiKey.trim() === '' || apiKey.startsWith('your_');
 
 if (!isMockMode) {
   try {
-    genAI = new GoogleGenerativeAI(apiKey);
+    groq = new Groq({ apiKey });
   } catch (err) {
-    console.warn('⚠️ GoogleGenerativeAI initialization failed. Running in mock mode.', err.message);
+    console.warn('⚠️ Groq initialization failed. Running in mock mode.', err.message);
   }
 } else {
-  console.log('ℹ️ Running geminiService in mock mode (no valid GEMINI_API_KEY provided)');
+  console.log('ℹ️ Running geminiService in mock mode (no valid GROQ_API_KEY provided)');
 }
 
 /**
- * Get a Gemini model instance
- * @param {string} model - Model name (default: gemini-1.5-flash)
- */
-const getModel = (model = 'gemini-1.5-flash') => {
-  if (isMockMode || !genAI) return null;
-  return genAI.getGenerativeModel({ model });
-};
-
-/**
- * Generate text content with Gemini or fall back to mock data
+ * Generate text content with Groq or fall back to mock data
  * @param {string} prompt - The full prompt to send
- * @param {string} model  - Model name
+ * @param {string} model  - Model name (default: llama-3.3-70b-versatile)
  * @returns {string} - Generated text response
  */
-const generateContent = async (prompt, model = 'gemini-1.5-flash') => {
-  if (isMockMode || !genAI) {
-    console.log(`🤖 [MOCK AI] Generating response for prompt keywords: "${prompt.slice(0, 150)}..."`);
-    // Wait a brief simulated latency
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    return getMockResponse(prompt);
+const generateContent = async (prompt, model = 'llama-3.3-70b-versatile') => {
+  if (isMockMode || !groq) {
+    throw new Error('Groq API is not configured. Please provide a valid GROQ_API_KEY in .env to use AI features.');
   }
 
   try {
-    const geminiModel = getModel(model);
-    const result      = await geminiModel.generateContent(prompt);
-    const response    = result.response;
-    return response.text();
+    const result = await groq.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: model,
+      temperature: 0.7,
+      max_tokens: 4096,
+    });
+    return result.choices[0].message.content;
   } catch (err) {
-    console.warn(`⚠️ Gemini API call failed (${err.message}). Falling back to Mock Mode.`);
-    // Fallback to mock data on any API error (invalid key, rate limit, quota, etc.)
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    return getMockResponse(prompt);
-  }
-};
-
-/**
- * Mock response helper based on prompt keywords
- */
-const getMockResponse = (prompt) => {
-  const lowercasePrompt = prompt.toLowerCase();
-  
-  if (lowercasePrompt.includes('recommenddestinations') || lowercasePrompt.includes('recommend 5 perfect destinations')) {
-    return JSON.stringify([
-      {
-        "name": "Kyoto",
-        "country": "Japan",
-        "whyItMatches": "Kyoto offers a serene blend of traditional culture, stunning temples, and beautiful gardens that align perfectly with your interest in historical experiences and scenic beauty.",
-        "budgetBreakdown": {
-          "accommodation": "80",
-          "food": "40",
-          "transport": "15",
-          "activities": "20"
-        },
-        "bestTime": "October to November (Autumn) or April (Cherry Blossom)",
-        "topActivities": ["Visit Fushimi Inari Shrine", "Explore Gion District", "Kinkaku-ji (Golden Pavilion)"],
-        "culturalTips": ["Bow when greeting someone", "Do not tip at restaurants - it is considered rude"],
-        "hiddenGem": "Otagi Nenbutsu-ji Temple, famous for its 1200 stone statues of Rakan"
-      },
-      {
-        "name": "Oaxaca",
-        "country": "Mexico",
-        "whyItMatches": "Oaxaca is the culinary heart of Mexico, offering rich Indigenous traditions, colorful festivals, and incredible street food that matches your taste for cultural immersion.",
-        "budgetBreakdown": {
-          "accommodation": "50",
-          "food": "25",
-          "transport": "10",
-          "activities": "15"
-        },
-        "bestTime": "October to December",
-        "topActivities": ["Explore Monte Albán ruins", "Taste Mole at Mercado 20 de Noviembre", "Visit Hierve el Agua"],
-        "culturalTips": ["Learn a few Spanish greetings", "Always ask before taking photos of local people"],
-        "hiddenGem": "Santiago Apoala, a stunning valley with waterfalls and canyons"
-      },
-      {
-        "name": "Florence",
-        "country": "Italy",
-        "whyItMatches": "As the birthplace of the Renaissance, Florence is a treasure trove of art, architecture, and world-class Tuscan cuisine, offering a sophisticated and enriching travel experience.",
-        "budgetBreakdown": {
-          "accommodation": "110",
-          "food": "50",
-          "transport": "12",
-          "activities": "30"
-        },
-        "bestTime": "May to September",
-        "topActivities": ["Visit the Uffizi Gallery", "Climb the Duomo dome", "Walk across Ponte Vecchio"],
-        "culturalTips": ["Cover shoulders and knees when entering churches", "Greet shopkeepers with a polite 'Buongiorno'"],
-        "hiddenGem": "Bardini Gardens, offering peaceful panoramic views of Florence without the crowds"
-      },
-      {
-        "name": "Cape Town",
-        "country": "South Africa",
-        "whyItMatches": "Cape Town combines breathtaking natural landscapes, diverse cultural history, and vibrant modern neighborhoods, perfect for an adventurous yet culturally rich getaway.",
-        "budgetBreakdown": {
-          "accommodation": "90",
-          "food": "35",
-          "transport": "15",
-          "activities": "25"
-        },
-        "bestTime": "November to March",
-        "topActivities": ["Take the cableway up Table Mountain", "Visit Robben Island", "Explore the Cape Peninsula"],
-        "culturalTips": ["Be mindful of your safety and local advice", "Tipping around 10-15% is standard in restaurants"],
-        "hiddenGem": "Kalk Bay, a quirky seaside village with antique shops and fresh seafood restaurants"
-      },
-      {
-        "name": "Reykjavik",
-        "country": "Iceland",
-        "whyItMatches": "Reykjavik is the perfect gateway to Iceland's dramatic volcanic landscapes, hot springs, and mythical folklore, offering a unique adventure for nature lovers.",
-        "budgetBreakdown": {
-          "accommodation": "150",
-          "food": "60",
-          "transport": "40",
-          "activities": "35"
-        },
-        "bestTime": "June to August (Midnight Sun) or September to March (Northern Lights)",
-        "topActivities": ["Relax in the Blue Lagoon", "Tour the Golden Circle", "Watch the Northern Lights"],
-        "culturalTips": ["Shower thoroughly before entering public geothermal pools", "Icelanders go by first names in directories"],
-        "hiddenGem": "Nauthólsvík Geothermal Beach, where warm water flows into the cold sea"
+    console.warn(`⚠️ Groq API call failed for ${model} (${err.message}). Trying fallback model...`);
+    if (model !== 'llama-3.1-8b-instant') {
+      try {
+        const resultFallback = await groq.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          model: 'llama-3.1-8b-instant',
+          temperature: 0.7,
+          max_tokens: 4096,
+        });
+        return resultFallback.choices[0].message.content;
+      } catch (fallbackErr) {
+        console.warn(`⚠️ Groq fallback model llama-3.1-8b-instant also failed (${fallbackErr.message}).`);
+        throw new Error(`Groq API call failed: ${fallbackErr.message}`);
       }
-    ]);
+    }
+    throw new Error(`Groq API call failed: ${err.message}`);
   }
-  
-  if (lowercasePrompt.includes('hiddengems') || lowercasePrompt.includes('off-the-beaten-path') || lowercasePrompt.includes('hidden gem')) {
-    return JSON.stringify([
-      {
-        "name": "Santiago Apoala",
-        "location": "Oaxaca, Mexico",
-        "whySpecial": "A pristine valley nestled in the Mixteca mountains with stunning emerald lagoons, twin waterfalls, and towering canyons.",
-        "howToGetThere": "Take a local bus or taxi from Oaxaca City to Nochixtlán, then catch a daily colectivo (shared van) to Apoala.",
-        "bestTime": "November to April (dry season)",
-        "localSecret": "Ask a local guide to show you the 'Cueva del Diablo' (Devil's Cave) for ancient cave paintings.",
-        "difficulty": "Moderate",
-        "estimatedCostPerDay": "30"
-      },
-      {
-        "name": "Otagi Nenbutsu-ji",
-        "location": "Arashiyama, Kyoto, Japan",
-        "whySpecial": "A quiet temple filled with over 1,200 whimsical stone statues of Buddhist disciples, each with a unique facial expression.",
-        "howToGetThere": "Take the Kyoto City Bus 94 from Hankyu Arashiyama Station directly to the temple gate.",
-        "bestTime": "Autumn (November) for red maple leaf contrast",
-        "localSecret": "Try to find the statue holding a tennis racket or the two laughing statues holding a cup of sake.",
-        "difficulty": "Easy",
-        "estimatedCostPerDay": "15"
-      },
-      {
-        "name": "Procida Island",
-        "location": "Bay of Naples, Italy",
-        "whySpecial": "The smallest and most authentic island in the Bay of Naples, famous for its pastel-colored houses and peaceful fishing village vibe.",
-        "howToGetThere": "Take a 40-minute ferry from Naples (Molo Beverello or Calata di Massa).",
-        "bestTime": "May, June, or September",
-        "localSecret": "Walk to the highest point, Terra Murata, at sunset to see the entire bay glow in gold.",
-        "difficulty": "Easy",
-        "estimatedCostPerDay": "65"
-      },
-      {
-        "name": "Albarracín",
-        "location": "Teruel, Aragon, Spain",
-        "whySpecial": "A breathtaking medieval town built on a rocky cliffside, voted the most beautiful village in Spain, with pinkish-red stone houses.",
-        "howToGetThere": "Drive from Valencia (2 hours) or take a train to Teruel and then a local bus.",
-        "bestTime": "September to October",
-        "localSecret": "The local bakery, Pastelería La Losa, makes the best traditional 'almojábanas' (cheese pastries) using a secret 500-year-old recipe.",
-        "difficulty": "Moderate",
-        "estimatedCostPerDay": "45"
-      },
-      {
-        "name": "Kalk Bay",
-        "location": "Cape Town, South Africa",
-        "whySpecial": "A bohemian fishing village with a working harbor, historic tidal pools, and a vibrant community of artists and fishermen.",
-        "howToGetThere": "Take the Southern Line train from Cape Town Central Station directly to Kalk Bay.",
-        "bestTime": "September to November",
-        "localSecret": "Walk to the end of the harbor pier to buy fresh catches directly from the boats, and watch the resident Cape Fur Seals play.",
-        "difficulty": "Easy",
-        "estimatedCostPerDay": "40"
-      },
-      {
-        "name": "Snaefellsnes Peninsula",
-        "location": "West Iceland",
-        "whySpecial": "Often called 'Iceland in Miniature' because it contains all of Iceland's signature wonders—glaciers, volcanoes, lava fields, and waterfalls.",
-        "howToGetThere": "Rent a car and drive 2 hours north from Reykjavik along Route 1 and Route 54.",
-        "bestTime": "June to August",
-        "localSecret": "Visit the mineral spring of Ölkelda, where you can drink naturally carbonated sparkling water straight from the ground.",
-        "difficulty": "Moderate",
-        "estimatedCostPerDay": "90"
-      }
-    ]);
-  }
-  
-  if (lowercasePrompt.includes('foodguide') || lowercasePrompt.includes('must-try traditional dishes') || lowercasePrompt.includes('culinary expert')) {
-    return JSON.stringify({
-      "traditionalDishes": [
-        { "name": "Chiles en Nogada", "description": "Poblano chilies stuffed with a mixture of shredded meat, fruits, and spices, topped with a walnut-based cream sauce (nogada) and pomegranate seeds.", "bestWhereToTry": "Oaxaca and Puebla traditional restaurants", "priceRange": "$$ (Mid-range)" },
-        { "name": "Tlayudas", "description": "Large, thin, crunchy toasted tortillas covered with spread of refried beans, asiento (unrefined pork lard), cabbage, avocado, meat (usually tasajo or cecina), and Oaxaca cheese.", "bestWhereToTry": "Mercado 20 de Noviembre, Oaxaca", "priceRange": "$ (Budget)" }
-      ],
-      "streetFood": [
-        { "name": "Tacos al Pastor", "description": "Thinly sliced spit-roasted pork marinated in dried chilies, spices, and pineapple, served on small corn tortillas with onions, cilantro, and pineapple.", "whereToFind": "Street stalls across Mexico", "bestTime": "Late evening/Night", "price": "$ (Budget)" }
-      ],
-      "desserts": [
-        { "name": "Tres Leches Cake", "description": "A sponge cake soaked in three kinds of milk: evaporated milk, condensed milk, and heavy cream, topped with whipped cream.", "culturalSignificance": "A staple dessert at Mexican birthday parties, weddings, and family gatherings, symbolizing sweet hospitality." }
-      ],
-      "restaurants": [
-        { "name": "Criollo", "type": "Fine Dining", "priceRange": "$$$ (Expensive)", "specialty": "Tasting menu featuring local, seasonal Oaxacan ingredients with modern techniques", "area": "Centro, Oaxaca" }
-      ],
-      "diningEtiquette": [
-        "Saying 'Buen provecho' before starting a meal is a polite custom.",
-        "Tipping is expected: 10% is standard, 15% for exceptional service.",
-        "Keep hands visible on the table, not on your lap.",
-        "Avoid leaving immediately after finishing a meal; 'la sobremesa' (table talk) is highly valued."
-      ]
-    });
-  }
-  
-  if (lowercasePrompt.includes('festivalguide') || lowercasePrompt.includes('festivals and cultural events')) {
-    return JSON.stringify([
-      {
-        "name": "Day of the Dead (Día de los Muertos)",
-        "type": "Traditional / Cultural",
-        "when": "October 31 - November 2",
-        "location": "Oaxaca and Central Mexico",
-        "history": "An ancient Mesoamerican holiday where families welcome back the souls of their deceased relatives for a brief reunion. Altars are built with marigolds, candles, and favorite foods.",
-        "howToExperienceIt": "Visit local cemeteries respectfully, see the elaborate altars (ofrendas) in town squares, and join the colorful night parades.",
-        "dressCode": "Casual; many people paint their faces as sugar skulls (Catrinas). Avoid overly revealing clothes in cemeteries.",
-        "culturalImportance": "A celebration of life, showing that death is not the end, but a natural phase of human existence.",
-        "tipsForVisitors": "Do not touch ofrendas or grave decorations. Always ask before photographing people or graves.",
-        "photography": "Respectful photography is allowed, but turn off your flash in cemeteries and ask families first."
-      }
-    ]);
-  }
-  
-  if (lowercasePrompt.includes('culturalguide') || lowercasePrompt.includes('cultural anthropologist and etiquette')) {
-    return JSON.stringify({
-      "greetings": [
-        "A warm handshake is the most common greeting for men and women.",
-        "Close friends often greet each other with a light hug or a single kiss on the right cheek (among women, or between a man and a woman)."
-      ],
-      "religiousPractices": [
-        "Most locals are Roman Catholic. Sacred sites require respectful behavior.",
-        "Remove hats when entering churches, lower your voice, and avoid photography during active mass/services."
-      ],
-      "traditionalClothing": [
-        "Locals wear standard modern clothing, but traditional embroidered garments (like Huipiles) are proudly worn on festivals and in indigenous communities.",
-        "Visitors should dress modestly when visiting churches; cover shoulders and knees."
-      ],
-      "businessEtiquette": [
-        "Build a personal relationship before discussing business details. Small talk is essential.",
-        "Meetings may start slightly late; patience and flexibility are appreciated."
-      ],
-      "thingsToAvoid": [
-        "Do not stand with your hands on your hips, which can be interpreted as anger or aggression.",
-        "Avoid speaking loudly or complaining aggressively in public spaces."
-      ],
-      "foodDining": [
-        "Keep your hands visible on the table. Tipping 10% is standard in sit-down restaurants.",
-        "Wait for the host to say 'Buen provecho' before starting to eat."
-      ],
-      "communicationStyle": [
-        "Indirect communication is preferred to maintain harmony. Saying 'no' directly is often avoided in favor of 'maybe' or 'we will see'.",
-        "Personal space is smaller than in Northern Europe or the USA."
-      ]
-    });
-  }
-  
-  if (lowercasePrompt.includes('languagehelper') || lowercasePrompt.includes('practical language guide')) {
-    return JSON.stringify({
-      "greetings": [
-        { "phrase": "Hola", "phonetic": "OH-lah", "meaning": "Hello", "whenToUse": "Anytime, informal" },
-        { "phrase": "Buenos días", "phonetic": "BWEH-nos DEE-ahs", "meaning": "Good morning", "whenToUse": "Before noon" },
-        { "phrase": "Buenas tardes", "phonetic": "BWEH-nas TAR-des", "meaning": "Good afternoon", "whenToUse": "From noon to sunset" },
-        { "phrase": "Buenas noches", "phonetic": "BWEH-nas NOH-chehs", "meaning": "Good evening / Good night", "whenToUse": "After sunset" }
-      ],
-      "usefulPhrases": [
-        { "phrase": "Por favor", "phonetic": "por fah-VOR", "meaning": "Please" },
-        { "phrase": "Gracias", "phonetic": "GRAH-syahs", "meaning": "Thank you" },
-        { "phrase": "Disculpe", "phonetic": "dees-KOOL-peh", "meaning": "Excuse me" },
-        { "phrase": "¿Cuánto cuesta?", "phonetic": "KWAN-toh KWEHS-tah", "meaning": "How much does it cost?" }
-      ],
-      "emergencyPhrases": [
-        { "phrase": "Ayuda", "phonetic": "ah-YOO-dah", "meaning": "Help" },
-        { "phrase": "Necesito ayuda", "phonetic": "neh-seh-SEE-toh ah-YOO-dah", "meaning": "I need help" }
-      ],
-      "numbers": [
-        { "phrase": "Uno, Dos, Tres", "phonetic": "OO-noh, dos, tres", "meaning": "1, 2, 3" }
-      ],
-      "culturalTips": [
-        "Always say 'gracias' and 'por favor' - politeness is highly valued.",
-        "Use 'Usted' (formal you) when speaking to elderly people or in professional settings."
-      ]
-    });
-  }
-  
-  if (lowercasePrompt.includes('budgetplanner') || lowercasePrompt.includes('budget planner') || lowercasePrompt.includes('budget tiers')) {
-    return JSON.stringify({
-      "budget": {
-        "dailyBreakdown": {
-          "accommodation": "25",
-          "food": "15",
-          "transport": "5",
-          "activities": "8",
-          "shopping": "5",
-          "misc": "4"
-        },
-        "totalCost": "434"
-      },
-      "midRange": {
-        "dailyBreakdown": {
-          "accommodation": "65",
-          "food": "30",
-          "transport": "12",
-          "activities": "20",
-          "shopping": "15",
-          "misc": "8"
-        },
-        "totalCost": "1050"
-      },
-      "luxury": {
-        "dailyBreakdown": {
-          "accommodation": "180",
-          "food": "75",
-          "transport": "35",
-          "activities": "50",
-          "shopping": "40",
-          "misc": "20"
-        },
-        "totalCost": "2800"
-      },
-      "savingTips": [
-        "Eat at local food markets (mercados) for authentic and budget-friendly meals.",
-        "Use shared transportation (colectivos) instead of private taxis.",
-        "Look for free museum days, usually on Sundays."
-      ],
-      "emergencyBuffer": "150",
-      "paymentTips": {
-        "currency": "Mexican Peso (MXN)",
-        "atm": "Widely available in cities, use bank-affiliated ATMs for lower fees",
-        "cards": "Accepted in major hotels and restaurants, cash is needed for markets and street stalls"
-      }
-    });
-  }
-  
-  if (lowercasePrompt.includes('itinerary planner') || lowercasePrompt.includes('itinerary') || lowercasePrompt.includes('day-wise')) {
-    return JSON.stringify([
-      {
-        "dayNumber": 1,
-        "theme": "Historical Highlights & Local Flavors",
-        "morning": {
-          "activity1": { "name": "Visit Santo Domingo Church", "description": "Explore the beautiful baroque church and its adjacent cultural museum.", "duration": "2 hours", "cost": "5", "address": "Macedonio Alcalá, Centro" },
-          "breakfast": { "name": "Café Centro", "dish": "Huevos Rancheros with hot chocolate", "price": "8" }
-        },
-        "afternoon": {
-          "activity2": { "name": "Explore Mercado 20 de Noviembre", "description": "Taste local delicacies like tlayudas and chapulines (grasshoppers).", "duration": "2 hours", "cost": "10" },
-          "lunch": { "name": "Pasillo de Humo", "specialty": "Grilled tasajo (beef) with spring onions", "price": "12" }
-        },
-        "evening": {
-          "activity4": { "name": "Sunset Walk at Zócalo Square", "description": "Enjoy live marimba music and watch the local street life." },
-          "dinner": { "name": "Los Danzantes", "cuisine": "Contemporary Oaxacan cuisine with mezcal pairing", "priceRange": "$$$ (Expensive)" },
-          "optional": "Enjoy a mezcal tasting at a local mezcalería"
-        },
-        "summary": {
-          "estimatedDailyCost": "45",
-          "distanceCovered": "3 km",
-          "transport": "Walking",
-          "proTips": "Wear comfortable walking shoes and stay hydrated."
-        }
-      }
-    ]);
-  }
-  
-  if (lowercasePrompt.includes('storytelling')) {
-    return "Welcome to Kyoto, the beating heart of traditional Japan. As a local guide, I am thrilled to show you the layers of history, spirituality, and quiet magic that define my home. Kyoto’s story begins in 794 AD, when it was chosen as the imperial capital of Japan, then known as Heian-kyo, or the 'Capital of Peace and Tranquility'. For over a millennium, emperors, courtesans, samurai, and monks walked these streets, leaving behind a legacy of seventeen UNESCO World Heritage sites. As we walk through the Gion district in the late afternoon, the wooden townhouses (machiya) cast long shadows on the cobblestones. You might catch a glimpse of a geiko or maiko gliding silently past, her elaborate kimono whispering against the sliding paper doors. Kyoto is a city of stories and spirits, where the old gods are honored in quiet corners, and every stone has a name. Let us start our journey by exploring the golden pagoda of Kinkaku-ji, which glows with an ethereal light against its surrounding pond...";
-  }
-
-  // Fallback default chat response
-  return "Hello! I am CultureQuest AI, your digital travel guide. I'd love to help you plan your next adventure! If you want a detailed travel itinerary, custom food guides, or recommendations for hidden gems, just let me know. What destination or experience are you interested in exploring today?";
 };
 
 /**
  * Generate a chat session for contextual conversations
  */
-const createChatSession = (history = [], model = 'gemini-1.5-flash') => {
-  const geminiModel = getModel(model);
-  return geminiModel.startChat({
-    history,
-    generationConfig: {
-      maxOutputTokens: 2048,
-      temperature:     0.7,
-    },
-  });
+const createChatSession = (history = [], model = 'llama-3.3-70b-versatile') => {
+  if (isMockMode || !groq) {
+    throw new Error('Groq API is not configured. Please provide a valid GROQ_API_KEY in .env to use AI features.');
+  }
+
+  return {
+    sendMessage: async (message) => {
+      // Map history to Groq format if needed, but for simplicity we append the new message
+      const messages = history.map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.parts?.[0]?.text || h.content || '' }));
+      messages.push({ role: 'user', content: message });
+      
+      const result = await groq.chat.completions.create({
+        messages,
+        model,
+        temperature: 0.7,
+        max_tokens: 2048,
+      });
+      return {
+        response: {
+          text: () => result.choices[0].message.content
+        }
+      };
+    }
+  };
 };
 
 // ─── Prompt Templates ─────────────────────────────────────────────────────────
 
 const prompts = {
-  recommendDestinations: ({ budget, travelStyle, season, interests, country, duration }) => `
-You are an expert travel consultant. Based on the following preferences, recommend 5 perfect destinations.
+  recommendDestinations: ({ budget, travelStyle, season, interests, country, duration, experienceDescription }) => `
+You are an expert travel consultant. Based on the user's custom travel experience prompt and preferences, recommend 5 perfect destinations.
 
-User Preferences:
+${experienceDescription ? `User's Desired Vibe/Experience Description: "${experienceDescription}"` : ''}
+
+Preferences:
 - Budget: ${budget} per person
 - Travel Style: ${travelStyle}
 - Season/Month: ${season}
@@ -417,16 +99,46 @@ User Preferences:
 - Country/Region: ${country || 'anywhere in the world'}
 - Trip Duration: ${duration} days
 
+CRITICAL REQUIREMENT FOR GEOGRAPHIC RESTRICTION:
+- If a specific Country/Region is specified above (e.g., "${country}"), or if the user's Desired Vibe/Experience Description mentions or implies a specific country/region (e.g., "India"), you MUST strictly recommend destinations that are located ONLY within that specific country/region. Do NOT recommend any destinations outside of that country/region under any circumstances.
+
 For each destination provide:
 1. **Destination Name & Country**
-2. **Why It Matches**: 2-3 sentences
-3. **Estimated Budget Breakdown**: Accommodation, Food, Transport, Activities (per day in USD)
+2. **Why It Matches**: 2-3 sentences based heavily on their desired vibe/experience or preferences.
+3. **Estimated Budget Breakdown**: Accommodation, Food, Transport, Activities (per day in INR, Indian Rupees, ₹)
 4. **Best Time to Visit**
 5. **Top 3 Activities**
 6. **Cultural Tips**: 2 key insights
-7. **Hidden Gem Nearby**
+7. **3 Nearby Hidden Gems**: A list of 3 off-the-beaten-path hidden gems, each with a name and brief description of what makes it special.
+8. **3 Famous Local Foods**: A list of 3 must-try traditional foods/specialties, each with a name and brief description.
+9. **Map Coordinates**: Centered latitude and longitude (numeric values).
 
-Format as structured JSON array with keys: name, country, whyItMatches, budgetBreakdown, bestTime, topActivities, culturalTips, hiddenGem.
+Format the output strictly as a structured JSON array where each object has these exact keys:
+name, country, whyItMatches, budgetBreakdown (object with keys: accommodation, food, transport, activities), bestTime, topActivities (array of strings), culturalTips (array of strings), hiddenGems (array of objects with keys: name, description), famousFoods (array of objects with keys: name, description), latitude (number), longitude (number).
+`,
+
+  generateDestinationProfile: (destinationNameOrSlug) => `
+You are an expert travel guide. The user requested details for the destination/region: "${destinationNameOrSlug}".
+Generate a complete, high-quality, and detailed travel profile for this destination.
+
+Provide:
+1. **Name & Country & City**
+2. **Category**: Choose one of ['beach', 'mountain', 'city', 'desert', 'forest', 'historical', 'adventure', 'cultural', 'wildlife', 'other']
+3. **Detailed Description** (up to 300 words)
+4. **History** (up to 200 words)
+5. **Culture** (up to 200 words)
+6. **Coordinates**: Numerical Latitude and Longitude.
+7. **Budget**: Min daily cost (number in INR, ₹), Max daily cost (number in INR, ₹), Level ('budget' / 'mid-range' / 'luxury')
+8. **Best Season**: Array of strings (e.g. ['spring', 'autumn'])
+9. **Highlights**: Array of 4-5 major tourist highlights.
+10. **Travel Tips**: Array of 3 essential travel guidelines.
+11. **Famous Places & Palaces**: 3 key landmarks (monuments, palaces, parks), each with a name and description.
+12. **Hidden Gems**: 3 off-the-beaten-path locations in the city/region, each with a name and description.
+13. **Famous Foods**: 3 must-try traditional dishes, each with a name and description.
+14. **Cover Image**: A valid, high-resolution Unsplash photo URL relevant to the city/destination (e.g., "https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=1200").
+
+Format the output strictly as JSON with keys:
+name, country, city, category, description, history, culture, latitude, longitude, budget (object with keys: min, max, level), bestSeason, highlights (array of strings), travelTips (array of strings), famousPlaces (array of objects with keys: name, description), hiddenGems (array of objects with keys: name, description), famousFoods (array of objects with keys: name, description), coverImage (string).
 `,
 
   storytelling: ({ destinationName, country }) => `
@@ -460,7 +172,7 @@ For each hidden gem provide:
 4. **Best Time to Visit**
 5. **Local Secret**: Something only locals know
 6. **Difficulty Level**: Easy/Moderate/Challenging
-7. **Estimated Cost per Day**
+7. **Estimated Cost per Day (in INR, ₹)**
 
 Format as JSON array with keys: name, location, whySpecial, howToGetThere, bestTime, localSecret, difficulty, estimatedCostPerDay.
 `,
@@ -589,7 +301,7 @@ You are an expert travel financial planner. Create a detailed budget plan for:
 - Travel Style: ${travelStyle || 'mid-range'}
 - Group Size: ${groupSize || 1} person(s)
 
-Provide three budget tiers (Budget / Mid-Range / Luxury):
+Provide three budget tiers (Budget / Mid-Range / Luxury). All monetary values, daily breakdowns, emergency buffers, and total costs MUST be calculated and represented in Indian Rupees (INR, ₹).
 
 For each tier include:
 1. **Daily Cost Breakdown**:
@@ -617,6 +329,7 @@ Format as JSON with tiers: budget, midRange, luxury and sections: dailyBreakdown
 
   itinerary: ({ destination, days, interests, budget, travelStyle }) => `
 You are a master travel itinerary planner. Create a detailed ${days}-day itinerary for ${destination}.
+All estimated daily costs, restaurant prices/costs, activity costs, and other money values MUST be calculated and represented strictly in Indian Rupees (INR, ₹).
 
 Travel preferences:
 - Interests: ${interests?.join(', ') || 'general tourism'}
@@ -645,7 +358,13 @@ Evening (6 PM - 11 PM):
 - Transport between locations
 - Pro tips for the day
 
-Format as JSON array of days with: dayNumber, theme, morning, afternoon, evening, summary.
+Format strictly as a JSON array of days. You MUST generate exactly ${days} elements in this array, one for each day. Each day MUST have:
+- dayNumber (number)
+- theme (string)
+- morning (array of activity objects: name, description, duration, cost, address. INCLUDE breakfast spot here as an activity)
+- afternoon (array of activity objects. INCLUDE lunch spot here as an activity)
+- evening (array of activity objects. INCLUDE dinner spot here as an activity)
+- summary (object with estimatedDailyCost, distanceCovered, transportBetweenLocations, proTips)
 `,
 
   chatbot: (message, conversationHistory) => `

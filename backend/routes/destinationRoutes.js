@@ -6,7 +6,6 @@ const {
   getTrendingDestinations, getSearchSuggestions,
 } = require('../controllers/destinationController');
 const { protect }         = require('../middlewares/authMiddleware');
-const { restrictTo }      = require('../middlewares/roleMiddleware');
 const { uploadDestination } = require('../config/cloudinary');
 
 // Public
@@ -16,8 +15,8 @@ router.get('/trending',   getTrendingDestinations);
 router.get('/suggestions',getSearchSuggestions);
 router.get('/:id',        getDestination);
 
-// Admin only
-router.use(protect, restrictTo('admin'));
+// Authenticated only
+router.use(protect);
 router.post('/', uploadDestination.fields([
   { name: 'coverImage', maxCount: 1 },
   { name: 'images', maxCount: 10 },

@@ -27,15 +27,35 @@ exports.getTrip = asyncHandler(async (req, res, next) => {
     .populate('user', 'name avatarUrl');
 
   if (!trip) return next(new AppError('Trip not found', 404));
-  if (trip.user._id.toString() !== req.user._id.toString() && !trip.isPublic && req.user.role !== 'admin') {
-    return next(new AppError('You do not have access to this trip', 403));
+  if (trip.user._id.toString() !== req.user._id.toString() && !trip.isPublic) {
+    return next(new AppError('You are not authorized to view this trip', 403));
   }
   sendSuccess(res, { trip }, 'Trip fetched');
 });
 
+const Destination  = require('../models/Destination');
+
 // @POST /api/trips
 exports.createTrip = asyncHandler(async (req, res) => {
-  const trip = await Trip.create({ ...req.body, user: req.user._id });
+  let { destinations, destinationName, ...tripData } = req.body;
+
+  // If a custom destination name is provided from the frontend
+  if (destinationName && (!destinations || destinations.length === 0)) {
+    // Find or create the destination document in the DB
+    let dest = await Destination.findOne({ name: { $regex: new RegExp(`^${destinationName.trim()}$`, 'i') } });
+    if (!dest) {
+      dest = await Destination.create({
+        name: destinationName.trim(),
+        city: destinationName.trim(),
+        country: 'Travel Spot',
+        category: 'cultural',
+        description: `Custom destination planned with AI for ${destinationName}`,
+      });
+    }
+    destinations = [dest._id];
+  }
+
+  const trip = await Trip.create({ ...tripData, destinations, user: req.user._id });
   sendSuccess(res, { trip }, 'Trip created successfully', 201);
 });
 

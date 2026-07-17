@@ -1,21 +1,25 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { MdMap, MdAutoAwesome } from 'react-icons/md';
+import { LuMap, LuSparkles } from 'react-icons/lu';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function TripPlanner() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const destParam = searchParams.get('dest') || '';
+
   const [destinations, setDestinations] = useState([]);
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(true);
   const [isPlanning, setIsPlanning] = useState(false);
-  const { register, handleSubmit, formState: { errors }, watch } = useForm({
+
+  const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm({
     defaultValues: {
       name: '',
       days: 3,
-      destinationId: '',
+      destinationName: destParam,
       travelStyle: 'solo',
       budgetTotal: 500,
       letAIPlan: false,
@@ -23,6 +27,13 @@ export default function TripPlanner() {
   });
 
   const watchLetAI = watch('letAIPlan');
+
+  useEffect(() => {
+    if (destParam) {
+      setValue('destinationName', destParam);
+      setValue('name', `Trip to ${destParam}`);
+    }
+  }, [destParam, setValue]);
 
   useEffect(() => {
     const fetchDestinationsList = async () => {
@@ -41,12 +52,17 @@ export default function TripPlanner() {
   const onSubmit = async (data) => {
     setIsPlanning(true);
     try {
-      const selectedDest = destinations.find((d) => d._id === data.destinationId);
-      if (!selectedDest) {
-        toast.error('Please select a valid destination');
+      const selectedDestName = data.destinationName.trim();
+      if (!selectedDestName) {
+        toast.error('Please enter a valid destination');
         setIsPlanning(false);
         return;
       }
+
+      // Check if selected name matches a preloaded destination to get its details or fallback
+      const matchedDest = destinations.find(
+        (d) => d.name.toLowerCase() === selectedDestName.toLowerCase()
+      );
 
       let plannedItinerary = [];
       let budgetBreakdown = { accommodation: 0, transport: 0, food: 0, activities: 0, emergency: 0 };
@@ -56,12 +72,12 @@ export default function TripPlanner() {
         try {
           const [itineraryRes, budgetRes] = await Promise.all([
             api.post('/ai/itinerary', {
-              destination: selectedDest.name,
+              destination: selectedDestName,
               days: data.days,
               travelStyle: data.travelStyle,
             }),
             api.post('/ai/budget-planner', {
-              destination: selectedDest.name,
+              destination: selectedDestName,
               duration: data.days,
               travelStyle: data.travelStyle,
             }),
@@ -115,10 +131,9 @@ export default function TripPlanner() {
       // Create Trip API call
       const totalBudget = Object.values(budgetBreakdown).reduce((a, b) => a + b, 0) || parseFloat(data.budgetTotal);
 
-      const tripRes = await api.post('/trips', {
+      const tripPayload = {
         name: data.name,
         days: data.days,
-        destinations: [data.destinationId],
         travelStyle: data.travelStyle,
         isAIGenerated: data.letAIPlan,
         budget: {
@@ -131,8 +146,15 @@ export default function TripPlanner() {
           activities: [],
         })),
         status: 'planning',
-      });
+      };
 
+      if (matchedDest) {
+        tripPayload.destinations = [matchedDest._id];
+      } else {
+        tripPayload.destinationName = selectedDestName;
+      }
+
+      const tripRes = await api.post('/trips', tripPayload);
       toast.success('Trip created successfully!');
       navigate(`/trip-planner/${tripRes.data.trip._id}`);
     } catch (err) {
@@ -143,55 +165,63 @@ export default function TripPlanner() {
   };
 
   return (
-    <div className="py-8 bg-slate-50 dark:bg-slate-900/40 min-h-screen">
+    <div className="py-8 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
       <div className="container-cq max-w-xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="card p-6 md:p-8 space-y-6"
+          className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 md:p-8 space-y-6 rounded-3xl shadow-sm"
         >
           <div className="text-center space-y-2">
             <span className="text-5xl animate-float block">🧭</span>
-            <h1 className="text-2xl font-black text-slate-800 dark:text-white font-display">Plan Your Next Trip</h1>
-            <p className="text-xs text-slate-500">Design your upcoming travel itinerary with smart AI pre-population.</p>
+            <h1 className="text-2xl font-black text-primary-900 dark:text-white font-display">Plan Your Next Trip</h1>
+            <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium">Design your upcoming travel itinerary with smart AI pre-population.</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className="label">Trip Name</label>
+              <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Trip Name</label>
               <input
                 type="text"
                 placeholder="e.g. Cherry Blossoms in Kyoto"
-                className={`input ${errors.name ? 'input-error' : ''}`}
+                className={`w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all ${errors.name ? 'border-red-500' : ''}`}
                 {...register('name', { required: 'Trip name is required' })}
               />
-              {errors.name && <p className="text-red-550 text-xs mt-1">{errors.name.message}</p>}
+              {errors.name && <p className="text-red-500 text-xs mt-1 font-semibold">{errors.name.message}</p>}
             </div>
 
             <div>
-              <label className="label">Destination</label>
+              <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Destination</label>
               {isLoadingDestinations ? (
-                <div className="h-10 skeleton" />
+                <div className="h-10 skeleton animate-pulse rounded-xl" />
               ) : (
-                <select className="input capitalize" {...register('destinationId', { required: 'Please pick a destination' })}>
-                  <option value="">Select Destination...</option>
-                  {destinations.map((d) => (
-                    <option key={d._id} value={d._id}>{d.name} ({d.city}, {d.country})</option>
-                  ))}
-                </select>
+                <>
+                  <input
+                    type="text"
+                    list="destinations-list"
+                    placeholder="e.g. Paris, Kyoto, Rome..."
+                    className={`w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all ${errors.destinationName ? 'border-red-500' : ''}`}
+                    {...register('destinationName', { required: 'Destination is required' })}
+                  />
+                  <datalist id="destinations-list">
+                    {destinations.map((d) => (
+                      <option key={d._id} value={d.name}>{d.city}, {d.country}</option>
+                    ))}
+                  </datalist>
+                </>
               )}
-              {errors.destinationId && <p className="text-red-550 text-xs mt-1">{errors.destinationId.message}</p>}
+              {errors.destinationName && <p className="text-red-500 text-xs mt-1 font-semibold">{errors.destinationName.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Total Days</label>
-                <input type="number" min="1" max="14" className="input" {...register('days')} />
+                <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Total Days</label>
+                <input type="number" min="1" max="14" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('days')} />
               </div>
               <div>
-                <label className="label">Travel Style</label>
-                <select className="input" {...register('travelStyle')}>
+                <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Travel Style</label>
+                <select className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('travelStyle')}>
                   <option value="solo">Solo</option>
                   <option value="couple">Couple</option>
                   <option value="family">Family</option>
@@ -202,22 +232,22 @@ export default function TripPlanner() {
 
             {!watchLetAI && (
               <div>
-                <label className="label">Target Budget (USD)</label>
-                <input type="number" min="10" className="input" {...register('budgetTotal')} />
+                <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Target Budget (INR, ₹)</label>
+                <input type="number" min="10" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('budgetTotal')} />
               </div>
             )}
 
             {/* AI Generator Option Toggle */}
-            <div className="p-4 bg-teal-500/5 dark:bg-teal-950/20 rounded-xl border border-teal-500/20 flex items-start gap-3">
+            <div className="p-4 bg-primary-50/70 border border-primary-100/60 dark:bg-primary-950/20 dark:border-primary-900/10 rounded-2xl flex items-start gap-3">
               <input
                 type="checkbox"
                 id="letAIPlan"
-                className="mt-1 accent-teal-600 rounded cursor-pointer"
+                className="mt-1 accent-accent rounded cursor-pointer"
                 {...register('letAIPlan')}
               />
-              <label htmlFor="letAIPlan" className="text-xs text-slate-650 dark:text-slate-350 cursor-pointer font-medium leading-relaxed select-none">
-                <strong className="text-teal-700 dark:text-teal-400 flex items-center gap-1">
-                  <MdAutoAwesome className="animate-pulse" /> Autocomplete with AI Story & Itinerary
+              <label htmlFor="letAIPlan" className="text-xs text-primary-900/70 dark:text-dark-muted cursor-pointer font-semibold leading-relaxed select-none">
+                <strong className="text-accent flex items-center gap-1">
+                  <LuSparkles className="animate-pulse text-sm shrink-0" /> Autocomplete with AI Story & Itinerary
                 </strong>
                 Generate day-wise activities, morning spots, afternoon meal spots, and budget breakdowns automatically.
               </label>
@@ -226,13 +256,13 @@ export default function TripPlanner() {
             <button
               type="submit"
               disabled={isPlanning}
-              className="w-full btn btn-primary py-3 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full btn bg-accent hover:bg-accent/90 text-white font-bold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 hover:shadow-glow"
             >
               {isPlanning ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <MdMap /> Plan Trip
+                  <LuMap /> Plan Trip
                 </>
               )}
             </button>

@@ -52,8 +52,8 @@ exports.createReview = asyncHandler(async (req, res, next) => {
 exports.updateReview = asyncHandler(async (req, res, next) => {
   const review = await Review.findById(req.params.id);
   if (!review) return next(new AppError('Review not found', 404));
-  if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-    return next(new AppError('You can only update your own reviews', 403));
+  if (review.user.toString() !== req.user._id.toString()) {
+    return next(new AppError('You are not authorized to update this review', 403));
   }
 
   const { rating, title, comment } = req.body;
@@ -68,7 +68,7 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
 exports.deleteReview = asyncHandler(async (req, res, next) => {
   const review = await Review.findById(req.params.id);
   if (!review) return next(new AppError('Review not found', 404));
-  if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+  if (review.user.toString() !== req.user._id.toString()) {
     return next(new AppError('You can only delete your own reviews', 403));
   }
   await review.remove();

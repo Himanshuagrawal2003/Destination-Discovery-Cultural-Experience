@@ -55,7 +55,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
     e.preventDefault();
     if (query.trim()) {
       onClose();
-      navigate(`/destinations?search=${encodeURIComponent(query.trim())}`);
+      navigate(`/ai/recommend?search=${encodeURIComponent(query.trim())}`);
     }
   };
 

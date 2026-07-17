@@ -96,7 +96,6 @@ app.use('/api/trips',        require('./routes/tripRoutes'));
 app.use('/api/bookmarks',    require('./routes/bookmarkRoutes'));
 app.use('/api/notifications',require('./routes/notificationRoutes'));
 app.use('/api/ai',           aiLimiter, require('./routes/aiRoutes'));
-app.use('/api/admin',        require('./routes/adminRoutes'));
 app.use('/api/users',        require('./routes/userRoutes'));
 
 // ─── 404 & Error Handlers ─────────────────────────────────────────────────────

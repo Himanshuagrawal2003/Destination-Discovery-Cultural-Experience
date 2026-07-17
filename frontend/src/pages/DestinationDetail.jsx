@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdPlace, MdAttachMoney, MdBookmark, MdBookmarkBorder, MdHistory,
          MdLightbulb, MdStar, MdAutoAwesome, MdThumbUp, MdReply } from 'react-icons/md';
+import { LuBookmark, LuSparkles, LuBookOpen, LuCompass, LuTrash } from 'react-icons/lu';
 import api from '../services/api';
 import { selectUser } from '../redux/slices/authSlice';
 import toast from 'react-hot-toast';
@@ -11,6 +12,7 @@ import LeafletMap from '../components/common/LeafletMap';
 
 export default function DestinationDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const user = useSelector(selectUser);
   const [destination, setDestination] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -31,6 +33,7 @@ export default function DestinationDetail() {
 
   // Reply states
   const [replyComments, setReplyComments] = useState({}); // { [reviewId]: 'reply text' }
+  const [destinationEvents, setDestinationEvents] = useState([]);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -50,6 +53,15 @@ export default function DestinationDetail() {
           const bookmarkRes = await api.get(`/bookmarks/check/${currentDest._id}?itemType=destination`);
           setIsBookmarked(bookmarkRes.data.isBookmarked);
           setBookmarkId(bookmarkRes.data.bookmarkId);
+        }
+
+        // Fetch events matching this destination
+        const city = currentDest.city || currentDest.name || '';
+        try {
+          const eventsRes = await api.get(`/events?location.city=${encodeURIComponent(city)}`);
+          setDestinationEvents(eventsRes.data.data || []);
+        } catch (eventErr) {
+          console.warn('Failed to fetch events for destination:', eventErr);
         }
       } catch (err) {
         console.error(err);
@@ -99,6 +111,18 @@ export default function DestinationDetail() {
       toast.error('AI storytelling failed');
     } finally {
       setIsAiLoading(false);
+    }
+  };
+
+  const handleDeleteDestination = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${destination.name}?`)) return;
+    try {
+      await api.delete(`/destinations/${destination._id}`);
+      toast.success(`${destination.name} deleted successfully`);
+      navigate('/destinations');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete destination');
     }
   };
 
@@ -223,27 +247,41 @@ export default function DestinationDetail() {
 
           <div className="flex gap-2 shrink-0">
             <button
+              onClick={() => navigate(`/trip-planner?dest=${encodeURIComponent(destination.name)}`)}
+              className="btn bg-white hover:bg-primary-50 text-accent rounded-xl border border-primary-200 flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm text-xs"
+            >
+              <LuCompass className="text-lg shrink-0" /> Plan Trip
+            </button>
+            <button
               onClick={handleBookmarkToggle}
-              className="btn bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 flex items-center gap-1.5"
+              className="btn bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 flex items-center gap-1.5 font-bold cursor-pointer transition-all"
             >
               {isBookmarked ? (
                 <>
-                  <MdBookmark className="text-lg text-teal-400" /> Saved
+                  <LuBookmark className="text-lg text-accent fill-accent" /> Saved
                 </>
               ) : (
                 <>
-                  <MdBookmarkBorder className="text-lg" /> Bookmark
+                  <LuBookmark className="text-lg text-white" /> Bookmark
                 </>
               )}
             </button>
             <button
               onClick={handleGenerateStory}
               disabled={isAiLoading}
-              className="btn btn-accent flex items-center gap-1.5"
+              className="btn bg-accent hover:bg-accent/90 hover:shadow-glow text-white flex items-center gap-1.5 rounded-xl shadow-md font-bold transition-all"
             >
-              <MdAutoAwesome className="text-lg animate-pulse" />
+              <LuSparkles className="text-lg animate-pulse" />
               {isAiLoading ? 'Storyteller writing...' : 'AI Storyteller'}
             </button>
+            {user && (
+              <button
+                onClick={handleDeleteDestination}
+                className="btn bg-rose-600/90 hover:bg-rose-600 hover:shadow-glow text-white flex items-center gap-1.5 rounded-xl shadow-md font-bold transition-all text-xs cursor-pointer"
+              >
+                <LuTrash className="text-lg shrink-0" /> Delete
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -258,13 +296,13 @@ export default function DestinationDetail() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="card border border-teal-500/30 bg-teal-50/10 dark:bg-teal-900/10 p-6 space-y-4"
+                className="card bg-white dark:bg-dark-card border border-primary-200 dark:border-primary-900/30 p-6 space-y-4 rounded-2xl shadow-sm"
               >
-                <div className="flex items-center gap-2 text-teal-700 dark:text-teal-400 font-bold border-b border-teal-500/20 pb-3">
-                  <MdHistory className="text-2xl animate-spin-slow" />
+                <div className="flex items-center gap-2 text-accent font-bold border-b border-primary-100 dark:border-dark-border pb-3 font-display">
+                  <LuBookOpen className="text-xl shrink-0" />
                   <h3>Immersive AI Cultural Story</h3>
                 </div>
-                <div className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line prose max-w-none">
+                <div className="text-sm text-primary-900/80 dark:text-slate-200 leading-relaxed whitespace-pre-line prose max-w-none font-medium">
                   {aiStory}
                 </div>
               </motion.div>
@@ -329,6 +367,131 @@ export default function DestinationDetail() {
               </div>
             )}
           </div>
+
+          {/* Famous Places */}
+          {destination.famousPlacesList?.length > 0 && (
+            <div className="card p-6 space-y-4">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
+                🏰 Famous Places & Palaces
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {destination.famousPlacesList.map((place, i) => (
+                  <div key={i} className="bg-primary-50 dark:bg-primary-950/20 p-4 rounded-xl border border-primary-100/60 dark:border-primary-900/10 shadow-sm transition-all hover:-translate-y-1">
+                    <h4 className="font-bold text-accent mb-2">{place.name}</h4>
+                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{place.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hidden Gems */}
+          {destination.hiddenGemsList?.length > 0 && (
+            <div className="card p-6 space-y-4 border-l-4 border-l-amber-500 bg-amber-50/10 dark:bg-amber-950/10">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
+                💎 Local Hidden Gems
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {destination.hiddenGemsList.map((gem, i) => (
+                  <div key={i} className="bg-amber-500/5 dark:bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 shadow-sm transition-all hover:-translate-y-1">
+                    <h4 className="font-bold text-amber-600 dark:text-amber-450 mb-2 flex items-center gap-1.5">
+                      <MdLightbulb className="text-lg shrink-0 animate-pulse" />
+                      {gem.name}
+                    </h4>
+                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium">{gem.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Famous Foods */}
+          {destination.famousFoodsList?.length > 0 && (
+            <div className="card p-6 space-y-4">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
+                🍲 Famous Local Food
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {destination.famousFoodsList.map((food, i) => (
+                  <div key={i} className="bg-orange-50 dark:bg-orange-950/20 p-4 rounded-xl border border-orange-100 dark:border-orange-900/10 shadow-sm transition-all hover:-translate-y-1">
+                    <h4 className="font-bold text-orange-600 dark:text-orange-400 mb-2 flex items-start gap-1.5">
+                      <span>🍽️</span> <span>{food.name}</span>
+                    </h4>
+                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{food.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Photo Gallery */}
+          {destination.images && destination.images.length > 0 && (
+            <div className="card p-6 md:p-8 space-y-4">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
+                🖼️ Gallery & Photo Tour
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {destination.images.map((img, i) => (
+                  <div key={i} className="aspect-video sm:aspect-square rounded-2xl overflow-hidden bg-primary-50 relative group cursor-pointer border border-primary-100/50 dark:border-dark-border shadow-sm">
+                    <img 
+                      src={img} 
+                      alt={`${destination.name} gallery ${i+1}`} 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Festivals & Events */}
+          {destinationEvents && destinationEvents.length > 0 && (
+            <div className="card p-6 md:p-8 space-y-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
+                🎉 Upcoming Festivals & Cultural Events
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {destinationEvents.map((event) => (
+                  <div key={event._id} className="group flex flex-col bg-primary-50/30 dark:bg-primary-950/10 rounded-2xl overflow-hidden border border-primary-100/60 dark:border-primary-900/10 transition-all hover:-translate-y-1 hover:shadow-sm">
+                    <div className="relative h-36 overflow-hidden bg-primary-100/30">
+                      {event.coverImage ? (
+                        <img 
+                          src={event.coverImage} 
+                          alt={event.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-primary-900/40 text-xs font-bold">
+                          🎉 Event Cover
+                        </div>
+                      )}
+                      <span className="absolute top-2 left-2 px-2 py-0.5 bg-white/95 dark:bg-dark-card/95 text-accent font-black text-3xs rounded-md shadow-sm uppercase tracking-wider">
+                        {event.type.replace('-', ' ')}
+                      </span>
+                    </div>
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-slate-800 dark:text-white text-xs leading-snug group-hover:text-accent transition-colors font-display line-clamp-1">
+                          {event.title}
+                        </h4>
+                        <p className="text-3xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mt-1 font-medium">
+                          {event.description}
+                        </p>
+                      </div>
+                      
+                      {event.price?.isFree ? (
+                        <span className="text-[10px] font-bold text-teal-600">Free Entry</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-600">
+                          ₹{event.price?.amount || 0}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── Reviews ── */}
           <div className="space-y-6">
@@ -483,7 +646,7 @@ export default function DestinationDetail() {
 
             {destination.budget?.min !== undefined && (
               <div className="text-xs text-slate-500 dark:text-dark-muted pl-13">
-                Avg Cost: ${destination.budget.min} - ${destination.budget.max} / day
+                Avg Cost: ₹{destination.budget.min} - ₹{destination.budget.max} / day
               </div>
             )}
 
@@ -501,7 +664,7 @@ export default function DestinationDetail() {
                 <div>
                   <p className="font-bold text-slate-855 dark:text-white">🎫 Entry Fee</p>
                   <p className="text-slate-500 dark:text-dark-muted mt-0.5">
-                    {destination.entryFee.amount === 0 ? 'Free' : `$${destination.entryFee.amount}`} {destination.entryFee.notes}
+                    {destination.entryFee.amount === 0 ? 'Free' : `₹${destination.entryFee.amount}`} {destination.entryFee.notes}
                   </p>
                 </div>
               )}

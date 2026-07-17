@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MdSearch, MdPlace, MdFilterList, MdClear, MdStar } from 'react-icons/md';
+import { 
+  LuSearch, 
+  LuMapPin, 
+  LuFilter, 
+  LuX, 
+  LuStar,
+  LuCoins,
+  LuSparkles
+} from 'react-icons/lu';
 import api from '../services/api';
 
 const CATEGORIES = [
@@ -86,23 +94,23 @@ export default function Destinations() {
   };
 
   return (
-    <div className="container-cq py-8 space-y-8 min-h-screen">
+    <div className="container-cq py-8 space-y-8 min-h-screen bg-[#FAF7FF] dark:bg-dark-bg">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white font-display">Explore Destinations</h1>
-          <p className="text-sm text-slate-500 dark:text-dark-muted font-medium mt-1">Uncover historical wonders and choose your next trip itinerary.</p>
+          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Explore Destinations</h1>
+          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Uncover historical wonders and choose your next trip itinerary.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button 
             onClick={() => setIsFilterCollapsed(!isFilterCollapsed)}
-            className="lg:hidden btn-secondary btn-sm flex items-center gap-1.5 flex-1 justify-center"
+            className="lg:hidden btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 flex-1 justify-center transition-all cursor-pointer"
           >
-            <MdFilterList className="text-base" /> {isFilterCollapsed ? 'Show Filters' : 'Hide Filters'}
+            <LuFilter className="text-base shrink-0" /> {isFilterCollapsed ? 'Show Filters' : 'Hide Filters'}
           </button>
           {(search || category || budget) && (
-            <button onClick={handleClearFilters} className="btn-secondary btn-sm flex items-center gap-1">
-              <MdClear className="text-base" /> Clear
+            <button onClick={handleClearFilters} className="btn bg-red-50 hover:bg-red-100 text-red-500 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1 transition-all cursor-pointer">
+              <LuX className="text-base shrink-0" /> Clear Filters
             </button>
           )}
         </div>
@@ -110,34 +118,34 @@ export default function Destinations() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
-        <aside className={`card p-6 space-y-6 h-fit lg:sticky lg:top-24 ${isFilterCollapsed ? 'hidden lg:block' : 'block lg:block'}`}>
-          <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800/80 pb-3">
-            <MdFilterList className="text-xl text-teal-600" />
+        <aside className={`card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 space-y-6 h-fit lg:sticky lg:top-24 rounded-2xl shadow-sm ${isFilterCollapsed ? 'hidden lg:block' : 'block lg:block'}`}>
+          <div className="flex items-center gap-2 font-bold text-primary-900 dark:text-white border-b border-primary-100 dark:border-dark-border pb-3 font-display">
+            <LuFilter className="text-xl text-accent" />
             <h3>Filters</h3>
           </div>
 
           {/* Search Input */}
           <div className="space-y-2">
-            <label className="label">Search</label>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Search</label>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Country, city, place name..."
                 value={search}
                 onChange={(e) => updateParam('search', e.target.value)}
-                className="input pr-10"
+                className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
               />
-              <MdSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+              <LuSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-900/40 dark:text-dark-muted text-base" />
             </div>
           </div>
 
           {/* Category Filter */}
           <div className="space-y-2">
-            <label className="label">Category</label>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Category</label>
             <select
               value={category}
               onChange={(e) => updateParam('category', e.target.value)}
-              className="input capitalize"
+              className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium capitalize transition-all"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -147,11 +155,11 @@ export default function Destinations() {
 
           {/* Budget Level Filter */}
           <div className="space-y-2">
-            <label className="label">Budget Level</label>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Budget Level</label>
             <select
               value={budget}
               onChange={(e) => updateParam('budget', e.target.value)}
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
             >
               {BUDGET_LEVELS.map((b) => (
                 <option key={b.value} value={b.value}>{b.label}</option>
@@ -161,11 +169,11 @@ export default function Destinations() {
 
           {/* Sort Filter */}
           <div className="space-y-2">
-            <label className="label">Sort By</label>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Sort By</label>
             <select
               value={sort}
               onChange={(e) => updateParam('sort', e.target.value)}
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -179,7 +187,7 @@ export default function Destinations() {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-80 skeleton" />
+                <div key={i} className="h-80 skeleton animate-pulse rounded-2xl" />
               ))}
             </div>
           ) : destinations.length > 0 ? (
@@ -189,9 +197,9 @@ export default function Destinations() {
                   <Link
                     key={item._id}
                     to={`/destinations/${item.slug || item._id}`}
-                    className="group card overflow-hidden flex flex-col hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                    className="group card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border overflow-hidden flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300 rounded-2xl"
                   >
-                    <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <div className="relative h-48 overflow-hidden bg-primary-50">
                       {item.coverImage && (
                         <img
                           src={item.coverImage}
@@ -199,26 +207,26 @@ export default function Destinations() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       )}
-                      <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-slate-900/95 text-primary-700 dark:text-primary-300 font-bold text-2xs rounded-lg shadow-sm capitalize">
+                      <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-dark-card/95 text-accent font-extrabold text-2xs rounded-lg shadow-sm capitalize">
                         {item.category}
                       </span>
                     </div>
                     <div className="p-4 flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
+                        <h3 className="font-bold text-primary-900 dark:text-white group-hover:text-accent transition-colors font-display text-sm">
                           {item.name}
                         </h3>
-                        <p className="text-xs text-slate-500 dark:text-dark-muted flex items-center gap-1 mt-1 font-medium">
-                          <MdPlace className="text-slate-400 shrink-0" />
+                        <p className="text-xs text-primary-900/50 dark:text-dark-muted flex items-center gap-1 mt-1 font-semibold">
+                          <LuMapPin className="text-accent shrink-0 text-sm" />
                           {item.city}, {item.country}
                         </p>
                       </div>
-                      <div className="flex items-center justify-between border-t border-slate-50 dark:border-slate-800/80 pt-3 mt-3">
-                        <span className="stars text-xs flex items-center gap-0.5 font-bold">
-                          ⭐ <span className="text-slate-700 dark:text-slate-200">{item.rating?.average || 0}</span>
+                      <div className="flex items-center justify-between border-t border-primary-50 dark:border-dark-border pt-3 mt-3">
+                        <span className="text-xs flex items-center gap-0.5 font-bold text-accent">
+                          <LuStar className="fill-accent text-accent text-xs" /> <span>{item.rating?.average || 0}</span>
                         </span>
                         {item.budget?.level && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350 text-[10px] font-bold rounded capitalize">
+                          <span className="px-2 py-0.5 bg-primary-50 text-accent dark:bg-primary-950 dark:text-primary-300 text-[10px] font-extrabold rounded capitalize">
                             💰 {item.budget.level}
                           </span>
                         )}
@@ -234,17 +242,17 @@ export default function Destinations() {
                   <button
                     disabled={!pagination.hasPrev}
                     onClick={() => updateParam('page', (page - 1).toString())}
-                    className="btn-secondary btn-sm px-4 py-2"
+                    className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all disabled:opacity-50 cursor-pointer"
                   >
                     Previous
                   </button>
-                  <span className="text-sm font-semibold text-slate-650 dark:text-slate-350 px-2">
+                  <span className="text-xs font-bold text-primary-900/50 dark:text-dark-muted px-2">
                     Page {pagination.page} of {pagination.totalPages}
                   </span>
                   <button
                     disabled={!pagination.hasNext}
                     onClick={() => updateParam('page', (page + 1).toString())}
-                    className="btn-secondary btn-sm px-4 py-2"
+                    className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all disabled:opacity-50 cursor-pointer"
                   >
                     Next
                   </button>
@@ -252,10 +260,10 @@ export default function Destinations() {
               )}
             </>
           ) : (
-            <div className="card p-12 text-center text-slate-500 space-y-4">
-              <span className="text-6xl block">🏖️</span>
-              <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">No Destinations Found</h3>
-              <p className="text-sm max-w-md mx-auto">We couldn't find any destinations matching your criteria. Try adjustments to your parameters or clear the query filter.</p>
+            <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-4 rounded-2xl">
+              <span className="text-6xl block animate-float">🏖️</span>
+              <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Destinations Found</h3>
+              <p className="text-xs max-w-md mx-auto leading-relaxed font-semibold">We couldn't find any destinations matching your criteria. Try adjustments to your parameters or clear the query filter.</p>
             </div>
           )}
         </div>

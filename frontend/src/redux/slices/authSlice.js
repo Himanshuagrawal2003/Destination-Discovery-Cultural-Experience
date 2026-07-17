@@ -150,7 +150,6 @@ export const { logout, clearError, setUser } = authSlice.actions;
 // Selectors
 export const selectAuth    = (state) => state.auth;
 export const selectUser    = (state) => state.auth.user;
-export const selectIsAdmin = (state) => state.auth.user?.role === 'admin';
 export const selectToken   = (state) => state.auth.token;
 
 export default authSlice.reducer;

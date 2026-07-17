@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { MdAutoAwesome, MdToday, MdDirectionsTransit, MdRestaurant } from 'react-icons/md';
+import { 
+  LuSparkles, 
+  LuCalendar, 
+  LuCompass, 
+  LuClock, 
+  LuCoins, 
+  LuMapPin,
+  LuSun,
+  LuSunset,
+  LuMoon
+} from 'react-icons/lu';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -38,22 +48,81 @@ export default function AIItinerary() {
     }
   };
 
-  const renderSection = (title, items) => {
-    if (!items || items.length === 0) return null;
+  const normalizeSection = (sectionData) => {
+    if (!sectionData) return [];
+    if (Array.isArray(sectionData)) {
+      return sectionData.map(item => ({
+        title: item.title || item.name || 'Activity',
+        description: item.description || item.dish || '',
+        duration: item.duration || '',
+        cost: item.cost || item.price || '',
+        address: item.address || item.location || ''
+      }));
+    }
+    if (typeof sectionData === 'object') {
+      if (sectionData.name || sectionData.title) {
+        return [{
+          title: sectionData.title || sectionData.name || 'Activity',
+          description: sectionData.description || sectionData.dish || '',
+          duration: sectionData.duration || '',
+          cost: sectionData.cost || sectionData.price || '',
+          address: sectionData.address || sectionData.location || ''
+        }];
+      }
+      const items = [];
+      Object.keys(sectionData).forEach(key => {
+        const val = sectionData[key];
+        if (val && typeof val === 'object') {
+          items.push({
+            title: val.title || val.name || (key.charAt(0).toUpperCase() + key.slice(1)),
+            description: val.description || val.dish || '',
+            duration: val.duration || '',
+            cost: val.cost || val.price || '',
+            address: val.address || val.location || ''
+          });
+        }
+      });
+      return items;
+    }
+    return [];
+  };
+
+  const renderSection = (title, rawData) => {
+    const items = normalizeSection(rawData);
+    if (items.length === 0) return null;
     return (
       <div className="space-y-3">
-        <h4 className="font-bold text-slate-800 dark:text-white text-xs border-b border-slate-100 dark:border-slate-800/80 pb-1.5 capitalize flex items-center gap-1.5">
-          {title === 'morning' ? '🌅 Morning' : title === 'afternoon' ? '☀️ Afternoon' : '🌙 Evening'}
+        <h4 className="font-bold text-primary-900 dark:text-white text-xs border-b border-primary-100 dark:border-dark-border pb-2 capitalize flex items-center gap-1.5 font-display">
+          {title === 'morning' ? (
+            <LuSun className="text-accent text-sm shrink-0" />
+          ) : title === 'afternoon' ? (
+            <LuCompass className="text-accent text-sm shrink-0" />
+          ) : (
+            <LuMoon className="text-accent text-sm shrink-0" />
+          )}
+          {title}
         </h4>
         <div className="space-y-3">
           {items.map((item, idx) => (
-            <div key={idx} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl space-y-1">
-              <h5 className="font-bold text-sm text-slate-850 dark:text-white">{item.title}</h5>
-              {item.description && <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>}
-              <div className="flex flex-wrap gap-x-4 text-[10px] text-slate-400 font-semibold pt-1">
-                {item.duration && <span>⏱️ Duration: {item.duration}</span>}
-                {item.cost && <span>💰 Cost: {item.cost}</span>}
-                {item.address && <span>📍 Address: {item.address}</span>}
+            <div key={idx} className="bg-white dark:bg-dark-bg border border-primary-100 dark:border-dark-border/50 p-4 rounded-xl space-y-1.5 shadow-2xs hover:shadow-3xs transition-shadow">
+              <h5 className="font-bold text-sm text-primary-900 dark:text-white font-display">{item.title}</h5>
+              {item.description && <p className="text-xs text-primary-900/60 dark:text-dark-muted leading-relaxed font-medium">{item.description}</p>}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-primary-900/40 dark:text-dark-muted/60 font-bold pt-1">
+                {item.duration && (
+                  <span className="flex items-center gap-1">
+                    <LuClock /> Duration: {item.duration}
+                  </span>
+                )}
+                {item.cost && (
+                  <span className="flex items-center gap-1">
+                    <LuCoins /> Cost: {item.cost}
+                  </span>
+                )}
+                {item.address && (
+                  <span className="flex items-center gap-1">
+                    <LuMapPin /> Location: {item.address}
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -63,43 +132,43 @@ export default function AIItinerary() {
   };
 
   return (
-    <div className="space-y-10 pb-12">
+    <div className="space-y-8 pb-12 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white font-display flex items-center gap-2">
-          <MdAutoAwesome className="text-amber-500 animate-pulse" /> AI Trip Itinerary Planner
+        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
+          <LuSparkles className="text-accent animate-pulse" /> AI Trip Itinerary Planner
         </h1>
-        <p className="text-sm text-slate-500 dark:text-dark-muted font-medium mt-1">Generate complete morning, afternoon, and evening schedules with food recommendations.</p>
+        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Generate complete morning, afternoon, and evening schedules with food recommendations.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-4 h-fit">
-          <h3 className="font-bold text-lg text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-855 pb-3 font-display">Itinerary Builder</h3>
+        {/* Form Column */}
+        <form onSubmit={handleSubmit(onSubmit)} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 space-y-5 h-fit rounded-2xl shadow-sm">
+          <h3 className="font-bold text-lg text-primary-900 dark:text-white border-b border-primary-100 dark:border-dark-border pb-3 font-display">Itinerary Builder</h3>
 
           <div>
-            <label className="label">Destination</label>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Destination</label>
             <input
               type="text"
               placeholder="e.g. Paris, France"
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
               {...register('destination', { required: 'Destination is required' })}
             />
-            {errors.destination && <p className="text-red-500 text-xs mt-1">{errors.destination.message}</p>}
+            {errors.destination && <p className="text-red-500 text-xs mt-1 font-semibold">{errors.destination.message}</p>}
           </div>
 
           <div>
-            <label className="label">Total Days</label>
-            <input type="number" min="1" max="10" className="input" {...register('days')} />
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Total Days</label>
+            <input type="number" min="1" max="10" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('days')} />
           </div>
 
           <div>
-            <label className="label">Interests (comma separated)</label>
-            <input type="text" placeholder="e.g. food, monuments, art" className="input" {...register('interests')} />
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Interests (comma separated)</label>
+            <input type="text" placeholder="e.g. food, monuments, art" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('interests')} />
           </div>
 
           <div>
-            <label className="label">Budget Tier</label>
-            <select className="input" {...register('budget')}>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Budget Tier</label>
+            <select className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('budget')}>
               <option value="budget">Budget</option>
               <option value="mid-range">Mid-range</option>
               <option value="luxury">Luxury</option>
@@ -107,8 +176,8 @@ export default function AIItinerary() {
           </div>
 
           <div>
-            <label className="label">Travel Style</label>
-            <select className="input" {...register('travelStyle')}>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Travel Style</label>
+            <select className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('travelStyle')}>
               <option value="solo">Solo</option>
               <option value="couple">Couple</option>
               <option value="family">Family</option>
@@ -116,37 +185,41 @@ export default function AIItinerary() {
             </select>
           </div>
 
-          <button type="submit" disabled={isLoading} className="w-full btn btn-primary flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full btn bg-accent hover:bg-accent/90 text-white font-bold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 hover:shadow-glow"
+          >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <MdAutoAwesome /> Create Plan
+                <LuSparkles /> Create Plan
               </>
             )}
           </button>
         </form>
 
-        {/* Results */}
+        {/* Results Column */}
         <div className="lg:col-span-2 space-y-6">
           {isLoading ? (
             <div className="space-y-6">
               {[1, 2].map((i) => (
-                <div key={i} className="h-64 skeleton w-full" />
+                <div key={i} className="h-64 skeleton w-full animate-pulse rounded-2xl" />
               ))}
             </div>
           ) : itinerary ? (
             <div className="space-y-6">
               {/* Day selection tabs */}
-              <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-100 dark:border-slate-800/80 no-scrollbar">
+              <div className="flex gap-2 overflow-x-auto pb-2 border-b border-primary-100 dark:border-dark-border no-scrollbar">
                 {itinerary.map((day, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveDay(day.dayNumber || day.day || (i + 1))}
                     className={`px-4 py-2 rounded-xl border text-xs font-semibold shrink-0 cursor-pointer transition-colors ${
                       activeDay === (day.dayNumber || day.day || (i + 1))
-                        ? 'bg-teal-700 text-white border-teal-700 shadow-sm'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30'
+                        ? 'bg-accent text-white border-accent shadow-sm hover:bg-accent/90'
+                        : 'bg-white dark:bg-dark-card text-primary-900/70 dark:text-dark-muted border-primary-200 dark:border-dark-border hover:bg-primary-50 dark:hover:bg-primary-950/20'
                     }`}
                   >
                     Day {day.dayNumber || day.day || (i + 1)}
@@ -159,22 +232,21 @@ export default function AIItinerary() {
                 const currentDayNum = day.dayNumber || day.day || (i + 1);
                 if (currentDayNum !== activeDay) return null;
 
-                // Ensure activities lists are valid arrays
-                const morning = Array.isArray(day.morning) ? day.morning : typeof day.morning === 'object' ? [day.morning] : [];
-                const afternoon = Array.isArray(day.afternoon) ? day.afternoon : typeof day.afternoon === 'object' ? [day.afternoon] : [];
-                const evening = Array.isArray(day.evening) ? day.evening : typeof day.evening === 'object' ? [day.evening] : [];
+                const morning = day.morning;
+                const afternoon = day.afternoon;
+                const evening = day.evening;
 
                 return (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="card p-6 space-y-6"
+                    className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 space-y-6 rounded-2xl shadow-sm"
                   >
-                    <div className="flex justify-between items-start border-b border-slate-150 pb-3">
+                    <div className="flex justify-between items-start border-b border-primary-100 dark:border-dark-border pb-3">
                       <div>
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5 font-display">
-                          <MdToday className="text-teal-600 shrink-0" /> Day {currentDayNum}: {day.theme || 'Exploration'}
+                        <h3 className="text-xl font-bold text-primary-900 dark:text-white flex items-center gap-1.5 font-display">
+                          <LuCalendar className="text-accent shrink-0" /> Day {currentDayNum}: {day.theme || 'Exploration'}
                         </h3>
                       </div>
                     </div>
@@ -187,9 +259,11 @@ export default function AIItinerary() {
 
                     {/* Summary / Notes */}
                     {day.summary && (
-                      <div className="bg-teal-50/10 dark:bg-teal-900/10 border border-teal-500/20 p-4 rounded-xl space-y-2 text-xs">
-                        <p className="font-bold text-teal-700 dark:text-teal-400">📝 Day Summary & Tips:</p>
-                        <div className="text-slate-650 dark:text-slate-350 space-y-1 font-medium">
+                      <div className="bg-primary-50/70 dark:bg-primary-950/20 border border-primary-100 dark:border-primary-900/20 p-4 rounded-xl space-y-2 text-xs">
+                        <p className="font-bold text-accent flex items-center gap-1 font-display">
+                          <LuSparkles /> Day Summary & Tips:
+                        </p>
+                        <div className="text-primary-900/70 dark:text-dark-muted space-y-1.5 font-semibold">
                           {day.summary.estimatedDailyCost && <p>💰 <strong>Estimated Cost:</strong> {day.summary.estimatedDailyCost}</p>}
                           {day.summary.distanceCovered && <p>🏃 <strong>Distance:</strong> {day.summary.distanceCovered}</p>}
                           {day.summary.transportBetweenLocations && <p>🚗 <strong>Transport:</strong> {day.summary.transportBetweenLocations}</p>}
@@ -203,10 +277,10 @@ export default function AIItinerary() {
               })}
             </div>
           ) : (
-            <div className="card p-12 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center space-y-4">
+            <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted flex flex-col items-center justify-center space-y-4 rounded-2xl shadow-sm">
               <span className="text-6xl animate-float">📅</span>
-              <h3 className="text-lg font-bold text-slate-700 dark:text-slate-350">Awaiting Itinerary Configuration</h3>
-              <p className="text-sm max-w-sm">Build personalized, day-by-day schedules with dining recommendations, times, and activities.</p>
+              <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">Awaiting Itinerary Configuration</h3>
+              <p className="text-xs max-w-sm font-semibold leading-relaxed">Build personalized, day-by-day schedules with dining recommendations, times, and activities.</p>
             </div>
           )}
         </div>

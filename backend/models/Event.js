@@ -30,7 +30,7 @@ const eventSchema = new mongoose.Schema(
     price: {
       isFree:   { type: Boolean, default: false },
       amount:   { type: Number, default: 0 },
-      currency: { type: String, default: 'USD' },
+      currency: { type: String, default: 'INR' },
     },
     organizer: {
       name:    { type: String, default: '' },

@@ -19,7 +19,7 @@ const tripSchema = new mongoose.Schema(
     days:      { type: Number, min: 1, max: 365, default: 1 },
     budget: {
       total:    { type: Number, default: 0 },
-      currency: { type: String, default: 'USD' },
+      currency: { type: String, default: 'INR' },
       breakdown: {
         accommodation: { type: Number, default: 0 },
         transport:     { type: Number, default: 0 },

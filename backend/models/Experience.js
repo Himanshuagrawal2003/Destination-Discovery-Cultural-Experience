@@ -22,7 +22,7 @@ const experienceSchema = new mongoose.Schema(
     images:      { type: [String], default: [] },
     price: {
       amount:   { type: Number, required: true, min: 0 },
-      currency: { type: String, default: 'USD' },
+      currency: { type: String, default: 'INR' },
       per:      { type: String, enum: ['person', 'group', 'session'], default: 'person' },
     },
     duration: {

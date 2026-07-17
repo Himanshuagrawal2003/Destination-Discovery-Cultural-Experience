@@ -9,37 +9,51 @@ export default {
     extend: {
       colors: {
         primary: {
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50:  '#FAF7FF', // Background
+          100: '#EDE9FE', // Highlight
+          200: '#DDD6FE', // Secondary
+          300: '#C4B5FD', // Primary
+          400: '#A78BFA',
+          500: '#8B5CF6', // Accent
+          600: '#7C3AED',
+          700: '#6D28D9',
+          800: '#5B21B6',
+          900: '#312E81', // Primary Text
+          950: '#1E1B4B',
         },
         secondary: {
-          DEFAULT: '#06b6d4', // Vibrant Cyan
+          DEFAULT: '#DDD6FE',
         },
         accent: {
-          DEFAULT: '#ec4899', // Rich Rose
-          50:  '#fdf2f8',
-          100: '#fce7f3',
-          400: '#f472b6',
-          500: '#ec4899',
-          600: '#db2777',
+          DEFAULT: '#8B5CF6',
+          50:  '#FAF7FF',
+          100: '#EDE9FE',
+          200: '#DDD6FE',
+          300: '#C4B5FD',
+          400: '#A78BFA',
+          500: '#8B5CF6',
+          600: '#7C3AED',
+          700: '#6D28D9',
         },
         surface: {
-          DEFAULT: '#F8FAFC',
-          dark: '#030712', // Deep Obsidian
+          DEFAULT: '#FAF7FF',
+          dark: '#030712',
+        },
+        lavender: {
+          bg: '#FAF7FF',
+          section: '#F5F3FF',
+          border: '#E9D5FF',
+          highlight: '#EDE9FE',
+          primary: '#C4B5FD',
+          secondary: '#DDD6FE',
+          accent: '#8B5CF6',
+          'text-primary': '#312E81',
+          'text-secondary': '#6B7280',
         },
         dark: {
-          bg:      '#030712', // Obsidian black
-          card:    '#0b1528', // Premium deep navy card
-          border:  '#1e293b', // Dark border
+          bg:      '#030712',
+          card:    '#0b1528',
+          border:  '#1e293b',
           text:    '#f8fafc',
           muted:   '#94a3b8',
         },

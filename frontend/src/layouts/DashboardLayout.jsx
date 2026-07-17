@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { to: '/my-trips',         icon: MdMap,           label: 'My Trips' },
   { to: '/my-reviews',       icon: MdRateReview,    label: 'My Reviews' },
   { to: '/notifications',    icon: MdNotifications, label: 'Notifications' },
+  { to: '/manage-destinations', icon: MdExplore,     label: 'Manage Destinations' },
 ];
 
 const AI_ITEMS = [
@@ -42,14 +43,14 @@ export default function DashboardLayout() {
   const linkClass = ({ isActive }) =>
     `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
       isActive
-        ? 'bg-primary-700 text-white shadow-md'
-        : 'text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border hover:text-primary-700 dark:hover:text-primary-300'
+        ? 'bg-accent text-white shadow-md hover:bg-accent/90 shadow-glow/10'
+        : 'text-primary-900/70 dark:text-dark-muted hover:bg-primary-100/50 dark:hover:bg-dark-border hover:text-accent dark:hover:text-primary-300'
     }`;
 
   return (
-    <div className="min-h-screen bg-surface dark:bg-dark-bg flex flex-col">
+    <div className="min-h-screen bg-surface dark:bg-dark-bg flex flex-col w-full overflow-x-hidden">
       <Navbar />
-      <div className="flex flex-1 container-cq py-6 gap-6">
+      <div className="flex flex-1 container-cq py-6 gap-6 min-w-0">
         {/* ─ Sidebar ─ */}
         <motion.aside
           initial={{ x: -20, opacity: 0 }}
@@ -61,9 +62,9 @@ export default function DashboardLayout() {
             {/* User info */}
             <div className="flex items-center gap-3 p-3 mb-4 bg-gradient-to-r from-primary-50 to-secondary/10 dark:from-primary-900/20 dark:to-primary-800/10 rounded-xl">
               <img
-                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name}&background=4f46e5&color=fff`}
+                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name}&background=8b5cf6&color=fff`}
                 alt={user?.name}
-                className="w-10 h-10 rounded-full object-cover border-2 border-primary-500"
+                className="w-10 h-10 rounded-full object-cover border-2 border-accent"
               />
               <div className="overflow-hidden">
                 <p className="font-semibold text-sm text-gray-800 dark:text-dark-text truncate">{user?.name}</p>
@@ -116,8 +117,8 @@ export default function DashboardLayout() {
                   to={item.to}
                   className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold shrink-0 transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-primary-700 text-white shadow-md'
-                      : 'bg-white dark:bg-slate-800 text-slate-650 dark:text-slate-300 border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-900/30'
+                      ? 'bg-accent text-white shadow-md'
+                      : 'bg-white dark:bg-dark-card text-primary-900/70 dark:text-dark-muted border border-primary-100 dark:border-dark-border hover:bg-primary-50 dark:hover:bg-primary-950/20'
                   }`}
                   end={item.to === '/dashboard'}
                 >

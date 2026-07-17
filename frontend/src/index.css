@@ -6,16 +6,16 @@
 
 /* ── CSS Variables ────────────────────────────────────────────────────────── */
 :root {
-  --primary:   #4f46e5;
-  --secondary: #06b6d4;
-  --accent:    #ec4899;
-  --bg:        #F8FAFC;
-  --text:      #0F172A;
-  --muted:     #475569;
-  --border:    #E2E8F0;
+  --primary:   #8B5CF6;
+  --secondary: #DDD6FE;
+  --accent:    #8B5CF6;
+  --bg:        #FAF7FF;
+  --text:      #312E81;
+  --muted:     #6B7280;
+  --border:    #E9D5FF;
   --card-bg:   #FFFFFF;
   --radius:    1rem;
-  --shadow:    0 2px 15px -3px rgba(0,0,0,.07), 0 10px 20px -2px rgba(0,0,0,.04);
+  --shadow:    0 10px 30px -10px rgba(139, 92, 246, 0.08), 0 1px 3px rgba(139, 92, 246, 0.02);
 }
 
 .dark {
@@ -130,7 +130,7 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Section */
   .section { @apply py-16 md:py-24; }
-  .container-cq { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+  .container-cq { @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
 
   /* Skeleton */
   .skeleton {
@@ -149,7 +149,7 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Hero gradient */
   .hero-gradient {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #06b6d4 100%);
+    background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 50%, #F5F3FF 100%);
   }
 
   /* Divider */
@@ -157,8 +157,8 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Dropdown */
   .dropdown {
-    @apply absolute z-50 mt-2 rounded-2xl shadow-lg border border-gray-100 dark:border-dark-border
-           bg-white dark:bg-dark-card overflow-hidden animate-scale-in;
+    @apply absolute z-[10000] mt-2 rounded-2xl shadow-lg border border-gray-100 dark:border-dark-border
+           bg-white/90 dark:bg-dark-card/90 backdrop-blur-md overflow-hidden animate-scale-in;
   }
 
   /* Page transitions */

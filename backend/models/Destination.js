@@ -28,7 +28,7 @@ const destinationSchema = new mongoose.Schema(
       coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
     },
     budget: {
-      currency: { type: String, default: 'USD' },
+      currency: { type: String, default: 'INR' },
       min:      { type: Number, default: 0 },
       max:      { type: Number, default: 0 },
       level:    { type: String, enum: ['budget', 'mid-range', 'luxury'], default: 'mid-range' },
@@ -48,7 +48,7 @@ const destinationSchema = new mongoose.Schema(
     openingHours: { type: String, default: '' },
     entryFee: {
       amount:   { type: Number, default: 0 },
-      currency: { type: String, default: 'USD' },
+      currency: { type: String, default: 'INR' },
       notes:    { type: String, default: '' },
     },
     highlights:     { type: [String], default: [] },
@@ -65,6 +65,18 @@ const destinationSchema = new mongoose.Schema(
       ref:  'User',
       required: true,
     },
+    hiddenGemsList: {
+      type: [{ name: String, description: String }],
+      default: []
+    },
+    famousFoodsList: {
+      type: [{ name: String, description: String }],
+      default: []
+    },
+    famousPlacesList: {
+      type: [{ name: String, description: String }],
+      default: []
+    }
   },
   {
     timestamps: true,
