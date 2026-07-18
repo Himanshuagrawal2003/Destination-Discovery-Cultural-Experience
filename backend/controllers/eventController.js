@@ -6,7 +6,14 @@ const { sendSuccess, sendPaginated } = require('../utils/apiResponse');
 
 const fetchRealUnsplashImage = async (query) => {
   try {
-    const response = await fetch(`https://unsplash.com/s/photos/${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      }
+    );
     if (!response.ok) return null;
     const html = await response.text();
     const matches = html.match(/https:\/\/images\.unsplash\.com\/photo-[a-zA-Z0-9\-_]+/g);
@@ -22,9 +29,8 @@ const fetchRealUnsplashImage = async (query) => {
 };
 
 exports.getEvents = asyncHandler(async (req, res, next) => {
-  // Check if we are filtering by city and have no events seeded for it yet
   const cityFilter = req.query['location.city'];
-  if (cityFilter && cityFilter.trim()) {
+  if (cityFilter && cityFilter.trim() && cityFilter.trim().length >= 3) {
     const cityClean = cityFilter.trim();
     // Count existing active events for this city
     const existingCount = await Event.countDocuments({
@@ -74,10 +80,35 @@ Return ONLY the raw JSON array inside a \`\`\`json ... \`\`\` code block.`;
               process.env.CLOUDINARY_API_SECRET && 
               !process.env.CLOUDINARY_API_SECRET.startsWith('your_');
 
+            const EVENT_IMAGE_FALLBACKS = {
+              janmashtami: 'https://images.unsplash.com/photo-1545128485-c400e7702796?q=80&w=1200',
+              holi: 'https://images.unsplash.com/photo-1531747118685-ca8fa6e08806?q=80&w=1200',
+              diwali: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200',
+              concert: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1200',
+              music: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200',
+              dance: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=1200',
+              food: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200',
+              festival: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200',
+              religious: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200',
+              cultural: 'https://images.unsplash.com/photo-1533240332313-0db49b439ad3?q=80&w=1200'
+            };
+
             for (const item of eventList) {
               console.log(`🔍 Searching Unsplash for cover image of event: "${item.title}"...`);
               const scrapedUrl = await fetchRealUnsplashImage(`${item.title} ${cityClean}`);
-              let finalCover = scrapedUrl || 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200';
+              
+              let fallbackUrl = 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200';
+              const titleLower = item.title.toLowerCase();
+              const typeLower = (item.type || '').toLowerCase();
+              
+              for (const [key, val] of Object.entries(EVENT_IMAGE_FALLBACKS)) {
+                if (titleLower.includes(key) || typeLower.includes(key)) {
+                  fallbackUrl = val;
+                  break;
+                }
+              }
+
+              let finalCover = scrapedUrl || fallbackUrl;
               
               if (isCloudinaryConfigured && scrapedUrl) {
                 try {
@@ -131,11 +162,35 @@ Return ONLY the raw JSON array inside a \`\`\`json ... \`\`\` code block.`;
     }
   }
 
-  const features = new APIFeatures(Event.find({ isActive: true }), req.query)
-    .filter().search(['title', 'description']).sort().limitFields().paginate();
+  const queryObj = { ...req.query };
+  const citySearchVal = queryObj['location.city'];
+  delete queryObj['location.city']; // Exclude from APIFeatures to avoid RegExp serialization bug
+
+  const features = new APIFeatures(Event.find({ isActive: true }), queryObj)
+    .filter()
+    .search(['title', 'description', 'location.city', 'location.venue'])
+    .sort()
+    .limitFields()
+    .paginate();
+
+  // Apply location.city filter case-insensitively directly on the Mongoose query
+  if (citySearchVal && citySearchVal.trim()) {
+    const regex = new RegExp(`^${citySearchVal.trim()}$`, 'i');
+    features.query = features.query.find({ 'location.city': regex });
+  }
+
   const events = await features.query;
-  const total  = await Event.countDocuments({ isActive: true });
-  sendPaginated(res, events, total, req.query.page || 1, req.query.limit || 12);
+  
+  // Count using the same filtered query to support correct pagination total counts
+  const countQuery = { isActive: true };
+  if (citySearchVal && citySearchVal.trim()) {
+    countQuery['location.city'] = { $regex: new RegExp(`^${citySearchVal.trim()}$`, 'i') };
+  }
+  if (queryObj.type) {
+    countQuery.type = queryObj.type;
+  }
+  const total = await Event.countDocuments(countQuery);
+  sendPaginated(res, events, total, req.query.page || 1, req.query.limit || 9);
 });
 
 exports.getUpcomingEvents = asyncHandler(async (req, res) => {

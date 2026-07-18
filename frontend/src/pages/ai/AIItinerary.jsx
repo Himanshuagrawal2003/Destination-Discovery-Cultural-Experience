@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   LuSparkles, 
@@ -10,15 +11,21 @@ import {
   LuMapPin,
   LuSun,
   LuSunset,
-  LuMoon
+  LuMoon,
+  LuSave,
+  LuCheck
 } from 'react-icons/lu';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 export default function AIItinerary() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [itinerary, setItinerary] = useState(null);
   const [activeDay, setActiveDay] = useState(1);
+  const [formMeta, setFormMeta] = useState(null);
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       destination: '',
@@ -32,6 +39,7 @@ export default function AIItinerary() {
   const onSubmit = async (data) => {
     setIsLoading(true);
     setItinerary(null);
+    setIsSaved(false);
     try {
       const interestsArray = data.interests ? data.interests.split(',').map((i) => i.trim()) : [];
       const res = await api.post('/ai/itinerary', {
@@ -39,6 +47,7 @@ export default function AIItinerary() {
         interests: interestsArray,
       });
       setItinerary(res.data.itinerary || []);
+      setFormMeta({ ...data });
       setActiveDay(1);
       toast.success('Itinerary ready!');
     } catch (err) {
@@ -46,6 +55,90 @@ export default function AIItinerary() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSaveTrip = async () => {
+    if (!itinerary || !formMeta) return;
+
+    const token = localStorage.getItem('cq_token');
+    if (!token) {
+      toast.error('Please login to save your trip');
+      navigate('/login');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Convert AI itinerary format to Trip model format
+      const tripItinerary = itinerary.map((day, i) => {
+        const dayNum = day.dayNumber || day.day || (i + 1);
+        const activities = [];
+
+        // Helper to extract activities from a section
+        const extractActivities = (sectionData, timeOfDay, actType) => {
+          if (!sectionData) return;
+          const items = normalizeSection(sectionData);
+          items.forEach(item => {
+            activities.push({
+              time: timeOfDay,
+              title: item.title || 'Activity',
+              description: item.description || '',
+              type: actType,
+              location: item.address || '',
+              cost: parseCost(item.cost),
+              notes: item.duration ? `Duration: ${item.duration}` : '',
+            });
+          });
+        };
+
+        extractActivities(day.morning, 'Morning', 'sightseeing');
+        extractActivities(day.afternoon, 'Afternoon', 'activity');
+        extractActivities(day.evening, 'Evening', 'food');
+
+        return {
+          day: dayNum,
+          title: day.theme || `Day ${dayNum}`,
+          activities,
+          notes: day.summary?.proTips || (typeof day.summary === 'string' ? day.summary : ''),
+        };
+      });
+
+      const tripPayload = {
+        name: `${formMeta.destination} - ${formMeta.days} Day Trip`,
+        destinationName: formMeta.destination,
+        days: parseInt(formMeta.days) || 3,
+        travelStyle: formMeta.travelStyle || 'solo',
+        itinerary: tripItinerary,
+        isAIGenerated: true,
+        status: 'planning',
+        notes: `AI-generated itinerary for ${formMeta.destination}. Budget: ${formMeta.budget}. Interests: ${formMeta.interests || 'General'}.`,
+      };
+
+      const res = await api.post('/trips', tripPayload);
+      setIsSaved(true);
+      toast.success('Trip saved successfully! 🎉');
+      
+      // Navigate to the saved trip after a short delay
+      setTimeout(() => {
+        if (res.data?.data?.trip?._id) {
+          navigate(`/trip-planner/${res.data.data.trip._id}`);
+        } else {
+          navigate('/my-trips');
+        }
+      }, 1000);
+    } catch (err) {
+      toast.error(err.message || 'Failed to save trip');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Helper to parse cost strings like "₹500" or "$20" to a number
+  const parseCost = (costStr) => {
+    if (!costStr) return 0;
+    if (typeof costStr === 'number') return costStr;
+    const nums = String(costStr).replace(/[^0-9.]/g, '');
+    return parseFloat(nums) || 0;
   };
 
   const normalizeSection = (sectionData) => {
@@ -210,6 +303,44 @@ export default function AIItinerary() {
             </div>
           ) : itinerary ? (
             <div className="space-y-6">
+              {/* Save Trip Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-gradient-to-r from-accent/10 to-primary-100/50 dark:from-accent/5 dark:to-primary-900/20 border border-accent/20 dark:border-accent/10 rounded-2xl"
+              >
+                <div className="flex items-center gap-2">
+                  <LuSparkles className="text-accent text-lg shrink-0" />
+                  <p className="text-sm font-bold text-primary-900 dark:text-white">
+                    {isSaved ? 'Trip saved to your dashboard!' : 'Your itinerary is ready! Save it as a trip.'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleSaveTrip}
+                  disabled={isSaving || isSaved}
+                  className={`btn font-bold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 cursor-pointer transition-all shadow-md disabled:opacity-70 ${
+                    isSaved
+                      ? 'bg-green-500 text-white'
+                      : 'bg-accent hover:bg-accent/90 text-white hover:shadow-glow'
+                  }`}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : isSaved ? (
+                    <>
+                      <LuCheck className="text-base" /> Saved!
+                    </>
+                  ) : (
+                    <>
+                      <LuSave className="text-base" /> Save as Trip
+                    </>
+                  )}
+                </button>
+              </motion.div>
+
               {/* Day selection tabs */}
               <div className="flex gap-2 overflow-x-auto pb-2 border-b border-primary-100 dark:border-dark-border no-scrollbar">
                 {itinerary.map((day, i) => (

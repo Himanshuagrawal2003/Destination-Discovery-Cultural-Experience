@@ -232,7 +232,7 @@ export default function TripDetail() {
           <button onClick={handleExportPDF} className="btn bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center gap-1 text-xs border border-white/20 font-bold py-2.5 px-4 cursor-pointer">
             <LuFileDown /> PDF Export
           </button>
-          <button onClick={handleToggleSharing} className="btn bg-white text-accent hover:bg-primary-50 rounded-xl text-xs flex items-center gap-1 font-bold py-2.5 px-4 shadow-sm cursor-pointer transition-all">
+          <button onClick={handleToggleSharing} className="btn bg-white dark:bg-dark-card text-accent hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-xl text-xs flex items-center gap-1 font-bold py-2.5 px-4 shadow-sm cursor-pointer transition-all border border-transparent dark:border-dark-border">
             <LuShare2 /> {trip.isPublic ? 'Unshare Trip' : 'Share Feed'}
           </button>
         </div>

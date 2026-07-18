@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdPlace, MdAttachMoney, MdBookmark, MdBookmarkBorder, MdHistory,
          MdLightbulb, MdStar, MdAutoAwesome, MdThumbUp, MdReply } from 'react-icons/md';
-import { LuBookmark, LuSparkles, LuBookOpen, LuCompass, LuTrash } from 'react-icons/lu';
+import { LuBookmark, LuSparkles, LuBookOpen, LuCompass, LuTrash, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 import api from '../services/api';
 import { selectUser } from '../redux/slices/authSlice';
 import toast from 'react-hot-toast';
@@ -20,6 +20,7 @@ export default function DestinationDetail() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkId, setBookmarkId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [reviewsPage, setReviewsPage] = useState(1);
 
   // AI Storytelling state
   const [aiStory, setAiStory] = useState('');
@@ -34,6 +35,23 @@ export default function DestinationDetail() {
   // Reply states
   const [replyComments, setReplyComments] = useState({}); // { [reviewId]: 'reply text' }
   const [destinationEvents, setDestinationEvents] = useState([]);
+  const [activeImageIndex, setActiveImageIndex] = useState(null);
+
+  // Keyboard navigation for image lightbox
+  useEffect(() => {
+    if (activeImageIndex === null || !destination?.images) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        setActiveImageIndex(prev => (prev + 1) % destination.images.length);
+      } else if (e.key === 'ArrowLeft') {
+        setActiveImageIndex(prev => (prev - 1 + destination.images.length) % destination.images.length);
+      } else if (e.key === 'Escape') {
+        setActiveImageIndex(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeImageIndex, destination?.images]);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -42,11 +60,6 @@ export default function DestinationDetail() {
         const destRes = await api.get(`/destinations/${id}`);
         const currentDest = destRes.data.destination;
         setDestination(currentDest);
-
-        // Fetch reviews
-        const reviewsRes = await api.get(`/reviews/destination/${currentDest._id}`);
-        setReviews(reviewsRes.data.data || []);
-        setReviewsPagination(reviewsRes.data.pagination || null);
 
         // Check if bookmarked
         if (user) {
@@ -72,6 +85,21 @@ export default function DestinationDetail() {
     };
     fetchDetail();
   }, [id, user]);
+
+  // Reactive reviews loading when destination or reviewsPage changes
+  useEffect(() => {
+    if (!destination?._id) return;
+    const fetchReviews = async () => {
+      try {
+        const reviewsRes = await api.get(`/reviews/destination/${destination._id}?page=${reviewsPage}&limit=5`);
+        setReviews(reviewsRes.data.data || []);
+        setReviewsPagination(reviewsRes.data.pagination || null);
+      } catch (err) {
+        console.error('Failed to fetch reviews:', err);
+      }
+    };
+    fetchReviews();
+  }, [destination?._id, reviewsPage]);
 
   const handleBookmarkToggle = async () => {
     if (!user) {
@@ -245,16 +273,16 @@ export default function DestinationDetail() {
             </p>
           </div>
 
-          <div className="flex gap-2 shrink-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2.5 w-full sm:w-auto shrink-0 mt-4 md:mt-0">
             <button
               onClick={() => navigate(`/trip-planner?dest=${encodeURIComponent(destination.name)}`)}
-              className="btn bg-white hover:bg-primary-50 text-accent rounded-xl border border-primary-200 flex items-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm text-xs"
+              className="btn whitespace-nowrap bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-primary-900/30 text-accent rounded-xl border border-primary-200 dark:border-dark-border flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all shadow-sm text-xs w-full sm:w-auto"
             >
               <LuCompass className="text-lg shrink-0" /> Plan Trip
             </button>
             <button
               onClick={handleBookmarkToggle}
-              className="btn bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 flex items-center gap-1.5 font-bold cursor-pointer transition-all"
+              className="btn whitespace-nowrap bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all w-full sm:w-auto"
             >
               {isBookmarked ? (
                 <>
@@ -269,7 +297,7 @@ export default function DestinationDetail() {
             <button
               onClick={handleGenerateStory}
               disabled={isAiLoading}
-              className="btn bg-accent hover:bg-accent/90 hover:shadow-glow text-white flex items-center gap-1.5 rounded-xl shadow-md font-bold transition-all"
+              className="col-span-2 sm:col-span-1 btn whitespace-nowrap bg-accent hover:bg-accent/90 hover:shadow-glow text-white flex items-center justify-center gap-1.5 rounded-xl shadow-md font-bold transition-all w-full sm:w-auto"
             >
               <LuSparkles className="text-lg animate-pulse" />
               {isAiLoading ? 'Storyteller writing...' : 'AI Storyteller'}
@@ -277,7 +305,7 @@ export default function DestinationDetail() {
             {user && (
               <button
                 onClick={handleDeleteDestination}
-                className="btn bg-rose-600/90 hover:bg-rose-600 hover:shadow-glow text-white flex items-center gap-1.5 rounded-xl shadow-md font-bold transition-all text-xs cursor-pointer"
+                className="col-span-2 sm:col-span-1 btn whitespace-nowrap bg-rose-600/90 hover:bg-rose-600 hover:shadow-glow text-white flex items-center justify-center gap-1.5 rounded-xl shadow-md font-bold transition-all text-xs cursor-pointer w-full sm:w-auto"
               >
                 <LuTrash className="text-lg shrink-0" /> Delete
               </button>
@@ -287,8 +315,89 @@ export default function DestinationDetail() {
       </section>
 
       <div className="container-cq max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (Primary Details) */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* 1. Quick Facts Card (Top on Mobile, Sidebar Top on Desktop) */}
+        <div className="lg:col-span-1 lg:col-start-3 lg:row-start-1 h-fit">
+          <div className="card p-6 space-y-5 bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border">
+            <div className="border-b border-primary-50 dark:border-dark-border pb-3">
+              <h3 className="font-bold text-lg text-primary-900 dark:text-white font-display flex items-center gap-2">
+                ⚡ Quick Facts
+              </h3>
+              <p className="text-2xs text-primary-900/60 dark:text-dark-muted font-medium mt-0.5">Essential details for your visit</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Rating fact */}
+              <div className="bg-primary-50/50 dark:bg-dark-bg p-3.5 rounded-xl border border-primary-100/30 dark:border-dark-border flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Rating</span>
+                <span className="text-sm font-black text-primary-900 dark:text-white flex items-center gap-1 mt-1">
+                  <MdStar className="text-amber-400 text-lg shrink-0" /> {destination.rating?.average || '0.0'} / 5.0
+                </span>
+              </div>
+
+              {/* Budget fact */}
+              <div className="bg-primary-50/50 dark:bg-dark-bg p-3.5 rounded-xl border border-primary-100/30 dark:border-dark-border flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Budget Level</span>
+                <span className="text-sm font-black text-primary-900 dark:text-white capitalize mt-1">
+                  💰 {destination.budget?.level || 'Mid-range'}
+                </span>
+              </div>
+            </div>
+
+            {/* Daily range if exists */}
+            {destination.budget?.min !== undefined && (
+              <div className="bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 p-3 rounded-xl flex items-center justify-between text-2xs text-emerald-600 dark:text-emerald-400 font-bold">
+                <span>Avg Daily Cost:</span>
+                <span>₹{destination.budget.min} - ₹{destination.budget.max}</span>
+              </div>
+            )}
+
+            <div className="space-y-4 pt-1">
+              {/* Best Season */}
+              {destination.bestSeason && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    ☀️
+                  </div>
+                  <div>
+                    <h4 className="text-2xs font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Best Season to Visit</h4>
+                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5 capitalize">{destination.bestSeason.join(', ')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Opening Hours */}
+              {destination.openingHours && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    ⏰
+                  </div>
+                  <div>
+                    <h4 className="text-2xs font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Opening Hours</h4>
+                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5">{destination.openingHours}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Entry Fee */}
+              {destination.entryFee && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                    🎫
+                  </div>
+                  <div>
+                    <h4 className="text-2xs font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Entry Fee</h4>
+                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5">
+                      {destination.entryFee.amount === 0 ? 'Free Entry' : `₹${destination.entryFee.amount}`} {destination.entryFee.notes}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Left Column (Primary Details - Middle on Mobile, Left on Desktop) */}
+        <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:row-span-3 space-y-8">
           {/* AI Story Output */}
           <AnimatePresence>
             {aiStory && (
@@ -354,7 +463,7 @@ export default function DestinationDetail() {
 
             {destination.travelTips?.length > 0 && (
               <div className="card p-6 space-y-3">
-                <h3 className="font-bold text-slate-850 dark:text-white flex items-center gap-1 text-amber-600">
+                <h3 className="font-bold text-slate-855 dark:text-white flex items-center gap-1 text-amber-600">
                   <MdLightbulb className="text-lg shrink-0" /> Local Insider Tips
                 </h3>
                 <ul className="space-y-2">
@@ -394,7 +503,7 @@ export default function DestinationDetail() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {destination.hiddenGemsList.map((gem, i) => (
                   <div key={i} className="bg-amber-500/5 dark:bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 shadow-sm transition-all hover:-translate-y-1">
-                    <h4 className="font-bold text-amber-600 dark:text-amber-450 mb-2 flex items-center gap-1.5">
+                    <h4 className="font-bold text-amber-600 dark:text-amber-455 mb-2 flex items-center gap-1.5">
                       <MdLightbulb className="text-lg shrink-0 animate-pulse" />
                       {gem.name}
                     </h4>
@@ -432,7 +541,7 @@ export default function DestinationDetail() {
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {destination.images.map((img, i) => (
-                  <div key={i} className="aspect-video sm:aspect-square rounded-2xl overflow-hidden bg-primary-50 relative group cursor-pointer border border-primary-100/50 dark:border-dark-border shadow-sm">
+                  <div key={i} onClick={() => setActiveImageIndex(i)} className="aspect-video sm:aspect-square rounded-2xl overflow-hidden bg-primary-50 relative group cursor-pointer border border-primary-100/50 dark:border-dark-border shadow-sm">
                     <img 
                       src={img} 
                       alt={`${destination.name} gallery ${i+1}`} 
@@ -492,6 +601,22 @@ export default function DestinationDetail() {
               </div>
             </div>
           )}
+
+          {/* Mobile-only Location Map (Above Reviews) */}
+          <div className="block lg:hidden card overflow-hidden border border-primary-100 dark:border-dark-border">
+            <div className="p-4 border-b border-primary-50 dark:border-dark-border bg-white dark:bg-dark-card">
+              <h3 className="font-bold text-primary-900 dark:text-white text-sm flex items-center gap-1.5 font-display">
+                🗺️ Location Map
+              </h3>
+            </div>
+            <div className="h-64 bg-slate-100 relative">
+              <LeafletMap 
+                lat={destination.location?.coordinates?.[1]} 
+                lng={destination.location?.coordinates?.[0]} 
+                popupText={`${destination.name}, ${destination.city}`} 
+              />
+            </div>
+          </div>
 
           {/* ── Reviews ── */}
           <div className="space-y-6">
@@ -625,62 +750,37 @@ export default function DestinationDetail() {
                 </div>
               )}
             </div>
+
+            {/* Reviews Pagination Controls */}
+            {reviewsPagination && reviewsPagination.totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 pt-4">
+                <button
+                  disabled={reviewsPage === 1}
+                  onClick={() => setReviewsPage(prev => Math.max(prev - 1, 1))}
+                  className="px-4 py-2 text-xs font-bold bg-white dark:bg-dark-card border border-primary-200 dark:border-dark-border text-primary-900/70 dark:text-dark-muted rounded-xl hover:bg-primary-50 dark:hover:bg-primary-955/20 disabled:opacity-50 transition-all cursor-pointer select-none"
+                >
+                  Previous
+                </button>
+                <span className="text-xs font-bold text-primary-900/60 dark:text-dark-muted select-none">
+                  Page {reviewsPage} of {reviewsPagination.totalPages}
+                </span>
+                <button
+                  disabled={reviewsPage === reviewsPagination.totalPages}
+                  onClick={() => setReviewsPage(prev => Math.min(prev + 1, reviewsPagination.totalPages))}
+                  className="px-4 py-2 text-xs font-bold bg-white dark:bg-dark-card border border-primary-200 dark:border-dark-border text-primary-900/70 dark:text-dark-muted rounded-xl hover:bg-primary-50 dark:hover:bg-primary-955/20 disabled:opacity-50 transition-all cursor-pointer select-none"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right Column (Side Details / Budget & Location) */}
-        <div className="space-y-6">
-          {/* Quick Stats Card */}
-          <div className="card p-6 space-y-4">
-            <h3 className="font-bold text-slate-800 dark:text-white">Quick Details</h3>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-700 dark:text-teal-400 rounded-xl">
-                <MdAttachMoney className="text-xl" />
-              </div>
-              <div>
-                <p className="text-2xs text-slate-500 dark:text-dark-muted font-semibold uppercase tracking-wider">Budget Level</p>
-                <p className="text-sm font-bold text-slate-800 dark:text-white capitalize">{destination.budget?.level || 'Mid-range'}</p>
-              </div>
-            </div>
-
-            {destination.budget?.min !== undefined && (
-              <div className="text-xs text-slate-500 dark:text-dark-muted pl-13">
-                Avg Cost: ₹{destination.budget.min} - ₹{destination.budget.max} / day
-              </div>
-            )}
-
-            <div className="divider my-2" />
-
-            {/* Opening hours & Fees */}
-            <div className="space-y-2.5 text-xs">
-              {destination.openingHours && (
-                <div>
-                  <p className="font-bold text-slate-855 dark:text-white">⏰ Opening Hours</p>
-                  <p className="text-slate-500 dark:text-dark-muted mt-0.5">{destination.openingHours}</p>
-                </div>
-              )}
-              {destination.entryFee && (
-                <div>
-                  <p className="font-bold text-slate-855 dark:text-white">🎫 Entry Fee</p>
-                  <p className="text-slate-500 dark:text-dark-muted mt-0.5">
-                    {destination.entryFee.amount === 0 ? 'Free' : `₹${destination.entryFee.amount}`} {destination.entryFee.notes}
-                  </p>
-                </div>
-              )}
-              {destination.bestSeason && (
-                <div>
-                  <p className="font-bold text-slate-855 dark:text-white">☀️ Best Season to Visit</p>
-                  <p className="text-slate-500 dark:text-dark-muted mt-0.5 capitalize">{destination.bestSeason.join(', ')}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Interactive Map */}
-          <div className="card overflow-hidden">
-            <div className="p-4 border-b border-slate-50 dark:border-slate-800/80">
-              <h3 className="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-1.5">
+        {/* 3. Interactive Map (Bottom on Mobile, Sidebar Bottom on Desktop) */}
+        <div className="hidden lg:block lg:col-span-1 lg:col-start-3 lg:row-start-2 h-fit">
+          <div className="card overflow-hidden border border-primary-100 dark:border-dark-border">
+            <div className="p-4 border-b border-primary-50 dark:border-dark-border bg-white dark:bg-dark-card">
+              <h3 className="font-bold text-primary-900 dark:text-white text-sm flex items-center gap-1.5 font-display">
                 🗺️ Location Map
               </h3>
             </div>
@@ -694,6 +794,67 @@ export default function DestinationDetail() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {activeImageIndex !== null && destination.images && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setActiveImageIndex(null)}
+            className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out select-none"
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setActiveImageIndex(null)}
+              className="absolute top-6 right-6 z-[999999] text-white/75 hover:text-white text-3xl font-bold p-2 transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Left/Previous button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex(prev => (prev - 1 + destination.images.length) % destination.images.length);
+              }}
+              className="absolute left-4 sm:left-8 z-[999999] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 sm:p-4 rounded-full transition-all cursor-pointer shadow-lg"
+            >
+              <LuChevronLeft className="text-2xl sm:text-3xl" />
+            </button>
+
+            {/* Main image container */}
+            <div className="relative max-w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              <motion.img
+                key={activeImageIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                src={destination.images[activeImageIndex]}
+                alt={`Enlarged gallery view ${activeImageIndex + 1}`}
+                className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl border border-white/10"
+              />
+              {/* Image indicator */}
+              <div className="absolute bottom-[-40px] text-white/75 text-xs font-bold bg-black/50 px-3 py-1.5 rounded-full border border-white/10">
+                {activeImageIndex + 1} / {destination.images.length}
+              </div>
+            </div>
+
+            {/* Right/Next button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex(prev => (prev + 1) % destination.images.length);
+              }}
+              className="absolute right-4 sm:right-8 z-[999999] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 sm:p-4 rounded-full transition-all cursor-pointer shadow-lg"
+            >
+              <LuChevronRight className="text-2xl sm:text-3xl" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

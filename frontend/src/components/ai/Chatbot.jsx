@@ -67,6 +67,18 @@ export default function Chatbot() {
     }
   };
 
+  const renderMessageContent = (text) => {
+    if (!text) return '';
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const cleanText = part.slice(2, -2);
+        return <strong key={index} className="font-extrabold text-primary-950 dark:text-white">{cleanText}</strong>;
+      }
+      return part;
+    });
+  };
+
   if (!user) return null; // Show chatbot only for authenticated users
 
   return (
@@ -112,13 +124,13 @@ export default function Chatbot() {
                     </div>
                   )}
                   <div
-                    className={`max-w-[75%] rounded-2xl p-3 text-sm leading-relaxed font-medium ${
+                    className={`max-w-[75%] rounded-2xl p-3 text-sm leading-relaxed font-medium whitespace-pre-line ${
                       m.role === 'user'
                         ? 'bg-accent text-white rounded-br-none shadow-sm'
                         : 'bg-white dark:bg-dark-bg text-primary-900 dark:text-slate-200 shadow-sm border border-primary-100/50 dark:border-dark-border/60 rounded-bl-none'
                     }`}
                   >
-                    {m.content}
+                    {renderMessageContent(m.content)}
                   </div>
                   {m.role === 'user' && (
                     <div className="w-8 h-8 rounded-full bg-primary-200/50 dark:bg-primary-950 flex items-center justify-center text-accent shrink-0 border border-primary-100">

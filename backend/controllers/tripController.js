@@ -24,7 +24,7 @@ exports.getMyTrips = asyncHandler(async (req, res) => {
 exports.getTrip = asyncHandler(async (req, res, next) => {
   const trip = await Trip.findOne({ _id: req.params.id })
     .populate('destinations', 'name country city coverImage slug location')
-    .populate('user', 'name avatarUrl');
+    .populate('user', 'name avatar');
 
   if (!trip) return next(new AppError('Trip not found', 404));
   if (trip.user._id.toString() !== req.user._id.toString() && !trip.isPublic) {
@@ -50,6 +50,7 @@ exports.createTrip = asyncHandler(async (req, res) => {
         country: 'Travel Spot',
         category: 'cultural',
         description: `Custom destination planned with AI for ${destinationName}`,
+        createdBy: req.user._id,
       });
     }
     destinations = [dest._id];
@@ -78,7 +79,7 @@ exports.deleteTrip = asyncHandler(async (req, res, next) => {
 // @GET /api/trips/public  — public feed of shared trips
 exports.getPublicTrips = asyncHandler(async (req, res) => {
   const trips = await Trip.find({ isPublic: true, status: 'completed' })
-    .populate('user', 'name avatarUrl')
+    .populate('user', 'name avatar')
     .populate('destinations', 'name country coverImage')
     .sort('-createdAt').limit(20);
   sendSuccess(res, { trips, count: trips.length }, 'Public trips fetched');

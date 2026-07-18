@@ -229,7 +229,7 @@ export default function ManageDestinations() {
         </div>
         <button
           onClick={handleOpenCreate}
-          className="btn bg-white text-accent hover:bg-primary-50 flex items-center gap-1.5 shrink-0 shadow-md font-bold text-xs transition-all cursor-pointer"
+          className="btn bg-white dark:bg-dark-card text-accent hover:bg-primary-50 dark:hover:bg-primary-900/30 flex items-center gap-1.5 shrink-0 shadow-md font-bold text-xs transition-all cursor-pointer border border-transparent dark:border-dark-border"
         >
           <LuPlus className="text-base" /> Add Destination
         </button>
@@ -623,7 +623,7 @@ export default function ManageDestinations() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="btn bg-primary-100 hover:bg-primary-200 text-primary-900 font-bold px-6 py-2.5 rounded-full text-xs transition-all cursor-pointer"
+                    className="btn bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-900 dark:text-primary-200 font-bold px-6 py-2.5 rounded-full text-xs transition-all cursor-pointer"
                   >
                     Cancel
                   </button>

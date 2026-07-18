@@ -67,7 +67,7 @@ export default function Notifications() {
           <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Stay updated with reviews, bookmarks, planned trip events, and AI recommendations logs.</p>
         </div>
         {unreadCount > 0 && (
-          <button onClick={handleReadAll} className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1">
+          <button onClick={handleReadAll} className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1">
             <LuCheck /> Mark All Read
           </button>
         )}

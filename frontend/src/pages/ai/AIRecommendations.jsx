@@ -436,7 +436,7 @@ export default function AIRecommendations() {
                           const slug = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
                           navigate(`/destinations/${slug}`);
                         }}
-                        className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold py-2 px-4 rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition-all"
+                        className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold py-2 px-4 rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition-all"
                       >
                         👁️ View Details
                       </button>

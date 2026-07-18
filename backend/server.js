@@ -54,13 +54,13 @@ app.use(cors({
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max:      200,
+  max:      1000,           // Increased limit for active testing
   message:  { success: false, message: 'Too many requests, please try again later.' },
 });
 
 const aiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max:      20,
+  max:      100,       // Increased AI rate limit for testing
   message:  { success: false, message: 'AI rate limit exceeded. Please wait a moment.' },
 });
 

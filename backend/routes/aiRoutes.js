@@ -4,7 +4,7 @@ const {
   recommendDestinations, storytelling, hiddenGems,
   foodGuide, festivalGuide, culturalGuide, languageHelper,
   budgetPlanner, generateItinerary, chatbot,
-  getHistory, deleteHistory,
+  getHistory, updateHistory, deleteHistory, getQueueStatus,
 } = require('../controllers/aiController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -22,6 +22,8 @@ router.post('/budget-planner',         budgetPlanner);
 router.post('/itinerary',              generateItinerary);
 router.post('/chatbot',                chatbot);
 router.get('/history',                 getHistory);
+router.put('/history/:id',             updateHistory);
 router.delete('/history/:id',          deleteHistory);
+router.get('/queue-status',            getQueueStatus);
 
 module.exports = router;

@@ -220,7 +220,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Link to="/login"    className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-sm transition-all">Log In</Link>
+                  <Link to="/login"    className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-sm transition-all">Log In</Link>
                   <Link to="/register" className="btn bg-accent hover:bg-accent/90 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-sm hover:shadow-glow">Sign Up</Link>
                 </div>
               )}
@@ -343,7 +343,7 @@ export default function Navbar() {
                   </>
                 ) : (
                   <div className="flex gap-2 mt-2 px-4">
-                    <Link to="/login" onClick={() => dispatch(closeMobileMenu())} className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex-1 text-center">Log In</Link>
+                    <Link to="/login" onClick={() => dispatch(closeMobileMenu())} className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex-1 text-center">Log In</Link>
                     <Link to="/register" onClick={() => dispatch(closeMobileMenu())} className="btn bg-accent hover:bg-accent/90 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex-1 text-center shadow-sm">Sign Up</Link>
                   </div>
                 )}

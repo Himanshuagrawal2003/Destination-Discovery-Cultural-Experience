@@ -312,7 +312,7 @@ export default function Home() {
             <div className="pt-4 flex flex-col sm:flex-row justify-center items-center gap-4">
               <Link
                 to="/register"
-                className="w-full sm:w-auto px-8 py-3 bg-white text-accent font-bold rounded-xl shadow-md hover:bg-primary-50 transition-all text-sm"
+                className="w-full sm:w-auto px-8 py-3 bg-white text-accent font-bold rounded-xl shadow-md hover:bg-primary-50 dark:hover:bg-gray-100 transition-all text-sm"
               >
                 Get Started Free
               </Link>

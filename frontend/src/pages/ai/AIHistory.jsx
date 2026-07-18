@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LuHistory, LuTrash, LuSparkles } from 'react-icons/lu';
+import { LuHistory, LuTrash, LuSparkles, LuBookmark } from 'react-icons/lu';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 export default function AIHistory() {
   const [history, setHistory] = useState([]);
   const [activeType, setActiveType] = useState('');
+  const [onlySaved, setOnlySaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export default function AIHistory() {
       try {
         const queryParams = new URLSearchParams();
         if (activeType) queryParams.set('type', activeType);
+        if (onlySaved) queryParams.set('isSaved', 'true');
         const res = await api.get(`/ai/history?${queryParams.toString()}`);
         setHistory(res.data.history || []);
       } catch (err) {
@@ -24,7 +26,19 @@ export default function AIHistory() {
       }
     };
     fetchHistory();
-  }, [activeType]);
+  }, [activeType, onlySaved]);
+
+  const handleToggleSave = async (id, currentIsSaved) => {
+    try {
+      await api.put(`/ai/history/${id}`, { isSaved: !currentIsSaved });
+      setHistory((prev) => 
+        prev.map((item) => (item._id === id ? { ...item, isSaved: !currentIsSaved } : item))
+      );
+      toast.success(!currentIsSaved ? 'Saved to Bookmarks!' : 'Removed from Bookmarks');
+    } catch (err) {
+      toast.error('Failed to update save status');
+    }
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -38,11 +52,25 @@ export default function AIHistory() {
 
   return (
     <div className="space-y-8 min-h-screen pb-12 bg-[#FAF7FF] dark:bg-dark-bg">
-      <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
-          <LuHistory className="text-accent animate-pulse" /> AI Query History
-        </h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review all past recommendations, itineraries, custom guides, and chatbot prompt logs.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
+            <LuHistory className="text-accent animate-pulse" /> AI Query History
+          </h1>
+          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review all past recommendations, itineraries, custom guides, and chatbot prompt logs.</p>
+        </div>
+
+        <button
+          onClick={() => setOnlySaved(!onlySaved)}
+          className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm ${
+            onlySaved
+              ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
+              : 'bg-white dark:bg-dark-card text-primary-900/70 dark:text-dark-muted border-primary-200 dark:border-dark-border hover:bg-primary-50 dark:hover:bg-primary-950/20'
+          }`}
+        >
+          <LuBookmark className={onlySaved ? 'fill-white text-white' : 'text-primary-900/50'} />
+          {onlySaved ? 'Showing Saved Guides' : 'Filter by Saved Only'}
+        </button>
       </div>
 
       {/* Filter Tabs */}
@@ -101,7 +129,7 @@ export default function AIHistory() {
                     💡 Prompt / Input: <span className="text-primary-900/70 dark:text-slate-350 font-semibold italic">"{item.prompt}"</span>
                   </p>
                   <div className="divider border-primary-100 dark:border-dark-border my-2" />
-                  <div className="bg-primary-50 dark:bg-primary-950/20 p-4 rounded-xl text-xs text-primary-900/80 dark:text-slate-350 leading-relaxed font-sans max-h-48 overflow-y-auto whitespace-pre-line border border-primary-100 dark:border-primary-900/10 font-medium">
+                  <div className="bg-primary-50 dark:bg-primary-950/20 p-4 rounded-xl text-xs text-primary-900/80 dark:text-slate-350 leading-relaxed font-sans max-h-64 overflow-y-auto whitespace-pre-line border border-primary-100 dark:border-primary-900/10 font-medium">
                     {item.response?.startsWith('{') || item.response?.startsWith('[') ? (
                       <code>{item.response}</code>
                     ) : (
@@ -110,13 +138,29 @@ export default function AIHistory() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDelete(item._id)}
-                  className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl shrink-0 h-fit transition-colors"
-                  aria-label="Delete entry"
-                >
-                  <LuTrash className="text-lg" />
-                </button>
+                <div className="flex gap-2 shrink-0 md:flex-col items-center">
+                  {/* Bookmark Toggle */}
+                  <button
+                    onClick={() => handleToggleSave(item._id, item.isSaved)}
+                    className={`p-2.5 rounded-xl transition-colors cursor-pointer ${
+                      item.isSaved 
+                        ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100' 
+                        : 'text-primary-900/40 dark:text-dark-muted hover:text-amber-500 hover:bg-primary-50 dark:hover:bg-primary-900/20'
+                    }`}
+                    title={item.isSaved ? 'Remove from Saved' : 'Save Guide'}
+                  >
+                    <LuBookmark className={`text-lg ${item.isSaved ? 'fill-amber-500 text-amber-500' : ''}`} />
+                  </button>
+
+                  {/* Delete button */}
+                  <button
+                    onClick={() => handleDelete(item._id)}
+                    className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors cursor-pointer"
+                    aria-label="Delete entry"
+                  >
+                    <LuTrash className="text-lg" />
+                  </button>
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>

@@ -8,7 +8,8 @@ import {
   LuTriangleAlert, 
   LuShirt, 
   LuMapPin,
-  LuCompass
+  LuCompass,
+  LuBookmark
 } from 'react-icons/lu';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -16,6 +17,12 @@ import toast from 'react-hot-toast';
 export default function AICulturalGuide() {
   const [isLoading, setIsLoading] = useState(false);
   const [culturalGuide, setCulturalGuide] = useState(null);
+  
+  // Independent save states
+  const [historyId, setHistoryId] = useState(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       country: '',
@@ -26,14 +33,40 @@ export default function AICulturalGuide() {
   const onSubmit = async (data) => {
     setIsLoading(true);
     setCulturalGuide(null);
+    setHistoryId(null);
+    setIsSaved(false);
     try {
       const res = await api.post('/ai/cultural-guide', data);
       setCulturalGuide(res.data.culturalGuide);
+      setHistoryId(res.data.historyId || null);
       toast.success('Cultural guide ready!');
     } catch (err) {
       toast.error(err.message || 'Failed to generate cultural guide');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!historyId) {
+      toast.error('No generated guide found to save');
+      return;
+    }
+    const token = localStorage.getItem('cq_token');
+    if (!token) {
+      toast.error('Please login to save the cultural guide');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await api.put(`/ai/history/${historyId}`, { isSaved: !isSaved });
+      setIsSaved(!isSaved);
+      toast.success(!isSaved ? 'Cultural guide saved to your Bookmarks!' : 'Removed from Bookmarks');
+    } catch (err) {
+      toast.error(err.message || 'Failed to update save status');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -70,26 +103,41 @@ export default function AICulturalGuide() {
   const renderSection = (title, key, data) => {
     if (!data) return null;
     return (
-      <div className={`card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-5 border-l-4 ${getSectionBorder(key)} space-y-3 rounded-2xl shadow-sm hover:shadow-md transition-all`}>
-        <h4 className="font-bold text-primary-900 dark:text-white text-sm capitalize flex items-center gap-1.5 font-display border-b border-primary-50 dark:border-dark-border pb-2.5">
+      <div className={`card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 border-l-4 ${getSectionBorder(key)} space-y-4 rounded-2xl shadow-sm hover:shadow-md transition-all`}>
+        <h4 className="font-bold text-primary-900 dark:text-white text-sm capitalize flex items-center gap-1.5 font-display border-b border-primary-100 dark:border-dark-border pb-3">
           {getSectionIcon(key)}
           <span>{title.replace(/([A-Z])/g, ' $1')}</span>
         </h4>
-        <div className="text-xs text-primary-900/70 dark:text-dark-muted leading-relaxed whitespace-pre-line font-semibold space-y-1.5">
-          {typeof data === 'string'
-            ? data
-            : Array.isArray(data)
-            ? data.map((item, idx) => (
-                <p key={idx} className="flex items-start gap-1">
-                  <span className="text-accent shrink-0">•</span>
-                  <span>{item}</span>
-                </p>
-              ))
-            : Object.entries(data).map(([k, val], idx) => (
-                <p key={idx} className="mb-2">
-                  <strong className="text-accent font-bold">{k.replace(/([A-Z])/g, ' $1')}:</strong> {val}
-                </p>
-              ))}
+        <div className="grid grid-cols-1 gap-2.5">
+          {typeof data === 'string' ? (
+            <div className="p-3.5 bg-primary-50/20 dark:bg-dark-bg/40 border border-primary-100/50 dark:border-dark-border rounded-xl text-xs font-semibold text-primary-900/80 dark:text-dark-muted leading-relaxed">
+              {data}
+            </div>
+          ) : Array.isArray(data) ? (
+            data.map((item, idx) => {
+              const text = typeof item === 'object' && item !== null
+                ? `${item.title || item.name || ''}: ${item.description || item.value || JSON.stringify(item)}`
+                : item;
+              return (
+                <div key={idx} className="flex items-start gap-2.5 p-3.5 bg-primary-50/20 dark:bg-dark-bg/40 border border-primary-100/50 dark:border-dark-border rounded-xl transition-all hover:bg-primary-50/40 dark:hover:bg-dark-bg/60">
+                  <span className="w-1.5 h-1.5 bg-accent rounded-full mt-2 shrink-0 animate-pulse" />
+                  <span className="text-xs font-semibold text-primary-900/80 dark:text-dark-muted leading-relaxed">{text}</span>
+                </div>
+              );
+            })
+          ) : (
+            Object.entries(data).map(([k, val], idx) => {
+              const text = typeof val === 'object' && val !== null
+                ? Array.isArray(val) ? val.join(', ') : JSON.stringify(val)
+                : val;
+              return (
+                <div key={idx} className="p-3.5 bg-primary-50/20 dark:bg-dark-bg/40 border border-primary-100/50 dark:border-dark-border rounded-xl flex flex-col gap-1 transition-all hover:bg-primary-50/40 dark:hover:bg-dark-bg/60">
+                  <strong className="text-accent text-[10px] font-black uppercase tracking-wider">{k.replace(/([A-Z])/g, ' $1')}</strong>
+                  <span className="text-xs font-semibold text-primary-900/80 dark:text-dark-muted leading-relaxed">{text}</span>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     );
@@ -97,11 +145,28 @@ export default function AICulturalGuide() {
 
   return (
     <div className="space-y-8 pb-12 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
-      <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
-          <LuSparkles className="text-accent animate-pulse" /> AI Cultural Customs Guide
-        </h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Learn local etiquette, dress code rules, sacred site regulations, and greetings.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
+            <LuSparkles className="text-accent animate-pulse" /> AI Cultural Customs Guide
+          </h1>
+          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Learn local etiquette, dress code rules, sacred site regulations, and greetings.</p>
+        </div>
+        
+        {culturalGuide && historyId && (
+          <button
+            onClick={handleToggleSave}
+            disabled={isSaving}
+            className={`px-5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm ${
+              isSaved
+                ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
+                : 'bg-white dark:bg-dark-card text-primary-900/70 dark:text-dark-muted border-primary-200 dark:border-dark-border hover:bg-primary-50 dark:hover:bg-primary-950/20'
+            }`}
+          >
+            <LuBookmark className={isSaved ? 'fill-white text-white' : 'text-primary-900/50'} />
+            {isSaved ? 'Saved to Bookmarks' : 'Save Cultural Guide'}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -149,11 +214,28 @@ export default function AICulturalGuide() {
               ))}
             </div>
           ) : culturalGuide ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderSection('Greetings & Customs', 'greetingsAndCustoms', culturalGuide.greetingsAndCustoms || culturalGuide.greetings)}
-              {renderSection('Sacred Sites Etiquette', 'religiousEtiquette', culturalGuide.religiousPracticesAndSacredSites || culturalGuide.religiousEtiquette)}
-              {renderSection('Clothing Rules', 'clothingEtiquette', culturalGuide.traditionalClothing || culturalGuide.clothingEtiquette)}
-              {renderSection('Taboos (Things to Avoid)', 'thingsToAvoid', culturalGuide.thingsToAvoid || culturalGuide.taboos)}
+            <div className="space-y-4">
+              {/* Check if we have at least one structured key */}
+              {(culturalGuide.greetingsAndCustoms || culturalGuide.greetings || culturalGuide.greetingsAndSocialCustoms ||
+                culturalGuide.religiousPracticesAndSacredSites || culturalGuide.religiousEtiquette || culturalGuide.religiousPractices ||
+                culturalGuide.traditionalClothing || culturalGuide.clothingEtiquette || culturalGuide.clothingRules ||
+                culturalGuide.thingsToAvoid || culturalGuide.taboos || culturalGuide.taboosAndGestures) ? (
+                <div className="grid grid-cols-1 gap-6">
+                  {renderSection('Greetings & Customs', 'greetingsAndCustoms', culturalGuide.greetingsAndCustoms || culturalGuide.greetings || culturalGuide.greetingsAndSocialCustoms)}
+                  {renderSection('Sacred Sites Etiquette', 'religiousEtiquette', culturalGuide.religiousPracticesAndSacredSites || culturalGuide.religiousEtiquette || culturalGuide.religiousPractices)}
+                  {renderSection('Clothing Rules', 'clothingEtiquette', culturalGuide.traditionalClothing || culturalGuide.clothingEtiquette || culturalGuide.clothingRules)}
+                  {renderSection('Taboos (Things to Avoid)', 'thingsToAvoid', culturalGuide.thingsToAvoid || culturalGuide.taboos || culturalGuide.taboosAndGestures)}
+                </div>
+              ) : (
+                /* Fallback: render raw markdown text */
+                <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 rounded-2xl shadow-sm whitespace-pre-line text-xs font-semibold leading-relaxed text-primary-900/70 dark:text-dark-muted">
+                  <h4 className="font-extrabold text-sm text-primary-900 dark:text-white mb-3 flex items-center gap-1.5 border-b border-primary-50 dark:border-dark-border pb-2.5 font-display">
+                    <LuBookOpen className="text-accent text-lg" />
+                    <span>Cultural Guide Details</span>
+                  </h4>
+                  {culturalGuide.rawText || (typeof culturalGuide === 'string' ? culturalGuide : JSON.stringify(culturalGuide, null, 2))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted flex flex-col items-center justify-center space-y-4 rounded-2xl shadow-sm">

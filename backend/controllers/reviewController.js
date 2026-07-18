@@ -12,8 +12,8 @@ exports.getDestinationReviews = asyncHandler(async (req, res) => {
 
   const [reviews, total] = await Promise.all([
     Review.find({ destination: req.params.destinationId, isHidden: false })
-      .populate('user', 'name avatarUrl')
-      .populate('replies.user', 'name avatarUrl')
+      .populate('user', 'name avatar')
+      .populate('replies.user', 'name avatar')
       .sort('-createdAt')
       .skip(skip)
       .limit(limit),
@@ -44,7 +44,7 @@ exports.createReview = asyncHandler(async (req, res, next) => {
     visitDate,
   });
 
-  await review.populate('user', 'name avatarUrl');
+  await review.populate('user', 'name avatar');
   sendSuccess(res, { review }, 'Review created successfully', 201);
 });
 
@@ -97,7 +97,7 @@ exports.addReply = asyncHandler(async (req, res, next) => {
   if (!review) return next(new AppError('Review not found', 404));
   review.replies.push({ user: req.user._id, comment: req.body.comment });
   await review.save({ validateBeforeSave: false });
-  await review.populate('replies.user', 'name avatarUrl');
+  await review.populate('replies.user', 'name avatar');
   sendSuccess(res, { replies: review.replies }, 'Reply added');
 });
 

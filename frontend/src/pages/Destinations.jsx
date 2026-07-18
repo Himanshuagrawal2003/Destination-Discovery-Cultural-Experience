@@ -85,7 +85,9 @@ export default function Destinations() {
     } else {
       nextParams.delete(key);
     }
-    nextParams.set('page', '1'); // reset page on filter change
+    if (key !== 'page') {
+      nextParams.set('page', '1'); // reset page on filter change
+    }
     setSearchParams(nextParams);
   };
 
@@ -104,12 +106,12 @@ export default function Destinations() {
         <div className="flex gap-2 w-full sm:w-auto">
           <button 
             onClick={() => setIsFilterCollapsed(!isFilterCollapsed)}
-            className="lg:hidden btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 flex-1 justify-center transition-all cursor-pointer"
+            className="lg:hidden btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 flex-1 justify-center transition-all cursor-pointer"
           >
             <LuFilter className="text-base shrink-0" /> {isFilterCollapsed ? 'Show Filters' : 'Hide Filters'}
           </button>
           {(search || category || budget) && (
-            <button onClick={handleClearFilters} className="btn bg-red-50 hover:bg-red-100 text-red-500 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1 transition-all cursor-pointer">
+            <button onClick={handleClearFilters} className="btn bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1 transition-all cursor-pointer">
               <LuX className="text-base shrink-0" /> Clear Filters
             </button>
           )}
@@ -242,7 +244,7 @@ export default function Destinations() {
                   <button
                     disabled={!pagination.hasPrev}
                     onClick={() => updateParam('page', (page - 1).toString())}
-                    className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all disabled:opacity-50 cursor-pointer"
+                    className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all disabled:opacity-50 cursor-pointer"
                   >
                     Previous
                   </button>
@@ -252,7 +254,7 @@ export default function Destinations() {
                   <button
                     disabled={!pagination.hasNext}
                     onClick={() => updateParam('page', (page + 1).toString())}
-                    className="btn bg-primary-100/50 hover:bg-primary-100 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all disabled:opacity-50 cursor-pointer"
+                    className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all disabled:opacity-50 cursor-pointer"
                   >
                     Next
                   </button>

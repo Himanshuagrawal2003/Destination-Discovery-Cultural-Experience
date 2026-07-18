@@ -15,17 +15,68 @@ if (!isMockMode) {
   console.log('ℹ️ Running geminiService in mock mode (no valid GROQ_API_KEY provided)');
 }
 
-/**
- * Generate text content with Groq or fall back to mock data
- * @param {string} prompt - The full prompt to send
- * @param {string} model  - Model name (default: llama-3.3-70b-versatile)
- * @returns {string} - Generated text response
- */
-const generateContent = async (prompt, model = 'llama-3.3-70b-versatile') => {
-  if (isMockMode || !groq) {
-    throw new Error('Groq API is not configured. Please provide a valid GROQ_API_KEY in .env to use AI features.');
+// ─── AI Request Queue ────────────────────────────────────────────────────────
+// Processes AI requests with limited concurrency to prevent Groq API rate limits.
+// When multiple users trigger AI features simultaneously, requests are queued
+// and processed in order instead of all hitting the API at once.
+class AIRequestQueue {
+  constructor(concurrency = 2) {
+    this.concurrency = concurrency;  // max simultaneous Groq API calls
+    this.running = 0;
+    this.queue = [];
+    this.totalProcessed = 0;
   }
 
+  enqueue(task) {
+    return new Promise((resolve, reject) => {
+      const wrappedTask = async () => {
+        try {
+          const result = await task();
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        } finally {
+          this.running--;
+          this.totalProcessed++;
+          this._processNext();
+        }
+      };
+
+      if (this.running < this.concurrency) {
+        this.running++;
+        wrappedTask();
+      } else {
+        this.queue.push(wrappedTask);
+        console.log(`📋 AI Queue: Request queued. Position: ${this.queue.length} | Running: ${this.running}/${this.concurrency}`);
+      }
+    });
+  }
+
+  _processNext() {
+    if (this.queue.length > 0 && this.running < this.concurrency) {
+      const nextTask = this.queue.shift();
+      this.running++;
+      console.log(`▶️ AI Queue: Processing next. Remaining: ${this.queue.length} | Running: ${this.running}/${this.concurrency}`);
+      nextTask();
+    }
+  }
+
+  getStatus() {
+    return {
+      running: this.running,
+      queued: this.queue.length,
+      concurrency: this.concurrency,
+      totalProcessed: this.totalProcessed,
+    };
+  }
+}
+
+const aiQueue = new AIRequestQueue(2); // Allow 2 concurrent Groq calls
+
+/**
+ * Internal function to make a Groq API call (not queued)
+ */
+const _callGroq = async (prompt, model) => {
   try {
     const result = await groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
@@ -55,6 +106,29 @@ const generateContent = async (prompt, model = 'llama-3.3-70b-versatile') => {
 };
 
 /**
+ * Generate text content with Groq via the request queue
+ * Requests are queued and processed with limited concurrency to prevent rate limits.
+ * @param {string} prompt - The full prompt to send
+ * @param {string} model  - Model name (default: llama-3.3-70b-versatile)
+ * @returns {string} - Generated text response
+ */
+const generateContent = async (prompt, model = 'llama-3.3-70b-versatile') => {
+  if (isMockMode || !groq) {
+    throw new Error('Groq API is not configured. Please provide a valid GROQ_API_KEY in .env to use AI features.');
+  }
+
+  // Wrap the API call in a timeout to prevent hanging requests
+  const timeoutMs = 60000; // 60 seconds
+  const resultPromise = aiQueue.enqueue(() => _callGroq(prompt, model));
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('AI request timed out after 60 seconds. Please try again.')), timeoutMs)
+  );
+
+  return Promise.race([resultPromise, timeoutPromise]);
+};
+
+/**
  * Generate a chat session for contextual conversations
  */
 const createChatSession = (history = [], model = 'llama-3.3-70b-versatile') => {
@@ -67,7 +141,7 @@ const createChatSession = (history = [], model = 'llama-3.3-70b-versatile') => {
       // Map history to Groq format if needed, but for simplicity we append the new message
       const messages = history.map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.parts?.[0]?.text || h.content || '' }));
       messages.push({ role: 'user', content: message });
-      
+
       const result = await groq.chat.completions.create({
         messages,
         model,
@@ -179,6 +253,7 @@ Format as JSON array with keys: name, location, whySpecial, howToGetThere, bestT
 
   foodGuide: ({ country, city, dietaryPreferences }) => `
 You are a culinary expert and food anthropologist specializing in ${country}${city ? `, specifically ${city}` : ''}.
+${dietaryPreferences ? `CRITICAL DIETARY DIRECTIVE: The user has specified the following dietary preference: "${dietaryPreferences}". You MUST strictly comply with this. All suggested traditional dishes, street food gems, desserts, and recommended restaurants MUST be 100% compliant with this dietary preference (for example: if the preference is "veg" or "vegetarian", do NOT suggest any meat, poultry, chicken, beef, pork, seafood, fish, or egg dishes anywhere. Every single item must be vegetarian).` : ''}
 
 Create a comprehensive local food guide including:
 
@@ -224,44 +299,11 @@ Format as JSON array with above keys.
   culturalGuide: ({ country, city }) => `
 You are a cultural anthropologist and etiquette expert. Create a comprehensive cultural guide for travelers visiting ${country}${city ? `, ${city}` : ''}.
 
-Include:
-
-**Greetings & Social Customs**:
-- How to greet locals (handshake, bow, etc.)
-- Formal vs informal situations
-- Names and titles
-
-**Religious Practices & Sacred Sites**:
-- Major religions
-- Temple/mosque/church etiquette
-- Sacred items and gestures
-
-**Traditional Clothing**:
-- What locals wear
-- What visitors should/shouldn't wear
-- Modesty guidelines
-
-**Business Etiquette**:
-- Meeting culture
-- Business card exchange
-- Negotiation style
-
-**Things to Avoid**:
-- Cultural taboos
-- Offensive gestures
-- Social faux pas
-
-**Food & Dining Culture**:
-- Table customs
-- What's considered rude
-- Host/guest dynamics
-
-**Communication Style**:
-- Direct vs indirect communication
-- Personal space norms
-- Topics to avoid
-
-Format as structured JSON with above sections.
+Format your output strictly as a structured JSON object with the following exact keys (no other text or wrapper except valid JSON):
+- "greetingsAndCustoms": detailed greetings and social customs (rules, bowing, handshakes, titles).
+- "religiousEtiquette": sacred sites etiquette, major practices, temple/mosque/church decorum.
+- "clothingEtiquette": what locals wear, modesty guidelines, clothing dos and don'ts for visitors.
+- "thingsToAvoid": cultural taboos, offensive gestures, and social faux pas.
 `,
 
   languageHelper: ({ country, language, situation }) => `
@@ -385,4 +427,4 @@ Provide a helpful, concise response. If recommending places or experiences, be s
 `,
 };
 
-module.exports = { generateContent, createChatSession, prompts };
+module.exports = { generateContent, createChatSession, prompts, aiQueue };

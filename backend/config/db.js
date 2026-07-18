@@ -2,7 +2,14 @@ const mongoose = require('mongoose');
 
 const fetchRealUnsplashImage = async (query) => {
   try {
-    const response = await fetch(`https://unsplash.com/s/photos/${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      }
+    );
     if (!response.ok) return null;
     const html = await response.text();
     const matches = html.match(/https:\/\/images\.unsplash\.com\/photo-[a-zA-Z0-9\-_]+/g);
@@ -19,7 +26,14 @@ const fetchRealUnsplashImage = async (query) => {
 
 const fetchMultipleUnsplashImages = async (query, limit = 5) => {
   try {
-    const response = await fetch(`https://unsplash.com/s/photos/${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      }
+    );
     if (!response.ok) return [];
     const html = await response.text();
     const matches = html.match(/https:\/\/images\.unsplash\.com\/photo-[a-zA-Z0-9\-_]+/g);
