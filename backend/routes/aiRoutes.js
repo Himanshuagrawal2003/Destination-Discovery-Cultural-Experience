@@ -3,7 +3,7 @@ const router  = express.Router();
 const {
   recommendDestinations, storytelling, hiddenGems,
   foodGuide, festivalGuide, culturalGuide, languageHelper,
-  budgetPlanner, generateItinerary, chatbot,
+  budgetPlanner, generateItinerary, chatbot, routePlanner,
   getHistory, updateHistory, deleteHistory, getQueueStatus,
 } = require('../controllers/aiController');
 const { protect } = require('../middlewares/authMiddleware');
@@ -21,6 +21,7 @@ router.post('/language-helper',        languageHelper);
 router.post('/budget-planner',         budgetPlanner);
 router.post('/itinerary',              generateItinerary);
 router.post('/chatbot',                chatbot);
+router.post('/route-planner',          routePlanner);
 router.get('/history',                 getHistory);
 router.put('/history/:id',             updateHistory);
 router.delete('/history/:id',          deleteHistory);

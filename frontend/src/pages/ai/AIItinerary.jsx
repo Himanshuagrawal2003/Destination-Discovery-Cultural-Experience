@@ -46,7 +46,30 @@ export default function AIItinerary() {
         ...data,
         interests: interestsArray,
       });
-      setItinerary(res.data.itinerary || []);
+      
+      let itineraryData = res.data.itinerary;
+      // Handle fallback if backend parsing returned a rawText wrap
+      if (itineraryData && !Array.isArray(itineraryData)) {
+        if (itineraryData.rawText) {
+          try {
+            const cleaned = itineraryData.rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            let jsonText = cleaned;
+            const startIndex = cleaned.indexOf('[');
+            const endIndex = cleaned.lastIndexOf(']');
+            if (startIndex > -1 && endIndex > startIndex) {
+              jsonText = cleaned.substring(startIndex, endIndex + 1);
+            }
+            itineraryData = JSON.parse(jsonText);
+          } catch (e) {
+            itineraryData = [];
+            toast.error('Failed to parse itinerary details.');
+          }
+        } else {
+          itineraryData = [];
+        }
+      }
+      
+      setItinerary(Array.isArray(itineraryData) ? itineraryData : []);
       setFormMeta({ ...data });
       setActiveDay(1);
       toast.success('Itinerary ready!');
@@ -143,6 +166,15 @@ export default function AIItinerary() {
 
   const normalizeSection = (sectionData) => {
     if (!sectionData) return [];
+    if (typeof sectionData === 'string' && sectionData.trim()) {
+      return [{
+        title: 'Activity Info',
+        description: sectionData.trim(),
+        duration: '',
+        cost: '',
+        address: ''
+      }];
+    }
     if (Array.isArray(sectionData)) {
       return sectionData.map(item => ({
         title: item.title || item.name || 'Activity',
@@ -343,7 +375,7 @@ export default function AIItinerary() {
 
               {/* Day selection tabs */}
               <div className="flex gap-2 overflow-x-auto pb-2 border-b border-primary-100 dark:border-dark-border no-scrollbar">
-                {itinerary.map((day, i) => (
+                {Array.isArray(itinerary) && itinerary.map((day, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveDay(day.dayNumber || day.day || (i + 1))}
@@ -359,7 +391,7 @@ export default function AIItinerary() {
               </div>
 
               {/* Day Details */}
-              {itinerary.map((day, i) => {
+              {Array.isArray(itinerary) && itinerary.map((day, i) => {
                 const currentDayNum = day.dayNumber || day.day || (i + 1);
                 if (currentDayNum !== activeDay) return null;
 

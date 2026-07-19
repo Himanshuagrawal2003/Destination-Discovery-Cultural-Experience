@@ -299,7 +299,7 @@ Format as JSON array with above keys.
   culturalGuide: ({ country, city }) => `
 You are a cultural anthropologist and etiquette expert. Create a comprehensive cultural guide for travelers visiting ${country}${city ? `, ${city}` : ''}.
 
-Format your output strictly as a structured JSON object with the following exact keys (no other text or wrapper except valid JSON):
+Format your output strictly as a structured JSON object inside a JSON code block (\`\`\`json ... \`\`\`) with the following exact keys:
 - "greetingsAndCustoms": detailed greetings and social customs (rules, bowing, handshakes, titles).
 - "religiousEtiquette": sacred sites etiquette, major practices, temple/mosque/church decorum.
 - "clothingEtiquette": what locals wear, modesty guidelines, clothing dos and don'ts for visitors.
@@ -407,6 +407,33 @@ Format strictly as a JSON array of days. You MUST generate exactly ${days} eleme
 - afternoon (array of activity objects. INCLUDE lunch spot here as an activity)
 - evening (array of activity objects. INCLUDE dinner spot here as an activity)
 - summary (object with estimatedDailyCost, distanceCovered, transportBetweenLocations, proTips)
+`,
+
+  routePlanner: ({ origin, destination, preferences }) => `
+You are a transit and logistics expert specializing in travel route optimization. 
+Recommend the best pathways/routes to travel from "${origin}" to "${destination}".
+${preferences ? `Consider these traveler preferences/restrictions: "${preferences}".` : ''}
+
+Provide structured route recommendations across travel options like budget, luxury, fastest, and scenic, utilizing transport modes like bus, car, train, and airplane.
+
+For each option, detail:
+1. **Option Title**: (e.g., "Budget Route (Train & Bus)", "Luxury & Comfort Route (Flight & Private Car)")
+2. **Total Estimated Cost**: in INR (₹)
+3. **Total Travel Duration**: (e.g., "14 hours", "3 hours")
+4. **Step-by-Step Pathway**: A list of steps (where to get the transport, transit points, terminal/station names, etc.)
+5. **Best Booking Platforms/Places**: Where to book the tickets or rent/hire the transport.
+6. **Pros & Cons**: 2 pros and 2 cons.
+
+Format the output strictly as a structured JSON object with the following keys:
+- "bestRoute": A short, user-friendly recommendation of the overall best route option.
+- "options": An array of route option objects. Each route option object must have the keys:
+  - "title": (string)
+  - "cost": (string)
+  - "duration": (string)
+  - "pathway": (array of strings, detailing step-by-step transition points and transit modes)
+  - "bookingInfo": (array of strings, showing websites/apps or offline counters to book)
+  - "pros": (array of strings)
+  - "cons": (array of strings)
 `,
 
   chatbot: (message, conversationHistory) => `

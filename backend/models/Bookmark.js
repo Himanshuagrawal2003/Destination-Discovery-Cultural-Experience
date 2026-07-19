@@ -10,10 +10,9 @@ const bookmarkSchema = new mongoose.Schema(
     itemType: {
       type:     String,
       required: true,
-      enum:     ['destination', 'experience', 'event', 'hidden-gem'],
+      enum:     ['destination', 'event', 'hidden-gem'],
     },
     destination: { type: mongoose.Schema.Types.ObjectId, ref: 'Destination' },
-    experience:  { type: mongoose.Schema.Types.ObjectId, ref: 'Experience' },
     event:       { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
     hiddenGem:   { type: mongoose.Schema.Types.ObjectId, ref: 'HiddenGem' },
     notes:       { type: String, maxlength: 500, default: '' },
@@ -24,7 +23,6 @@ const bookmarkSchema = new mongoose.Schema(
 
 // One bookmark per user per item
 bookmarkSchema.index({ user: 1, destination: 1 }, { unique: true, sparse: true });
-bookmarkSchema.index({ user: 1, experience: 1 },  { unique: true, sparse: true });
 bookmarkSchema.index({ user: 1, event: 1 },        { unique: true, sparse: true });
 bookmarkSchema.index({ user: 1, hiddenGem: 1 },    { unique: true, sparse: true });
 

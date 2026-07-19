@@ -4,28 +4,241 @@ const AppError     = require('../utils/AppError');
 const APIFeatures  = require('../utils/apiFeatures');
 const { sendSuccess, sendPaginated } = require('../utils/apiResponse');
 
-const fetchRealUnsplashImage = async (query) => {
-  try {
-    const response = await fetch(
-      `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
-      {
+// Helper to fetch with retry & exponential back-off
+const fetchWithRetry = async (url, options = {}, retries = 3, backoff = 1000) => {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      console.log(`[HTTP Request] Fetching URL: ${url} (Attempt ${attempt + 1}/${retries})`);
+      const response = await fetch(url, {
+        ...options,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          'User-Agent': 'CultureQuestAI/1.0 (himanshuagrawal7766@gmail.com; developer)',
+          ...(options.headers || {})
+        }
+      });
+
+      console.log(`[HTTP Response] Status Code: ${response.status} for ${url}`);
+
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after');
+        const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : backoff * Math.pow(2, attempt);
+        console.warn(`⚠️ Received 429 Rate Limit for ${url}. Retrying after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        attempt++;
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+
+      return response;
+    } catch (err) {
+      console.error(`❌ Fetch failed for ${url} (Attempt ${attempt + 1}/${retries}):`, err.message);
+      attempt++;
+      if (attempt >= retries) throw err;
+      const delay = backoff * Math.pow(2, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// URL Sanitizer & Validator
+const sanitizeAndValidateWikimediaUrl = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    let sanitized = url.trim();
+    // Fix typos in domain name
+    sanitized = sanitized.replace(/https?:\/\/(upload\.)?w+ikimedia\.o+r+g/i, 'https://upload.wikimedia.org');
+    sanitized = sanitized.replace(/https?:\/\/(upload\.)?wikimedia\.o+r+g/i, 'https://upload.wikimedia.org');
+    // Fix double slash after domain name
+    sanitized = sanitized.replace(/(https?:\/\/upload\.wikimedia\.org)\/+/gi, '$1/');
+    // Fix w-typos in wikipedia path
+    sanitized = sanitized.replace(/org\/w+ikipedia/i, 'org/wikipedia');
+
+    const parsed = new URL(sanitized);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+    if (parsed.hostname !== 'upload.wikimedia.org') return null;
+    if (!parsed.pathname.startsWith('/wikipedia/')) return null;
+
+    return parsed.href;
+  } catch (err) {
+    console.warn(`⚠️ URL sanitization failed for "${url}":`, err.message);
+    return null;
+  }
+};
+
+// Retrieve images directly from a Wikipedia page article
+const getWikiPageImages = async (query, limit = 5) => {
+  try {
+    console.log(`[Wikimedia Search] Searching Wikipedia for primary article of "${query}"...`);
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(query)}&srlimit=3&origin=*`;
+    const searchRes = await fetchWithRetry(searchUrl);
+    const searchData = await searchRes.json();
+    console.log(`[Wikimedia Search] Search response for "${query}":`, JSON.stringify(searchData).slice(0, 500));
+
+    if (!searchData.query || !searchData.query.search || searchData.query.search.length === 0) {
+      console.log(`[Wikimedia Search] No articles found on Wikipedia for "${query}"`);
+      return [];
+    }
+
+    const bestPage = searchData.query.search[0];
+    console.log(`[Wikimedia Search] Best article match for "${query}": "${bestPage.title}"`);
+
+    // Fetch images list from the article page
+    const imagesUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=images&titles=${encodeURIComponent(bestPage.title)}&imlimit=50&origin=*`;
+    const imagesRes = await fetchWithRetry(imagesUrl);
+    const imagesData = await imagesRes.json();
+    console.log(`[Wikimedia Search] Page images response:`, JSON.stringify(imagesData).slice(0, 500));
+
+    if (!imagesData.query || !imagesData.query.pages) return [];
+    const pages = Object.values(imagesData.query.pages);
+    if (pages.length === 0 || !pages[0].images) {
+      console.log(`[Wikimedia Search] No images embedded on page "${bestPage.title}"`);
+      return [];
+    }
+
+    // Filter out vector graphics, icons, maps, portal buttons, logos, flags
+    const noiseKeywords = ['flag', 'map', 'logo', 'icon', 'portal', 'shield', 'stub', 'unconfirmed', 'template', 'button', 'wikimedia-logo'];
+    const imageFiles = pages[0].images
+      .map(img => img.title)
+      .filter(title => {
+        const lower = title.toLowerCase();
+        const hasValidExt = /\.(jpg|jpeg|png|webp)$/i.test(lower);
+        const isNoise = noiseKeywords.some(keyword => lower.includes(keyword));
+        return hasValidExt && !isNoise;
+      });
+
+    if (imageFiles.length === 0) {
+      console.log(`[Wikimedia Search] No clean non-vector/non-logo images on page "${bestPage.title}"`);
+      return [];
+    }
+
+    console.log(`[Wikimedia Search] Found ${imageFiles.length} clean images for "${query}" inside article:`, imageFiles.slice(0, limit));
+
+    // Fetch direct URLs for the images (batched in one API call)
+    const titlesQuery = imageFiles.slice(0, limit).join('|');
+    const urlsUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&titles=${encodeURIComponent(titlesQuery)}&iiprop=url&origin=*`;
+    const urlsRes = await fetchWithRetry(urlsUrl);
+    const urlsData = await urlsRes.json();
+    console.log(`[Wikimedia Search] Direct URLs API response:`, JSON.stringify(urlsData).slice(0, 500));
+
+    if (!urlsData.query || !urlsData.query.pages) return [];
+    const urlPages = Object.values(urlsData.query.pages);
+    const validUrls = [];
+    urlPages.forEach(p => {
+      if (p.imageinfo && p.imageinfo[0] && p.imageinfo[0].url) {
+        const validated = sanitizeAndValidateWikimediaUrl(p.imageinfo[0].url);
+        if (validated) {
+          validUrls.push(validated);
         }
       }
-    );
-    if (!response.ok) return null;
-    const html = await response.text();
-    const matches = html.match(/https:\/\/images\.unsplash\.com\/photo-[a-zA-Z0-9\-_]+/g);
-    if (matches && matches.length > 0) {
-      const uniqueMatches = Array.from(new Set(matches));
-      const picked = uniqueMatches[0];
-      return `${picked}?q=80&w=1200`;
+    });
+
+    console.log(`[Wikimedia Search] Retaining ${validUrls.length} validated images for "${query}"`);
+    return validUrls;
+  } catch (err) {
+    console.error(`[Wikimedia Search] Error in getWikiPageImages for "${query}":`, err.message);
+    return [];
+  }
+};
+
+// Fallback 1: Commons Search (Namespace 6: Files)
+const queryCommonsSearch = async (query, limit = 5) => {
+  try {
+    console.log(`[Wikimedia Search] Falling back to Commons namespace 6 file search for "${query}"...`);
+    const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query)}&gsrlimit=15&prop=imageinfo&iiprop=url&origin=*`;
+    const response = await fetchWithRetry(commonsUrl);
+    const data = await response.json();
+    console.log(`[Wikimedia Search] Commons query response:`, JSON.stringify(data).slice(0, 500));
+
+    if (data.query && data.query.pages) {
+      const pages = Object.values(data.query.pages);
+      const images = [];
+      for (const page of pages) {
+        if (page.imageinfo && page.imageinfo[0] && page.imageinfo[0].url) {
+          const url = page.imageinfo[0].url;
+          const validated = sanitizeAndValidateWikimediaUrl(url);
+          if (validated) {
+            images.push(validated);
+          }
+        }
+      }
+      return images.slice(0, limit);
     }
   } catch (err) {
-    console.error('Error fetching Unsplash search page:', err.message);
+    console.error(`[Wikimedia Search] Commons search failed for "${query}":`, err.message);
   }
+  return [];
+};
+
+// Fallback 2: Wikipedia Standard PageImages Search
+const queryWikipediaPageImages = async (query, limit = 5) => {
+  try {
+    console.log(`[Wikimedia Search] Falling back to Wikipedia PageImages search for "${query}"...`);
+    const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=10&piprop=original&origin=*`;
+    const response = await fetchWithRetry(wikiUrl);
+    const data = await response.json();
+    console.log(`[Wikimedia Search] Wikipedia PageImages response:`, JSON.stringify(data).slice(0, 500));
+
+    if (data.query && data.query.pages) {
+      const pages = Object.values(data.query.pages);
+      const images = [];
+      for (const page of pages) {
+        if (page.original && page.original.source) {
+          const validated = sanitizeAndValidateWikimediaUrl(page.original.source);
+          if (validated) {
+            images.push(validated);
+          }
+        }
+      }
+      return images.slice(0, limit);
+    }
+  } catch (err) {
+    console.error(`[Wikimedia Search] Wikipedia PageImages query failed for "${query}":`, err.message);
+  }
+  return [];
+};
+
+const fetchRealUnsplashImage = async (query) => {
+  console.log(`[Image Retrieval] Fetching cover image for event "${query}"...`);
+  // Try Wikipedia page images first
+  const pageImages = await getWikiPageImages(query, 1);
+  if (pageImages.length > 0) return pageImages[0];
+
+  // Try Commons search next
+  const commonsImages = await queryCommonsSearch(query, 1);
+  if (commonsImages.length > 0) return commonsImages[0];
+
+  // Try Wikipedia PageImages next
+  const wikiPageImages = await queryWikipediaPageImages(query, 1);
+  if (wikiPageImages.length > 0) return wikiPageImages[0];
+
+  console.warn(`⚠️ [Image Retrieval] Failed to retrieve any cover image for event "${query}"`);
   return null;
+};
+
+const uploadImageToCloudinary = async (imgUrl) => {
+  if (!imgUrl || !imgUrl.startsWith('http')) return imgUrl;
+  try {
+    const response = await fetchWithRetry(imgUrl);
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const dataUrl = `data:${contentType};base64,${base64}`;
+
+    const { cloudinary } = require('../config/cloudinary');
+    const res = await cloudinary.uploader.upload(dataUrl, {
+      folder: 'culturequest/events',
+      resource_type: 'image'
+    });
+    console.log(`[Cloudinary Upload] Upload success! Secure URL: ${res.secure_url}`);
+    return res.secure_url;
+  } catch (err) {
+    console.warn(`⚠️ Cloudinary upload failed via base64 fallback for ${imgUrl}:`, err.message);
+    return imgUrl;
+  }
 };
 
 exports.getEvents = asyncHandler(async (req, res, next) => {
@@ -75,7 +288,6 @@ Return ONLY the raw JSON array inside a \`\`\`json ... \`\`\` code block.`;
 
           const eventList = parseJSONHelper(rawText);
           if (Array.isArray(eventList)) {
-            const { cloudinary } = require('../config/cloudinary');
             const isCloudinaryConfigured = 
               process.env.CLOUDINARY_API_SECRET && 
               !process.env.CLOUDINARY_API_SECRET.startsWith('your_');
@@ -113,11 +325,7 @@ Return ONLY the raw JSON array inside a \`\`\`json ... \`\`\` code block.`;
               if (isCloudinaryConfigured && scrapedUrl) {
                 try {
                   console.log(`📤 Uploading cover image for ${item.title} to Cloudinary...`);
-                  const resUpload = await cloudinary.uploader.upload(scrapedUrl, {
-                    folder: 'culturequest/events',
-                    resource_type: 'image'
-                  });
-                  finalCover = resUpload.secure_url;
+                  finalCover = await uploadImageToCloudinary(scrapedUrl);
                 } catch (uploadErr) {
                   // ignore
                 }

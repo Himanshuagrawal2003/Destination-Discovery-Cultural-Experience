@@ -205,3 +205,16 @@ exports.getQueueStatus = asyncHandler(async (req, res) => {
   const status = aiQueue.getStatus();
   sendSuccess(res, { status }, 'AI queue status fetched successfully');
 });
+
+// ─── @POST /api/ai/route-planner ──────────────────────────────────────────────
+exports.routePlanner = asyncHandler(async (req, res) => {
+  const { origin, destination, preferences } = req.body;
+  if (!origin || !destination) throw new AppError('Origin and Destination are required', 400);
+
+  const prompt  = prompts.routePlanner({ origin, destination, preferences });
+  const rawText = await generateContent(prompt);
+  const data    = parseJSON(rawText);
+
+  const historyDoc = await saveHistory(req.user._id, 'route-planner', prompt, rawText, { origin, destination });
+  sendSuccess(res, { routePlan: data, rawText, historyId: historyDoc?._id }, 'Route plan generated');
+});

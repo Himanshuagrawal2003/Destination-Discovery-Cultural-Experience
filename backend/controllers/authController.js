@@ -125,8 +125,8 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    // Don't reveal whether user exists
-    return sendSuccess(res, {}, 'If that email exists, a reset link has been sent.');
+    // Security: don't reveal whether the email exists
+    return sendSuccess(res, {}, 'If that email is registered, a reset link has been sent.');
   }
 
   const resetToken = user.createPasswordResetToken();
@@ -134,15 +134,32 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
+  // Always log reset URL in development for easy access
+  console.log('\n============================================================');
+  console.log(`🔑 PASSWORD RESET TOKEN for: ${user.email}`);
+  console.log(`🔗 Reset URL: ${resetUrl}`);
+  console.log('============================================================\n');
+
+  // Attempt to send email (non-blocking — if it fails, the link is still in console)
   try {
-    await sendPasswordResetEmail(user.email, user.name, resetUrl);
-    sendSuccess(res, {}, 'Password reset email sent successfully.');
+    const result = await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    if (result && result.skipped) {
+      console.warn('⚠️ Email not sent: SMTP not configured. Use the console URL above.');
+    } else if (result && (result.error || result.timedOut)) {
+      console.warn(`⚠️ Email delivery issue: ${result.error || 'Timeout'}. Use console URL above.`);
+    } else {
+      console.log('✅ Reset email sent successfully to:', user.email);
+    }
   } catch (err) {
+    console.error('⚠️ Email error:', err.message, '— Use the console URL above.');
+    // Clean up token on hard email failure
     user.resetPasswordToken  = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
-    return next(new AppError('Error sending email. Please try again.', 500));
+    return next(new AppError('Error sending email. Please try again later.', 500));
   }
+
+  sendSuccess(res, {}, 'If that email is registered, a reset link has been sent.');
 });
 
 // ─── @route  POST /api/auth/reset-password/:token ────────────────────────────

@@ -96,7 +96,8 @@ export default function Dashboard() {
             { to: '/ai/itinerary', label: 'Day-Wise Itinerary', desc: 'Generate complete travel schedules.', icon: LuCompass },
             { to: '/ai/budget', label: 'Smart Budget Planner', desc: 'Calculate daily hotel and meal expenses.', icon: LuSearch },
             { to: '/ai/food-guide', label: 'Culinary Anthropologist', desc: 'Must-try street foods and rules.', icon: LuChefHat },
-            { to: '/ai/cultural-guide', label: 'Etiquette & Customs', desc: 'Read local taboos, sacred site laws.', icon: LuGlobe }
+            { to: '/ai/cultural-guide', label: 'Etiquette & Customs', desc: 'Read local taboos, sacred site laws.', icon: LuGlobe },
+            { to: '/ai/route-planner', label: 'Route & Transit Planner', desc: 'Get budget vs luxury travel routes.', icon: LuCompass }
           ].map((item, idx) => (
             <Link key={idx} to={item.to} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-5 space-y-2 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-350 rounded-2xl shadow-sm">
               <div className="flex items-center gap-3">

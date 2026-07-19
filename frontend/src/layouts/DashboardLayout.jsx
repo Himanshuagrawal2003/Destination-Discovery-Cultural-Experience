@@ -26,6 +26,7 @@ const AI_ITEMS = [
   { to: '/ai/budget',         icon: MdAttachMoney,  label: 'Budget Planner' },
   { to: '/ai/food-guide',     icon: MdRestaurant,   label: 'Food Guide' },
   { to: '/ai/cultural-guide', icon: MdLanguage,     label: 'Cultural Guide' },
+  { to: '/ai/route-planner',  icon: MdExplore,      label: 'Route Planner' },
   { to: '/ai/history',        icon: MdHistory,      label: 'AI History' },
 ];
 

@@ -97,7 +97,6 @@ export default function AIFoodGuide() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form Column */}
         <form onSubmit={handleSubmit(onSubmit)} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 space-y-5 h-fit rounded-2xl shadow-sm">
           <h3 className="font-bold text-lg text-primary-900 dark:text-white border-b border-primary-100 dark:border-dark-border pb-3 font-display">Destination</h3>
 
@@ -196,7 +195,7 @@ export default function AIFoodGuide() {
                           const spot = typeof item === 'object' ? item.whereToFind || item.location || 'Local markets' : 'Local markets';
                           const price = typeof item === 'object' ? item.price || 'Low' : 'Low';
                           return (
-                            <div key={i} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-5 border-l-4 border-l-amber-550 space-y-2 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                            <div key={i} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-5 border-l-4 border-l-amber-500 space-y-2 rounded-2xl shadow-sm hover:shadow-md transition-all">
                               <h4 className="font-bold text-primary-900 dark:text-white text-sm font-display">{name}</h4>
                               {desc && <p className="text-xs text-primary-900/60 dark:text-dark-muted leading-relaxed font-medium">{desc}</p>}
                               <div className="flex flex-wrap gap-x-3 text-[10px] text-primary-900/40 dark:text-dark-muted/50 font-bold pt-1">
@@ -232,7 +231,7 @@ export default function AIFoodGuide() {
                               <span className="text-xs font-semibold text-primary-900/80 dark:text-dark-muted leading-relaxed">{tip}</span>
                             </div>
                           ))
-                        ) : (
+                        ) : typeof foodGuide.diningEtiquette === 'object' && foodGuide.diningEtiquette !== null ? (
                           Object.entries(foodGuide.diningEtiquette).map(([key, val], i) => {
                             const text = typeof val === 'object' && val !== null
                               ? Array.isArray(val) ? val.join(', ') : JSON.stringify(val)
@@ -244,7 +243,7 @@ export default function AIFoodGuide() {
                               </div>
                             );
                           })
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   )}

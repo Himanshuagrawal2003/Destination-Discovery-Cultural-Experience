@@ -21,6 +21,7 @@ export default function DestinationDetail() {
   const [bookmarkId, setBookmarkId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [reviewsPage, setReviewsPage] = useState(1);
+  const [heroBroken, setHeroBroken] = useState(false);
 
   // AI Storytelling state
   const [aiStory, setAiStory] = useState('');
@@ -248,26 +249,47 @@ export default function DestinationDetail() {
 
   return (
     <div className="pb-16 space-y-10">
-      {/* ── Hero Banner ── */}
-      <section className="relative h-[450px] overflow-hidden bg-slate-900 text-white flex items-end">
-        {destination.coverImage ? (
-          <img
-            src={destination.coverImage}
-            alt={destination.name}
-            className="absolute inset-0 w-full h-full object-cover opacity-60"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-900 to-cyan-800 opacity-60" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+      {/* ── Hero Poster ── */}
+      <section className="relative h-[520px] sm:h-[580px] overflow-hidden bg-slate-950 text-white flex items-end">
+
+        {/* Background Image — full bleed poster */}
+        {(() => {
+          // Build a smart Unsplash fallback using destination name + city
+          const searchTerms = [destination.name, destination.city, destination.country, 'landmark', 'tourism']
+            .filter(Boolean).join(',');
+          const unsplashFallback = `https://source.unsplash.com/1600x900/?${encodeURIComponent(searchTerms)}`;
+
+          const heroSrc = (!destination.coverImage || heroBroken)
+            ? unsplashFallback
+            : destination.coverImage;
+
+          return (
+            <img
+              key={heroSrc}
+              src={heroSrc}
+              alt={`${destination.name} - ${destination.city}`}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+              style={{ filter: 'brightness(0.55)' }}
+              onError={() => {
+                if (!heroBroken) setHeroBroken(true);
+              }}
+            />
+          );
+        })()}
+
+        {/* Strong bottom-up gradient so text is always readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+
+        {/* Subtle top vignette */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent" />
 
         <div className="container-cq max-w-5xl pb-10 relative z-10 w-full flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div className="space-y-3">
             <span className="badge badge-primary bg-teal-500/20 text-teal-300 border border-teal-500/30 font-bold capitalize">
               {destination.category}
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold font-display leading-tight">{destination.name}</h1>
-            <p className="text-slate-200 font-medium flex items-center gap-1">
+            <h1 className="text-3xl sm:text-5xl font-extrabold font-display leading-tight drop-shadow-lg">{destination.name}</h1>
+            <p className="text-slate-200 font-medium flex items-center gap-1 drop-shadow">
               <MdPlace className="text-teal-400 text-lg shrink-0" />
               {destination.city}, {destination.country}
             </p>
@@ -313,6 +335,7 @@ export default function DestinationDetail() {
           </div>
         </div>
       </section>
+
 
       <div className="container-cq max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 1. Quick Facts Card (Top on Mobile, Sidebar Top on Desktop) */}

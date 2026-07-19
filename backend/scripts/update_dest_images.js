@@ -1,4 +1,7 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
+const Destination = require('../models/Destination');
+const { cloudinary } = require('../config/cloudinary');
 
 // Helper to fetch with retry & exponential back-off
 const fetchWithRetry = async (url, options = {}, retries = 3, backoff = 1000) => {
@@ -199,15 +202,12 @@ const queryWikipediaPageImages = async (query, limit = 5) => {
 
 const fetchRealUnsplashImage = async (query) => {
   console.log(`[Image Retrieval] Fetching cover image for "${query}"...`);
-  // Try Wikipedia page images first
   const pageImages = await getWikiPageImages(query, 1);
   if (pageImages.length > 0) return pageImages[0];
 
-  // Try Commons search next
   const commonsImages = await queryCommonsSearch(query, 1);
   if (commonsImages.length > 0) return commonsImages[0];
 
-  // Try Wikipedia PageImages next
   const wikiPageImages = await queryWikipediaPageImages(query, 1);
   if (wikiPageImages.length > 0) return wikiPageImages[0];
 
@@ -239,7 +239,6 @@ const uploadImageToCloudinary = async (imgUrl) => {
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     const dataUrl = `data:${contentType};base64,${base64}`;
 
-    const { cloudinary } = require('./cloudinary');
     const res = await cloudinary.uploader.upload(dataUrl, {
       folder: 'culturequest/destinations',
       resource_type: 'image'
@@ -252,129 +251,99 @@ const uploadImageToCloudinary = async (imgUrl) => {
   }
 };
 
-const connectDB = async () => {
+const CATEGORY_FALLBACKS = {
+  beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
+  mountain: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200',
+  city: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200',
+  desert: 'https://images.unsplash.com/photo-1509316975850-ff9c5edd0cd9?q=80&w=1200',
+  forest: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200',
+  historical: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200',
+  adventure: 'https://images.unsplash.com/photo-1533240332313-0db49b439ad3?q=80&w=1200',
+  cultural: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200',
+  wildlife: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?q=80&w=1200',
+  other: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1200'
+};
+
+const migrate = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log('🔌 Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ MongoDB Connected!');
 
-    // Dynamically heal any broken cover images in the database on startup
-    const Destination = require('../models/Destination');
-    const CATEGORY_FALLBACKS = {
-      beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
-      mountain: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200',
-      city: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200',
-      desert: 'https://images.unsplash.com/photo-1509316975850-ff9c5edd0cd9?q=80&w=1200',
-      forest: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200',
-      historical: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200',
-      adventure: 'https://images.unsplash.com/photo-1533240332313-0db49b439ad3?q=80&w=1200',
-      cultural: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200',
-      wildlife: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?q=80&w=1200',
-      other: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1200'
-    };
-
-    const list = await Destination.find({});
-    const VERIFIED_FALLBACKS = [
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200',
-      'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200',
-      'https://images.unsplash.com/photo-1509316975850-ff9c5edd0cd9?q=80&w=1200',
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200',
-      'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200',
-      'https://images.unsplash.com/photo-1533240332313-0db49b439ad3?q=80&w=1200',
-      'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200',
-      'https://images.unsplash.com/photo-1472396961693-142e6e269027?q=80&w=1200',
-      'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1200'
-    ];
+    const destinations = await Destination.find({});
+    console.log(`📌 Found ${destinations.length} destinations to verify/update.`);
 
     const isCloudinaryConfigured = 
       process.env.CLOUDINARY_API_SECRET && 
       !process.env.CLOUDINARY_API_SECRET.startsWith('your_');
 
-    let healedCount = 0;
-    for (const dest of list) {
-      // 1. Throttling: Delay 1s between destinations
+    for (const dest of destinations) {
+      console.log(`\n----------------------------------------`);
+      console.log(`🧭 Processing destination: "${dest.name}" (Category: ${dest.category})`);
+
+      // Skip generic placeholder "Destination" if it exists or empty names
+      if (!dest.name || dest.name.toLowerCase() === 'destination') {
+        console.log(`⚠️ Skipping placeholder or invalid destination.`);
+        continue;
+      }
+
+      // 1. Throttling: Delay 1s between destinations to avoid API spikes
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const isUnsplashBroken = dest.coverImage && 
-                               dest.coverImage.includes('images.unsplash.com') && 
-                               !VERIFIED_FALLBACKS.includes(dest.coverImage);
-      
-      const isMissing = !dest.coverImage || !dest.coverImage.startsWith('http');
+      // Fetch authentic cover image
+      console.log(`🔍 Searching Wikipedia/Wikimedia for cover image of "${dest.name}"...`);
+      const rawCover = await fetchRealUnsplashImage(dest.name);
+      const fallbackUrl = CATEGORY_FALLBACKS[(dest.category || 'other').toLowerCase()] || CATEGORY_FALLBACKS.other;
+      const targetCoverUrl = rawCover || fallbackUrl;
 
-      const isGenericCloudinary = dest.coverImage && dest.coverImage.includes('cloudinary');
+      let finalCoverUrl = targetCoverUrl;
 
-      const hasNoImages = !dest.images || dest.images.length === 0;
+      // Upload cover to Cloudinary if configured
+      if (isCloudinaryConfigured && targetCoverUrl.startsWith('http')) {
+        console.log(`📤 Uploading cover image to Cloudinary (base64)...`);
+        finalCoverUrl = await uploadImageToCloudinary(targetCoverUrl);
+      }
 
-      if (isUnsplashBroken || isMissing || isGenericCloudinary || hasNoImages) {
-        const categoryKey = (dest.category || 'other').toLowerCase();
-        const fallbackUrl = CATEGORY_FALLBACKS[categoryKey] || CATEGORY_FALLBACKS.other;
-        
-        let coverUrl = dest.coverImage;
-        if (isUnsplashBroken || isMissing || isGenericCloudinary) {
-          console.log(`🩺 Healing cover image for "${dest.name}"...`);
-          const scraped = await fetchRealUnsplashImage(dest.name);
-          const imageUrl = scraped || fallbackUrl;
+      // Fetch authentic gallery images
+      console.log(`🔍 Searching Wikipedia/Wikimedia for gallery images of "${dest.name}"...`);
+      const rawGallery = await fetchMultipleUnsplashImages(dest.name, 6);
+      let finalGallery = [];
 
-          coverUrl = imageUrl;
-          if (isCloudinaryConfigured) {
-            try {
-              console.log(`📤 Uploading cover image for "${dest.name}"...`);
-              coverUrl = await uploadImageToCloudinary(imageUrl);
-            } catch (uploadErr) {
-              console.warn(`⚠️ Cloudinary cover upload failed during healing for ${dest.name}:`, uploadErr.message);
-              if (imageUrl !== fallbackUrl) {
-                try {
-                  coverUrl = await uploadImageToCloudinary(fallbackUrl);
-                } catch (fallbackErr) {
-                  coverUrl = fallbackUrl;
-                }
-              }
-            }
+      if (rawGallery.length > 0) {
+        if (isCloudinaryConfigured) {
+          console.log(`📤 Uploading ${rawGallery.length} gallery images to Cloudinary (base64)...`);
+          for (const imgUrl of rawGallery) {
+            // 2. Throttling: Delay 500ms between individual gallery uploads
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const uploadedUrl = await uploadImageToCloudinary(imgUrl);
+            finalGallery.push(uploadedUrl);
           }
-          dest.coverImage = coverUrl;
-        }
-
-        if (hasNoImages) {
-          console.log(`🩺 Healing gallery images for "${dest.name}"...`);
-          const galleryUrls = await fetchMultipleUnsplashImages(dest.name, 6);
-          let uploadedImages = [];
-          if (isCloudinaryConfigured && galleryUrls.length > 0) {
-            console.log(`📤 Uploading gallery images for ${dest.name} to Cloudinary...`);
-            for (const imgUrl of galleryUrls) {
-              // 2. Throttling: Delay 500ms between individual gallery uploads
-              await new Promise(resolve => setTimeout(resolve, 500));
-              const uploadedUrl = await uploadImageToCloudinary(imgUrl);
-              uploadedImages.push(uploadedUrl);
-            }
-          } else {
-            uploadedImages = galleryUrls;
-          }
-          dest.images = uploadedImages;
-          dest.gallery = uploadedImages;
-        }
-
-        // Fetch fresh copy from database before saving to avoid VersionError race condition
-        const freshDest = await Destination.findById(dest._id);
-        if (freshDest) {
-          freshDest.coverImage = dest.coverImage;
-          freshDest.images = dest.images;
-          freshDest.gallery = dest.gallery;
-          await freshDest.save();
-          console.log(`💾 Successfully updated and saved healed destination "${dest.name}"`);
-          healedCount++;
+        } else {
+          finalGallery = rawGallery;
         }
       }
+
+      // Fetch fresh copy from DB right before save to avoid VersionError race condition
+      const freshDest = await Destination.findById(dest._id);
+      if (freshDest) {
+        freshDest.coverImage = finalCoverUrl;
+        freshDest.images = finalGallery;
+        freshDest.gallery = finalGallery;
+        await freshDest.save();
+        console.log(`💾 Successfully updated and saved "${dest.name}"!`);
+      } else {
+        console.warn(`⚠️ Could not find fresh document for "${dest.name}" (ID: ${dest._id}) in database.`);
+      }
     }
-    if (healedCount > 0) {
-      console.log(`🩺 Database healing complete: Fixed cover/gallery images for ${healedCount} destinations.`);
-    }
-  } catch (error) {
-    console.error(`❌ MongoDB Connection/Healing Error: ${error.message}`);
-    process.exit(1);
+
+    console.log(`\n========================================`);
+    console.log('🎉 Migration completed successfully!');
+  } catch (err) {
+    console.error('❌ Migration failed:', err);
+  } finally {
+    await mongoose.connection.close();
+    console.log('🔌 MongoDB connection closed.');
   }
 };
 
-module.exports = connectDB;
+migrate();

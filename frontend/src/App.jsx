@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMe }       from './redux/slices/authSlice';
@@ -43,6 +43,7 @@ import AIBudgetPlanner   from './pages/ai/AIBudgetPlanner';
 import AIItinerary       from './pages/ai/AIItinerary';
 import AIFoodGuide       from './pages/ai/AIFoodGuide';
 import AICulturalGuide   from './pages/ai/AICulturalGuide';
+import AIRoutePlanner     from './pages/ai/AIRoutePlanner';
 import AIHistory         from './pages/ai/AIHistory';
 
 // User Dashboard
@@ -53,7 +54,20 @@ import MyReviews       from './pages/dashboard/MyReviews';
 import Notifications   from './pages/dashboard/Notifications';
 import ManageDestinations from './pages/dashboard/ManageDestinations';
 
+// Scroll to top on navigation helper
+function ScrollToTop() {
+  const { pathname } = useLocation();
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
+  }, [pathname]);
+
+  return null;
+}
 
 // ─── App Component ───────────────────────────────────────────────────────────
 export default function App() {
@@ -73,6 +87,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* ─ Public Routes (MainLayout) ─ */}
         <Route element={<MainLayout />}>
@@ -116,6 +131,7 @@ export default function App() {
             <Route path="ai/itinerary"     element={<AIItinerary />} />
             <Route path="ai/food-guide"    element={<AIFoodGuide />} />
             <Route path="ai/cultural-guide"element={<AICulturalGuide />} />
+            <Route path="ai/route-planner" element={<AIRoutePlanner />} />
             <Route path="ai/history"       element={<AIHistory />} />
           </Route>
         </Route>

@@ -13,7 +13,7 @@ const aiHistorySchema = new mongoose.Schema(
       enum: [
         'recommendation', 'storytelling', 'hidden-gems', 'food-guide',
         'festival-guide', 'cultural-guide', 'language-helper',
-        'budget-planner', 'itinerary', 'chatbot',
+        'budget-planner', 'itinerary', 'chatbot', 'route-planner',
       ],
     },
     prompt:     { type: String, required: true },

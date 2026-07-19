@@ -112,15 +112,7 @@ export default function Navbar() {
 
             {/* ── Actions ── */}
             <div className="flex items-center gap-2">
-              {/* Search */}
-              <button
-                id="search-btn"
-                onClick={() => setIsSearchOpen(true)}
-                className="btn-icon hover:bg-primary-50 dark:hover:bg-dark-border text-primary-900/60 dark:text-dark-muted cursor-pointer"
-                aria-label="Search"
-              >
-                <LuSearch className="text-lg" />
-              </button>
+
 
               {/* Dark Mode Toggle */}
               <button
