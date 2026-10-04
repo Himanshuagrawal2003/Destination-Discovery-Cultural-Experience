@@ -80,10 +80,12 @@ When a user searches for any destination not yet in MongoDB (e.g. *Jaipur*, *Tok
 ### 🔖 Bookmarking System (`/bookmarks`)
 - **Universal Bookmarks**: Users can bookmark destinations, events, and trips with instant UI feedback and database persistence.
 
-### 🔐 Authentication, Password Reset & SMTP Email Pipeline (`/forgot-password`, `/reset-password/:token`)
+### 🔐 Authentication, Password Reset & Dual Email Pipeline (`/forgot-password`, `/reset-password/:token`)
 - **Forgot Password Flow**: Generates secure SHA-256 hashed reset token valid for 10 minutes.
 - **Dynamic URL Resolution**: Automatically detects domain from request Origin/Referer and `FRONTEND_URL` / `CLIENT_URL` to ensure reset links work seamlessly on both localhost and production deployment.
-- **SMTP Email Delivery**: High-deliverability branded HTML reset email dispatched via Gmail SMTP with timeout protection and fallback console token logging.
+- **Dual Email Delivery Engine**:
+  - **Resend HTTPS REST API**: First-class support via `RESEND_API_KEY`. Operates over HTTPS (Port 443) which bypasses Render/Vercel cloud SMTP port blocking with 100% deliverability.
+  - **Nodemailer SMTP Fallback**: Supports Gmail App Password for local development environments.
 
 ### 🌓 Theme & UI Aesthetics
 - **Dark & Light Modes**: Managed via Redux Toolkit (`uiSlice`) with persistent local storage and smooth CSS transitions.

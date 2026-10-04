@@ -37,10 +37,42 @@ const getTransporter = () => {
 };
 
 /**
- * Send a generic email
- * @param {Object} options - { to, subject, html }
+ * Send a generic email via HTTPS API (Resend) or SMTP (Nodemailer)
+ * @param {Object} options - { to, subject, html, text }
  */
 const sendEmail = async ({ to, subject, html, text }) => {
+  // Method 1: Resend HTTPS REST API (Bypasses Render/Cloud SMTP port blocking)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      console.log(`[Email Service] Sending email via Resend HTTPS API to ${to}...`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM || 'CultureQuest AI <onboarding@resend.dev>',
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+          text: text || 'Please view this email in an HTML-capable mail client.'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || JSON.stringify(data));
+      }
+      console.log('✅ Email delivered successfully via Resend HTTPS API:', data);
+      return data;
+    } catch (apiErr) {
+      console.error('⚠️ Resend HTTPS API error:', apiErr.message);
+      // Fall through to SMTP fallback
+    }
+  }
+
+  // Method 2: Standard SMTP (Gmail with App Password)
   const isEmailConfigured = 
     process.env.EMAIL_USER &&
     process.env.EMAIL_PASS;
