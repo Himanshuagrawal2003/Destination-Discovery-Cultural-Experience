@@ -122,8 +122,9 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
 // ─── @route  POST /api/auth/forgot-password ──────────────────────────────────
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
+  const cleanEmail = email ? email.toLowerCase().trim() : '';
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: cleanEmail });
   if (!user) {
     // Security: don't reveal whether the email exists
     return sendSuccess(res, {}, 'If that email is registered, a reset link has been sent.');
@@ -136,8 +137,9 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   // 1. Use FRONTEND_URL env var (set this on your deployment platform)
   // 2. Fallback to request Origin header (works for deployed apps)
   // 3. Last resort: CLIENT_URL env var
-  const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '');
-  const clientUrl = process.env.FRONTEND_URL || origin || process.env.CLIENT_URL || 'http://localhost:5173';
+  const origin = req.headers.origin || req.headers.referer?.replace(/\/+$/, '');
+  const rawUrl = process.env.FRONTEND_URL || origin || process.env.CLIENT_URL || 'http://localhost:5173';
+  const clientUrl = rawUrl.replace(/\/+$/, '');
   const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
   // Always log reset URL for debugging
