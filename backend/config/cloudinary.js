@@ -27,7 +27,9 @@ const isCloudinaryConfigured =
   apiSecret && 
   !apiSecret.startsWith('your_');
 
-let storageDestination;
+let storageDestinationCover;
+let storageDestinationGallery;
+let storageTour;
 let storageAvatar;
 let storageGeneral;
 
@@ -41,15 +43,37 @@ if (isCloudinaryConfigured) {
 
   console.log('☁️ Cloudinary configured successfully.');
 
-  storageDestination = new CloudinaryStorage({
+  // 1. Destination Cover Images Folder
+  storageDestinationCover = new CloudinaryStorage({
     cloudinary,
     params: {
-      folder:         'culturequest/destinations',
+      folder:         'culturequest/destination_covers',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [{ width: 1200, height: 800, crop: 'limit', quality: 'auto' }],
+      transformation: [{ width: 1600, height: 1000, crop: 'limit', quality: 'auto' }],
     },
   });
 
+  // 2. Destination Gallery Images Folder
+  storageDestinationGallery = new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder:         'culturequest/destination_gallery',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: [{ width: 1400, height: 900, crop: 'limit', quality: 'auto' }],
+    },
+  });
+
+  // 3. Tours & Experiences Folder
+  storageTour = new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder:         'culturequest/tours',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: [{ width: 1400, height: 900, crop: 'limit', quality: 'auto' }],
+    },
+  });
+
+  // 4. User Avatars Folder
   storageAvatar = new CloudinaryStorage({
     cloudinary,
     params: {
@@ -59,10 +83,11 @@ if (isCloudinaryConfigured) {
     },
   });
 
+  // 5. General Uploads Folder
   storageGeneral = new CloudinaryStorage({
     cloudinary,
     params: {
-      folder:         'culturequest/uploads',
+      folder:         'culturequest/general',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       transformation: [{ width: 1200, quality: 'auto' }],
     },
@@ -70,7 +95,6 @@ if (isCloudinaryConfigured) {
 } else {
   console.log('📁 Cloudinary not configured. Falling back to local disk storage in "uploads/"');
 
-  // Custom storage wrapper to return public URLs instead of local file paths
   class LocalUrlStorage {
     constructor(folderName) {
       const uploadDir = path.join(__dirname, '../../uploads', folderName);
@@ -95,7 +119,6 @@ if (isCloudinaryConfigured) {
       this.diskStorage._handleFile(req, file, (err, info) => {
         if (err) return cb(err);
         const host = req.get('host') || 'localhost:5000';
-        // Format path as a full URL to the static assets route
         info.path = `${req.protocol}://${host}/uploads/${this.folderName}/${info.filename}`;
         cb(null, info);
       });
@@ -106,14 +129,27 @@ if (isCloudinaryConfigured) {
     }
   }
 
-  storageDestination = new LocalUrlStorage('destinations');
-  storageAvatar      = new LocalUrlStorage('avatars');
-  storageGeneral     = new LocalUrlStorage('general');
+  storageDestinationCover   = new LocalUrlStorage('destination_covers');
+  storageDestinationGallery = new LocalUrlStorage('destination_gallery');
+  storageTour               = new LocalUrlStorage('tours');
+  storageAvatar             = new LocalUrlStorage('avatars');
+  storageGeneral            = new LocalUrlStorage('general');
 }
 
 // Multer upload instances
-const uploadDestination = multer({ storage: storageDestination });
-const uploadAvatar      = multer({ storage: storageAvatar });
-const uploadGeneral     = multer({ storage: storageGeneral });
+const uploadDestinationCover   = multer({ storage: storageDestinationCover });
+const uploadDestinationGallery = multer({ storage: storageDestinationGallery });
+const uploadDestination        = uploadDestinationCover; // Backward compatibility alias
+const uploadTour               = multer({ storage: storageTour });
+const uploadAvatar             = multer({ storage: storageAvatar });
+const uploadGeneral            = multer({ storage: storageGeneral });
 
-module.exports = { cloudinary, uploadDestination, uploadAvatar, uploadGeneral };
+module.exports = { 
+  cloudinary, 
+  uploadDestinationCover,
+  uploadDestinationGallery,
+  uploadDestination, 
+  uploadTour,
+  uploadAvatar, 
+  uploadGeneral 
+};

@@ -27,15 +27,14 @@ export default function ResetPassword() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-primary-900 dark:text-white font-display">Create New Password</h2>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted mt-1 font-medium">Please enter your new strong password</p>
-      </div>
+        <p className="text-sm text-primary-900/60 dark:text-dark-muted mt-1 font-medium">Please enter your new strong password</p> </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-primary-900 dark:text-dark-text mb-1.5">New Password</label>
           <input
             type="password"
-            placeholder="••••••••"
+            placeholder=""
             className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm transition-all ${
               errors.password ? 'border-red-400 focus:ring-red-400' : 'border-primary-200 dark:border-dark-border focus:border-transparent'
             }`}
@@ -56,7 +55,7 @@ export default function ResetPassword() {
           <label className="block text-sm font-semibold text-primary-900 dark:text-dark-text mb-1.5">Confirm New Password</label>
           <input
             type="password"
-            placeholder="••••••••"
+            placeholder=""
             className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm transition-all ${
               errors.confirmPassword ? 'border-red-400 focus:ring-red-450' : 'border-slate-700 focus:border-transparent'
             }`}
@@ -78,14 +77,11 @@ export default function ResetPassword() {
           ) : (
             'Reset Password'
           )}
-        </button>
-      </form>
+        </button> </form>
 
       <p className="text-center text-sm text-primary-900/60 dark:text-dark-muted font-medium">
         <Link to="/login" className="text-accent hover:underline font-semibold">
           Back to Sign In
-        </Link>
-      </p>
-    </div>
+        </Link> </p> </div>
   );
 }

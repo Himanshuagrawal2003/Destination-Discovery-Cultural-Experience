@@ -69,9 +69,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
               onClick={onClose}
               className="p-3 text-slate-400 hover:text-white rounded-full bg-slate-800 hover:bg-slate-700 transition-colors"
             >
-              <MdClose className="text-2xl" />
-            </button>
-          </div>
+              <MdClose className="text-2xl" /> </button> </div>
 
           <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
             {/* Search form */}
@@ -88,16 +86,13 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 type="submit"
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-slate-400 hover:text-teal-400 transition-colors"
               >
-                <MdSearch className="text-2xl sm:text-3xl" />
-              </button>
-            </form>
+                <MdSearch className="text-2xl sm:text-3xl" /> </button> </form>
 
             {/* Results */}
             <div className="mt-8 flex-1 overflow-y-auto no-scrollbar">
               {isLoading ? (
                 <div className="flex items-center justify-center py-10">
-                  <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-                </div>
+                  <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" /> </div>
               ) : results.length > 0 ? (
                 <div className="grid gap-3">
                   {results.map((item) => (
@@ -116,16 +111,13 @@ export default function SearchOverlay({ isOpen, onClose }) {
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400">
-                          <MdPlace className="text-xl" />
-                        </div>
+                          <MdPlace className="text-xl" /> </div>
                       )}
                       <div>
                         <h4 className="font-semibold text-white">{item.name}</h4>
                         <p className="text-sm text-slate-400">
                           {item.city}, {item.country}
-                        </p>
-                      </div>
-                    </motion.div>
+                        </p> </div> </motion.div>
                   ))}
                 </div>
               ) : query.length >= 2 ? (
@@ -144,12 +136,9 @@ export default function SearchOverlay({ isOpen, onClose }) {
                         {term}
                       </button>
                     ))}
-                  </div>
-                </div>
+                  </div> </div>
               )}
-            </div>
-          </div>
-        </div>
+            </div> </div> </div>
       )}
     </AnimatePresence>
   );

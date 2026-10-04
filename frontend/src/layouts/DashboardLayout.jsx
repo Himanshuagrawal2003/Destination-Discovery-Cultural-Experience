@@ -52,7 +52,7 @@ export default function DashboardLayout() {
     <div className="min-h-screen bg-surface dark:bg-dark-bg flex flex-col w-full overflow-x-hidden">
       <Navbar />
       <div className="flex flex-1 container-cq py-6 gap-6 min-w-0">
-        {/* ─ Sidebar ─ */}
+        {/*  Sidebar  */}
         <motion.aside
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0,   opacity: 1 }}
@@ -63,19 +63,21 @@ export default function DashboardLayout() {
             {/* User info */}
             <div className="flex items-center gap-3 p-3 mb-4 bg-gradient-to-r from-primary-50 to-secondary/10 dark:from-primary-900/20 dark:to-primary-800/10 rounded-xl">
               <img
-                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name}&background=8b5cf6&color=fff`}
-                alt={user?.name}
+                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Explorer')}&background=8b5cf6&color=fff`}
+                alt={user?.name || 'User'}
                 className="w-10 h-10 rounded-full object-cover border-2 border-accent"
               />
               <div className="overflow-hidden">
-                <p className="font-semibold text-sm text-gray-800 dark:text-dark-text truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-dark-muted truncate">{user?.email}</p>
-              </div>
-            </div>
+                <p className="font-semibold text-sm text-gray-800 dark:text-dark-text truncate">{user?.name || 'Guest Explorer'}</p>
+                <p className="text-xs text-gray-500 dark:text-dark-muted truncate">{user?.email || 'AI Discovery Mode'}</p> </div> </div>
 
             {/* Nav items */}
             <nav className="space-y-1">
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS.filter(item => {
+                if (item.to === '/manage-destinations' && user?.role !== 'admin') return false;
+                if (!user && (item.to === '/profile' || item.to === '/notifications' || item.to === '/my-reviews')) return false;
+                return true;
+              }).map((item) => (
                 <NavLink key={item.to} to={item.to} className={linkClass} end>
                   <item.icon className="text-lg shrink-0" />
                   {item.label}
@@ -87,7 +89,7 @@ export default function DashboardLayout() {
 
             {/* AI Features */}
             <p className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-dark-muted px-3 pb-1">
-              🤖 AI Features
+               AI Features
             </p>
             <nav className="space-y-1">
               {AI_ITEMS.map((item) => (
@@ -100,13 +102,18 @@ export default function DashboardLayout() {
 
             <div className="divider" />
 
-            <button onClick={handleLogout} className="btn-ghost w-full justify-start text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl">
-              <span>🚪</span> Logout
-            </button>
-          </div>
-        </motion.aside>
+            {user ? (
+              <button onClick={handleLogout} className="btn-ghost w-full justify-start text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl">
+                <span></span> Logout
+              </button>
+            ) : (
+              <button onClick={() => navigate('/login')} className="btn bg-accent text-white w-full justify-center text-xs font-bold py-2 rounded-xl shadow-sm hover:bg-accent/90">
+                <span></span> Log In / Sign Up
+              </button>
+            )}
+          </div> </motion.aside>
 
-        {/* ─ Main Content ─ */}
+        {/*  Main Content  */}
         <main className="flex-1 min-w-0">
           {/* Mobile / Tablet Horizontal Scrollable Sub-navbar */}
           <div className="lg:hidden w-full overflow-x-auto pb-3 flex gap-2 no-scrollbar border-b border-slate-100 dark:border-slate-800/80 mb-6">
@@ -123,7 +130,7 @@ export default function DashboardLayout() {
                   }`}
                   end={item.to === '/dashboard'}
                 >
-                  <item.icon className={`text-sm shrink-0 ${item.to.startsWith('/ai') ? 'text-accent' : ''}`} />
+                  <item.icon className={`text-sm shrink-0 ${isActive ? 'text-white' : item.to.startsWith('/ai') ? 'text-accent' : ''}`} />
                   {item.label}
                 </NavLink>
               );
@@ -136,11 +143,7 @@ export default function DashboardLayout() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <Outlet />
-          </motion.div>
-        </main>
-      </div>
-      <Chatbot />
-    </div>
+            <Outlet /> </motion.div> </main> </div>
+      <Chatbot /> </div>
   );
 }

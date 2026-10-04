@@ -63,8 +63,8 @@ export default function Notifications() {
     <div className="space-y-8 min-h-screen pb-12 bg-[#FAF7FF] dark:bg-dark-bg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Notifications</h1>
-          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Stay updated with reviews, bookmarks, planned trip events, and AI recommendations logs.</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Notifications</h1>
+          <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Stay updated with reviews, bookmarks, planned trip events, and AI recommendations logs.</p>
         </div>
         {unreadCount > 0 && (
           <button onClick={handleReadAll} className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1">
@@ -95,8 +95,7 @@ export default function Notifications() {
                 <div className="flex-1 space-y-1">
                   <h3 className="font-bold text-sm text-primary-900 dark:text-white font-display">{item.title}</h3>
                   <p className="text-xs text-primary-900/60 dark:text-dark-muted font-semibold">{item.message}</p>
-                  <p className="text-[10px] text-primary-900/40 dark:text-dark-muted/50 font-bold">{new Date(item.createdAt).toLocaleString()}</p>
-                </div>
+                  <p className="text-[10px] text-primary-900/40 dark:text-dark-muted/50 font-bold">{new Date(item.createdAt).toLocaleString()}</p> </div>
 
                 <div className="flex gap-1 shrink-0">
                   {!item.isRead && (
@@ -105,27 +104,21 @@ export default function Notifications() {
                       className="p-2 text-accent hover:bg-primary-50 dark:hover:bg-primary-950/20 rounded-xl cursor-pointer transition-colors"
                       aria-label="Mark read"
                     >
-                      <LuCheck className="text-lg" />
-                    </button>
+                      <LuCheck className="text-lg" /> </button>
                   )}
                   <button
                     onClick={() => handleDelete(item._id)}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl cursor-pointer transition-colors"
                     aria-label="Delete"
                   >
-                    <LuTrash2 className="text-lg" />
-                  </button>
-                </div>
-              </motion.div>
+                    <LuTrash2 className="text-lg" /> </button> </div> </motion.div>
             ))}
-          </AnimatePresence>
-        </div>
+          </AnimatePresence> </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-4 rounded-2xl">
           <LuBellOff className="text-6xl text-primary-200 dark:text-dark-muted mx-auto animate-float" />
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">All caught up!</h3>
-          <p className="text-xs max-w-sm mx-auto leading-relaxed font-semibold">No new updates or alerts logs for you at this time.</p>
-        </div>
+          <p className="text-xs max-w-sm mx-auto leading-relaxed font-semibold">No new updates or alerts logs for you at this time.</p> </div>
       )}
     </div>
   );

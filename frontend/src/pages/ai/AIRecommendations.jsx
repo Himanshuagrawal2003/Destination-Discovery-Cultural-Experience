@@ -34,6 +34,27 @@ export default function AIRecommendations() {
   const [showOptional, setShowOptional] = useState(false);
   const [activeCardTabs, setActiveCardTabs] = useState({});
 
+  // Helper to parse numeric amounts from strings like "₹2,500/day" or "$30"
+  const parseAmount = (val, defaultVal = 0) => {
+    if (!val) return defaultVal;
+    if (typeof val === 'number') return val;
+    const nums = String(val).replace(/[^0-9.]/g, '');
+    return parseFloat(nums) || defaultVal;
+  };
+
+  const formatAvgPrice = (val, defaultVal = 500) => {
+    if (val === 0) return 'Free';
+    if (!val || String(val).toUpperCase() === 'N/A') return `Avg. ₹${defaultVal.toLocaleString('en-IN')}`;
+    let cleaned = String(val).replace(/₹\s*₹/g, '₹').replace(/\$/g, '₹').replace(/usd/gi, 'INR');
+    if (!cleaned.includes('₹') && !cleaned.toLowerCase().includes('inr') && !cleaned.toLowerCase().includes('rs') && !cleaned.toLowerCase().includes('free')) {
+      cleaned = `₹${cleaned}`;
+    }
+    if (!cleaned.toLowerCase().includes('avg') && !cleaned.toLowerCase().includes('approx') && !cleaned.toLowerCase().includes('free')) {
+      cleaned = `Avg. ${cleaned}`;
+    }
+    return cleaned;
+  };
+
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: {
       budget: 'mid-range',
@@ -98,12 +119,15 @@ export default function AIRecommendations() {
   }, [searchQ]);
 
   return (
-    <div className="space-y-8 pb-12 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
+    <div className="space-y-6 sm:space-y-8 pb-12 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
       <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
-          <LuSparkles className="text-accent animate-pulse" /> AI Destination Recommendations
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display flex items-center gap-2 tracking-tight">
+          <LuSparkles className="text-accent animate-pulse shrink-0 text-lg sm:text-2xl" /> 
+          <span>AI Destination Recommendations</span>
         </h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Get personalized suggestions by describing your desired experience or setting custom filters.</p>
+        <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">
+          Get personalized suggestions by describing your desired experience or setting custom filters.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -119,7 +143,7 @@ export default function AIRecommendations() {
                   : 'text-primary-900/50 dark:text-dark-muted hover:text-accent'
               }`}
             >
-              ✨ Experience Vibe
+               Experience Vibe
             </button>
             <button
               onClick={() => setSearchMode('manual')}
@@ -129,9 +153,8 @@ export default function AIRecommendations() {
                   : 'text-primary-900/50 dark:text-dark-muted hover:text-accent'
               }`}
             >
-              ⚙️ Manual Filters
-            </button>
-          </div>
+               Manual Filters
+            </button> </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {searchMode === 'vibe' ? (
@@ -146,8 +169,7 @@ export default function AIRecommendations() {
                 />
                 <p className="text-[10px] text-primary-900/40 dark:text-dark-muted/50 font-bold leading-normal">
                   Describe what you want to see, feel, or eat in natural language. Gemini AI will match destinations directly!
-                </p>
-              </div>
+                </p> </div>
             ) : (
               /* Manual filters Mode */
               <div className="space-y-4">
@@ -156,20 +178,15 @@ export default function AIRecommendations() {
                   <select className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('budget')}>
                     <option value="budget">Budget (₹)</option>
                     <option value="mid-range">Mid-range (₹₹)</option>
-                    <option value="luxury">Luxury (₹₹₹)</option>
-                  </select>
-                </div>
+                    <option value="luxury">Luxury (₹₹₹)</option> </select> </div>
 
                 <div>
                   <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Season / Month</label>
-                  <input type="text" placeholder="e.g. Summer, October" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('season')} />
-                </div>
+                  <input type="text" placeholder="e.g. Summer, October" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('season')} /> </div>
 
                 <div>
                   <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Interests (comma separated)</label>
-                  <input type="text" placeholder="e.g. history, food, adventure" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('interests')} />
-                </div>
-              </div>
+                  <input type="text" placeholder="e.g. history, food, adventure" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('interests')} /> </div> </div>
             )}
 
             {/* Collapsible Optional Filters for Vibe Mode / Standard for manual */}
@@ -195,34 +212,26 @@ export default function AIRecommendations() {
                       <select className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('budget')}>
                         <option value="budget">Budget (₹)</option>
                         <option value="mid-range">Mid-range (₹₹)</option>
-                        <option value="luxury">Luxury (₹₹₹)</option>
-                      </select>
-                    </div>
+                        <option value="luxury">Luxury (₹₹₹)</option> </select> </div>
 
                     <div>
                       <label className="block text-[10px] font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Season / Month</label>
-                      <input type="text" placeholder="e.g. Summer, October" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('season')} />
-                    </div>
+                      <input type="text" placeholder="e.g. Summer, October" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('season')} /> </div>
 
                     <div>
                       <label className="block text-[10px] font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Target Country/Region</label>
-                      <input type="text" placeholder="e.g. Japan, Europe" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('country')} />
-                    </div>
+                      <input type="text" placeholder="e.g. Japan, Europe" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('country')} /> </div>
 
                     <div>
                       <label className="block text-[10px] font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Interests (comma separated)</label>
-                      <input type="text" placeholder="e.g. history, food" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('interests')} />
-                    </div>
-                  </motion.div>
+                      <input type="text" placeholder="e.g. history, food" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('interests')} /> </div> </motion.div>
                 )}
               </div>
             ) : (
               <div className="space-y-4 pt-2 border-t border-primary-50 dark:border-dark-border">
                 <div>
                   <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Target Country/Region (Optional)</label>
-                  <input type="text" placeholder="e.g. Europe, Japan" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('country')} />
-                </div>
-              </div>
+                  <input type="text" placeholder="e.g. Europe, Japan" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('country')} /> </div> </div>
             )}
 
             {/* Common fields (Style, Duration) */}
@@ -233,15 +242,11 @@ export default function AIRecommendations() {
                   <option value="solo">Solo</option>
                   <option value="couple">Couple</option>
                   <option value="family">Family</option>
-                  <option value="group">Group</option>
-                </select>
-              </div>
+                  <option value="group">Group</option> </select> </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Duration (Days)</label>
-                <input type="number" min="1" max="60" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('duration')} />
-              </div>
-            </div>
+                <input type="number" min="1" max="60" className="w-full px-3 py-2 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold transition-all" {...register('duration')} /> </div> </div>
 
             <button
               type="submit"
@@ -255,9 +260,7 @@ export default function AIRecommendations() {
                   <LuSparkles /> Match Destinations
                 </>
               )}
-            </button>
-          </form>
-        </div>
+            </button> </form> </div>
 
         {/* Results Column */}
         <div className="lg:col-span-2 space-y-6">
@@ -290,12 +293,10 @@ export default function AIRecommendations() {
                         </h3>
                         <p className="text-xs text-accent font-bold mt-1 flex items-center gap-1">
                           <LuCalendar className="text-sm shrink-0" /> Best time: {item.bestTime}
-                        </p>
-                      </div>
+                        </p> </div>
                       <span className="px-2.5 py-1 rounded-lg bg-primary-100/50 dark:bg-primary-900/20 text-accent font-extrabold text-[10px] tracking-wide">
-                        💡 Choice #{idx + 1}
-                      </span>
-                    </div>
+                         Choice #{idx + 1}
+                      </span> </div>
 
                     {/* Tab Navigation */}
                     <div className="flex flex-wrap gap-1 border-b border-primary-100 dark:border-dark-border pb-1">
@@ -330,19 +331,20 @@ export default function AIRecommendations() {
                           </p>
                           <div className="grid grid-cols-2 gap-4 text-xs font-bold text-primary-900/60 dark:text-dark-muted pt-2 border-t border-primary-50 dark:border-dark-border">
                             <div>
-                              <span className="block text-[10px] text-primary-900/40 uppercase font-black">💰 Total Budget</span>
-                              <span className="text-accent text-sm capitalize">
-                                {item.budgetBreakdown 
-                                  ? `₹${(Number(item.budgetBreakdown.accommodation) || 0) + (Number(item.budgetBreakdown.food) || 0) + (Number(item.budgetBreakdown.transport) || 0) + (Number(item.budgetBreakdown.activities) || 0)} / day`
-                                  : 'N/A'}
-                              </span>
-                            </div>
+                              <span className="block text-[10px] text-primary-900/40 uppercase font-black"> Avg. Daily Budget</span>
+                              <span className="text-accent text-sm capitalize font-extrabold">
+                                {(() => {
+                                  const bb = item.budgetBreakdown || {};
+                                  const total = parseAmount(bb.accommodation, 2000) +
+                                                parseAmount(bb.food, 1000) +
+                                                parseAmount(bb.transport, 500) +
+                                                parseAmount(bb.activities, 700);
+                                  return `Avg. ₹${total.toLocaleString('en-IN')} / day`;
+                                })()}
+                              </span> </div>
                             <div>
-                              <span className="block text-[10px] text-primary-900/40 uppercase font-black">📅 Recommended Season</span>
-                              <span className="text-accent text-sm">{item.bestTime || 'Year-round'}</span>
-                            </div>
-                          </div>
-                        </div>
+                              <span className="block text-[10px] text-primary-900/40 uppercase font-black"> Recommended Season</span>
+                              <span className="text-accent text-sm">{item.bestTime || 'Year-round'}</span> </div> </div> </div>
                       )}
 
                       {activeTab === 'activities' && (
@@ -355,11 +357,9 @@ export default function AIRecommendations() {
                               {item.topActivities?.map((act, i) => (
                                 <li key={i} className="flex items-start gap-1.5">
                                   <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
-                                  <span>{act}</span>
-                                </li>
+                                  <span>{act}</span> </li>
                               ))}
-                            </ul>
-                          </div>
+                            </ul> </div>
                           <div className="space-y-2">
                             <h4 className="font-bold text-[11px] uppercase tracking-wider text-accent flex items-center gap-1">
                               <LuUtensils className="text-sm shrink-0" /> Famous Local Foods
@@ -370,15 +370,13 @@ export default function AIRecommendations() {
                                   <strong className="text-accent">{food.name}</strong>: {food.description}
                                 </li>
                               ))}
-                            </ul>
-                          </div>
-                        </div>
+                            </ul> </div> </div>
                       )}
 
                       {activeTab === 'gems' && (
                         <div className="space-y-3">
                           <h4 className="font-bold text-[11px] uppercase tracking-wider text-accent flex items-center gap-1.5">
-                            🗺️ Off-The-Beaten-Path Hidden Gems
+                             Off-The-Beaten-Path Hidden Gems
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {item.hiddenGems?.map((gem, i) => (
@@ -386,11 +384,9 @@ export default function AIRecommendations() {
                                 <h5 className="font-bold text-primary-900 dark:text-white text-xs">{gem.name}</h5>
                                 <p className="text-[11px] text-primary-900/60 dark:text-dark-muted mt-1 leading-normal font-semibold">
                                   {gem.description}
-                                </p>
-                              </div>
+                                </p> </div>
                             ))}
-                          </div>
-                        </div>
+                          </div> </div>
                       )}
 
                       {activeTab === 'culture' && (
@@ -403,29 +399,23 @@ export default function AIRecommendations() {
                               {item.culturalTips?.map((tip, i) => (
                                 <li key={i} className="flex items-start gap-1.5">
                                   <LuLightbulb className="text-accent shrink-0 mt-0.5" />
-                                  <span>"{tip}"</span>
-                                </li>
+                                  <span>"{tip}"</span> </li>
                               ))}
-                            </ul>
-                          </div>
+                            </ul> </div>
                           <div className="space-y-2">
                             <h4 className="font-bold text-[11px] uppercase tracking-wider text-accent flex items-center gap-1">
-                              <LuCoins className="text-sm shrink-0" /> Daily Cost Breakdown
+                              <LuCoins className="text-sm shrink-0" /> Avg. Daily Cost Breakdown
                             </h4>
                             <div className="bg-primary-50/50 dark:bg-primary-950/20 p-3 rounded-xl border border-primary-100/50 dark:border-primary-900/10 grid grid-cols-2 gap-2 text-xs font-semibold text-primary-900/70 dark:text-dark-muted">
-                              <div>🏨 Stay: <span className="text-accent font-bold">₹{item.budgetBreakdown?.accommodation || 0}</span></div>
-                              <div>🍜 Food: <span className="text-accent font-bold">₹{item.budgetBreakdown?.food || 0}</span></div>
-                              <div>🚕 Transit: <span className="text-accent font-bold">₹{item.budgetBreakdown?.transport || 0}</span></div>
-                              <div>🎟️ Tickets: <span className="text-accent font-bold">₹{item.budgetBreakdown?.activities || 0}</span></div>
-                            </div>
-                          </div>
-                        </div>
+                              <div> Stay: <span className="text-accent font-bold">{formatAvgPrice(item.budgetBreakdown?.accommodation, 2000)}</span></div>
+                              <div> Food: <span className="text-accent font-bold">{formatAvgPrice(item.budgetBreakdown?.food, 1000)}</span></div>
+                              <div> Transit: <span className="text-accent font-bold">{formatAvgPrice(item.budgetBreakdown?.transport, 500)}</span></div>
+                              <div> Activities: <span className="text-accent font-bold">{formatAvgPrice(item.budgetBreakdown?.activities, 700)}</span></div> </div> </div> </div>
                       )}
 
                       {activeTab === 'map' && (
                         <div className="w-full h-64 rounded-xl overflow-hidden border border-primary-100 dark:border-dark-border relative">
-                          <LeafletMap lat={Number(item.latitude)} lng={Number(item.longitude)} popupText={`${item.name}, ${item.country}`} zoom={8} />
-                        </div>
+                          <LeafletMap lat={Number(item.latitude)} lng={Number(item.longitude)} popupText={`${item.name}, ${item.country}`} zoom={8} /> </div>
                       )}
                     </div>
 
@@ -438,7 +428,7 @@ export default function AIRecommendations() {
                         }}
                         className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold py-2 px-4 rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition-all"
                       >
-                        👁️ View Details
+                        <LuBookOpen className="text-sm shrink-0" /> View Details
                       </button>
                       <button
                         onClick={() => navigate(`/trip-planner?dest=${encodeURIComponent(item.name)}`)}
@@ -457,13 +447,13 @@ export default function AIRecommendations() {
             )
           ) : (
             <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted flex flex-col items-center justify-center space-y-4 rounded-2xl shadow-sm">
-              <div className="w-16 h-16 rounded-full bg-primary-100/50 dark:bg-primary-900/20 flex items-center justify-center text-3xl animate-float">🤖</div>
+              <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
+                <LuCompass className="w-8 h-8 animate-pulse" />
+              </div>
               <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">Awaiting Search Preferences</h3>
               <p className="text-xs max-w-xs leading-relaxed font-semibold">Complete the parameters form on the left and match to discover tailored cultural trips suggestions.</p>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </div> </div> </div>
   );
 }

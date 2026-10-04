@@ -49,8 +49,8 @@ export default function Experiences() {
     <div className="container-cq py-8 space-y-8 min-h-screen bg-[#FAF7FF] dark:bg-dark-bg">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Cultural Experiences</h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Book local heritage activities, culinary workshops, village walks, and temple tours.</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Cultural Experiences</h1>
+        <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Book local heritage activities, culinary workshops, village walks, and temple tours.</p>
       </div>
 
       {/* Category Tabs */}
@@ -86,17 +86,19 @@ export default function Experiences() {
                   <img
                     src={item.coverImage}
                     alt={item.title}
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=900&auto=format&fit=crop&q=80';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <div className="w-full h-full bg-primary-100 dark:bg-dark-border flex items-center justify-center text-primary-900/40">
-                    📸 Experience
+                     Experience
                   </div>
                 )}
                 <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-dark-card/95 text-accent font-extrabold text-2xs rounded-lg shadow-sm capitalize">
                   {item.type.replace('-', ' ')}
-                </span>
-              </div>
+                </span> </div>
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <h3 className="font-bold text-primary-900 dark:text-white group-hover:text-accent transition-colors font-display text-sm">
@@ -108,8 +110,7 @@ export default function Experiences() {
                   </p>
                   <p className="text-xs text-primary-900/60 dark:text-dark-muted line-clamp-3 leading-relaxed font-medium">
                     {item.description}
-                  </p>
-                </div>
+                  </p> </div>
 
                 <div className="border-t border-primary-50 dark:border-dark-border pt-4 grid grid-cols-2 gap-2 text-2xs text-primary-900/50 dark:text-dark-muted font-bold">
                   <span className="flex items-center gap-1">
@@ -123,18 +124,14 @@ export default function Experiences() {
                   </span>
                   <span className="text-right text-sm font-black text-accent">
                     ₹{item.price?.amount}
-                  </span>
-                </div>
-              </div>
-            </div>
+                  </span> </div> </div> </div>
           ))}
         </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-4 rounded-2xl">
-          <span className="text-6xl block animate-float">🎭</span>
+          <span className="text-6xl block animate-float"></span>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Experiences Found</h3>
-          <p className="text-xs max-w-md mx-auto leading-relaxed font-semibold">We couldn't find any listings matching this category. Please check again later.</p>
-        </div>
+          <p className="text-xs max-w-md mx-auto leading-relaxed font-semibold">We couldn't find any listings matching this category. Please check again later.</p> </div>
       )}
     </div>
   );

@@ -1,13 +1,14 @@
-const asyncHandler     = require('../utils/asyncHandler');
-const AppError         = require('../utils/AppError');
-const { sendSuccess }  = require('../utils/apiResponse');
+const asyncHandler = require('../utils/asyncHandler');
+const AppError = require('../utils/AppError');
+const { sendSuccess } = require('../utils/apiResponse');
 const { generateContent, prompts, aiQueue } = require('../services/geminiService');
-const AIHistory        = require('../models/AIHistory');
+const AIHistory = require('../models/AIHistory');
 
 /**
  * Helper: save AI interaction to history
  */
 const saveHistory = async (userId, type, prompt, response, metadata = {}) => {
+  if (!userId) return null;
   try {
     const doc = await AIHistory.create({ user: userId, type, prompt, response, metadata });
     return doc;
@@ -33,24 +34,24 @@ const parseJSON = (text) => {
 // ─── @POST /api/ai/recommend-destinations ────────────────────────────────────
 exports.recommendDestinations = asyncHandler(async (req, res) => {
   const { budget, travelStyle, season, interests, country, duration, experienceDescription } = req.body;
-  
+
   if (!experienceDescription && (!budget || !season)) {
     throw new AppError('Preferences details are required', 400);
   }
 
-  const prompt   = prompts.recommendDestinations({ 
-    budget: budget || 'mid-range', 
-    travelStyle: travelStyle || 'solo', 
-    season: season || 'any season', 
-    interests: interests || [], 
-    country, 
+  const prompt = prompts.recommendDestinations({
+    budget: budget || 'mid-range',
+    travelStyle: travelStyle || 'solo',
+    season: season || 'any season',
+    interests: interests || [],
+    country,
     duration: duration || 7,
     experienceDescription
   });
-  const rawText  = await generateContent(prompt);
-  const data     = parseJSON(rawText);
+  const rawText = await generateContent(prompt);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'recommendation', prompt, rawText, { budget, travelStyle, season, experienceDescription });
+  const historyDoc = await saveHistory(req.user?._id, 'recommendation', prompt, rawText, { budget, travelStyle, season, experienceDescription });
   sendSuccess(res, { recommendations: data, rawText, historyId: historyDoc?._id }, 'Destinations recommended by AI');
 });
 
@@ -59,10 +60,10 @@ exports.storytelling = asyncHandler(async (req, res) => {
   const { destinationName, country } = req.body;
   if (!destinationName || !country) throw new AppError('Destination name and country required', 400);
 
-  const prompt  = prompts.storytelling({ destinationName, country });
-  const story   = await generateContent(prompt);
+  const prompt = prompts.storytelling({ destinationName, country });
+  const story = await generateContent(prompt);
 
-  const historyDoc = await saveHistory(req.user._id, 'storytelling', prompt, story, { destinationName, country });
+  const historyDoc = await saveHistory(req.user?._id, 'storytelling', prompt, story, { destinationName, country });
   sendSuccess(res, { story, historyId: historyDoc?._id }, 'Story generated successfully');
 });
 
@@ -70,11 +71,11 @@ exports.storytelling = asyncHandler(async (req, res) => {
 exports.hiddenGems = asyncHandler(async (req, res) => {
   const { country, travelStyle, interests } = req.body;
 
-  const prompt  = prompts.hiddenGems({ country, travelStyle, interests });
+  const prompt = prompts.hiddenGems({ country, travelStyle, interests });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'hidden-gems', prompt, rawText, { country });
+  const historyDoc = await saveHistory(req.user?._id, 'hidden-gems', prompt, rawText, { country });
   sendSuccess(res, { gems: data, rawText, historyId: historyDoc?._id }, 'Hidden gems discovered by AI');
 });
 
@@ -83,11 +84,11 @@ exports.foodGuide = asyncHandler(async (req, res) => {
   const { country, city, dietaryPreferences } = req.body;
   if (!country) throw new AppError('Country is required', 400);
 
-  const prompt  = prompts.foodGuide({ country, city, dietaryPreferences });
+  const prompt = prompts.foodGuide({ country, city, dietaryPreferences });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'food-guide', prompt, rawText, { country, city });
+  const historyDoc = await saveHistory(req.user?._id, 'food-guide', prompt, rawText, { country, city });
   sendSuccess(res, { foodGuide: data, rawText, historyId: historyDoc?._id }, 'Food guide generated');
 });
 
@@ -96,11 +97,11 @@ exports.festivalGuide = asyncHandler(async (req, res) => {
   const { country, month } = req.body;
   if (!country) throw new AppError('Country is required', 400);
 
-  const prompt  = prompts.festivalGuide({ country, month });
+  const prompt = prompts.festivalGuide({ country, month });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'festival-guide', prompt, rawText, { country, month });
+  const historyDoc = await saveHistory(req.user?._id, 'festival-guide', prompt, rawText, { country, month });
   sendSuccess(res, { festivals: data, rawText, historyId: historyDoc?._id }, 'Festival guide generated');
 });
 
@@ -109,11 +110,11 @@ exports.culturalGuide = asyncHandler(async (req, res) => {
   const { country, city } = req.body;
   if (!country) throw new AppError('Country is required', 400);
 
-  const prompt  = prompts.culturalGuide({ country, city });
+  const prompt = prompts.culturalGuide({ country, city });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'cultural-guide', prompt, rawText, { country, city });
+  const historyDoc = await saveHistory(req.user?._id, 'cultural-guide', prompt, rawText, { country, city });
   sendSuccess(res, { culturalGuide: data, rawText, historyId: historyDoc?._id }, 'Cultural guide generated');
 });
 
@@ -122,11 +123,11 @@ exports.languageHelper = asyncHandler(async (req, res) => {
   const { country, language, situation } = req.body;
   if (!country) throw new AppError('Country is required', 400);
 
-  const prompt  = prompts.languageHelper({ country, language, situation });
+  const prompt = prompts.languageHelper({ country, language, situation });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'language-helper', prompt, rawText, { country, language });
+  const historyDoc = await saveHistory(req.user?._id, 'language-helper', prompt, rawText, { country, language });
   sendSuccess(res, { languageGuide: data, rawText, historyId: historyDoc?._id }, 'Language guide generated');
 });
 
@@ -135,11 +136,11 @@ exports.budgetPlanner = asyncHandler(async (req, res) => {
   const { destination, duration, travelStyle, groupSize } = req.body;
   if (!destination || !duration) throw new AppError('Destination and duration are required', 400);
 
-  const prompt  = prompts.budgetPlanner({ destination, duration, travelStyle, groupSize });
+  const prompt = prompts.budgetPlanner({ destination, duration, travelStyle, groupSize });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'budget-planner', prompt, rawText, { destination, duration });
+  const historyDoc = await saveHistory(req.user?._id, 'budget-planner', prompt, rawText, { destination, duration });
   sendSuccess(res, { budgetPlan: data, rawText, historyId: historyDoc?._id }, 'Budget plan generated');
 });
 
@@ -148,11 +149,11 @@ exports.generateItinerary = asyncHandler(async (req, res) => {
   const { destination, days, interests, budget, travelStyle } = req.body;
   if (!destination || !days) throw new AppError('Destination and days are required', 400);
 
-  const prompt  = prompts.itinerary({ destination, days, interests, budget, travelStyle });
+  const prompt = prompts.itinerary({ destination, days, interests, budget, travelStyle });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'itinerary', prompt, rawText, { destination, days });
+  const historyDoc = await saveHistory(req.user?._id, 'itinerary', prompt, rawText, { destination, days });
   sendSuccess(res, { itinerary: data, rawText, historyId: historyDoc?._id }, 'Itinerary generated successfully');
 });
 
@@ -161,18 +162,18 @@ exports.chatbot = asyncHandler(async (req, res) => {
   const { message, conversationHistory = [] } = req.body;
   if (!message) throw new AppError('Message is required', 400);
 
-  const prompt   = prompts.chatbot(message, conversationHistory.slice(-10));
+  const prompt = prompts.chatbot(message, conversationHistory.slice(-10));
   const response = await generateContent(prompt);
 
-  const historyDoc = await saveHistory(req.user._id, 'chatbot', message, response, { historyLength: conversationHistory.length });
+  const historyDoc = await saveHistory(req.user?._id, 'chatbot', message, response, { historyLength: conversationHistory.length });
   sendSuccess(res, { response, message, historyId: historyDoc?._id }, 'AI response generated');
 });
 
 // ─── @GET /api/ai/history ────────────────────────────────────────────────────
 exports.getHistory = asyncHandler(async (req, res) => {
-  const page  = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10)|| 20;
-  const filter= { user: req.user._id };
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 20;
+  const filter = { user: req.user._id };
   if (req.query.type) filter.type = req.query.type;
   if (req.query.isSaved !== undefined) filter.isSaved = req.query.isSaved === 'true';
 
@@ -211,10 +212,10 @@ exports.routePlanner = asyncHandler(async (req, res) => {
   const { origin, destination, preferences } = req.body;
   if (!origin || !destination) throw new AppError('Origin and Destination are required', 400);
 
-  const prompt  = prompts.routePlanner({ origin, destination, preferences });
+  const prompt = prompts.routePlanner({ origin, destination, preferences });
   const rawText = await generateContent(prompt);
-  const data    = parseJSON(rawText);
+  const data = parseJSON(rawText);
 
-  const historyDoc = await saveHistory(req.user._id, 'route-planner', prompt, rawText, { origin, destination });
+  const historyDoc = await saveHistory(req.user?._id, 'route-planner', prompt, rawText, { origin, destination });
   sendSuccess(res, { routePlan: data, rawText, historyId: historyDoc?._id }, 'Route plan generated');
 });

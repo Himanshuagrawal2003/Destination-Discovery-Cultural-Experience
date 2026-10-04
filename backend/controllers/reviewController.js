@@ -1,5 +1,6 @@
 const Review       = require('../models/Review');
 const Destination  = require('../models/Destination');
+const User         = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError     = require('../utils/AppError');
 const { sendSuccess, sendPaginated } = require('../utils/apiResponse');
@@ -68,10 +69,14 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
 exports.deleteReview = asyncHandler(async (req, res, next) => {
   const review = await Review.findById(req.params.id);
   if (!review) return next(new AppError('Review not found', 404));
-  if (review.user.toString() !== req.user._id.toString()) {
+  if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('You can only delete your own reviews', 403));
   }
-  await review.remove();
+  const destId = review.destination;
+  await review.deleteOne();
+  if (destId) {
+    await Review.calcAverageRatings(destId);
+  }
   sendSuccess(res, {}, 'Review deleted successfully');
 });
 
@@ -99,6 +104,18 @@ exports.addReply = asyncHandler(async (req, res, next) => {
   await review.save({ validateBeforeSave: false });
   await review.populate('replies.user', 'name avatar');
   sendSuccess(res, { replies: review.replies }, 'Reply added');
+});
+
+// @GET /api/reviews/featured
+exports.getFeaturedReviews = asyncHandler(async (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 6;
+  const reviews = await Review.find({ isHidden: false })
+    .populate('user', 'name avatar')
+    .populate('destination', 'name coverImage slug country location')
+    .sort({ rating: -1, createdAt: -1 })
+    .limit(limit);
+
+  sendSuccess(res, { reviews }, 'Featured reviews fetched');
 });
 
 // @GET /api/reviews/my

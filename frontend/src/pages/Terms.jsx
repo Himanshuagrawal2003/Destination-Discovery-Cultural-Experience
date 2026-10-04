@@ -10,7 +10,7 @@ export default function Terms() {
           transition={{ duration: 0.5 }}
           className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-8 md:p-12 space-y-6 rounded-3xl shadow-sm"
         >
-          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Terms of Service</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Terms of Service</h1>
           <p className="text-xs text-primary-900/40 dark:text-dark-muted font-bold">Last Updated: July 4, 2026</p>
           <div className="border-t border-primary-100 dark:border-dark-border" />
 
@@ -28,10 +28,6 @@ export default function Terms() {
             <h3 className="text-sm font-bold text-primary-900 dark:text-white font-display pt-2">AI Content Accuracy</h3>
             <p>
               CultureQuest AI relies on Google's Gemini API for travel tips, dining etiquette, storytelling, and itinerary creation. While we optimize the prompts for maximum accuracy, AI-generated travel details, pricing, routes, and dates can hallucinate. Users must verify travel logistics, opening hours, local weather warnings, and security notices independently.
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+            </p> </div> </motion.div> </div> </div>
   );
 }

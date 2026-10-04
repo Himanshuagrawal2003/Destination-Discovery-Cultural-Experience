@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { 
-  LuMapPin, 
-  LuSparkles, 
-  LuBus, 
-  LuKey, 
-  LuCoins, 
+import {
+  LuMapPin,
+  LuSparkles,
+  LuBus,
+  LuKey,
+  LuCoins,
   LuActivity,
   LuBookmark
 } from 'react-icons/lu';
@@ -60,12 +60,12 @@ const defaultFallbackGems = [
 
 export default function HiddenGems() {
   const user = useSelector(selectUser);
-  
+
   // Initialize state from cache if available
   const [aiGems, setAiGems] = useState(cachedGems || []);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiCountry, setAiCountry] = useState(cachedCountry || '');
-  const [bookmarkedGems, setBookmarkedGems] = useState(cachedBookmarkedGems || {}); 
+  const [bookmarkedGems, setBookmarkedGems] = useState(cachedBookmarkedGems || {});
   const [savingGem, setSavingGem] = useState(null); // index of gem being saved
 
   useEffect(() => {
@@ -144,11 +144,11 @@ export default function HiddenGems() {
     if (bookmarkedGems[idx]) {
       try {
         await api.delete(`/bookmarks/${bookmarkedGems[idx]}`);
-        setBookmarkedGems(prev => { 
-          const n = {...prev}; 
-          delete n[idx]; 
+        setBookmarkedGems(prev => {
+          const n = { ...prev };
+          delete n[idx];
           cachedBookmarkedGems = n;
-          return n; 
+          return n;
         });
         toast.success('Removed from bookmarks');
       } catch { toast.error('Failed to remove bookmark'); }
@@ -207,8 +207,8 @@ export default function HiddenGems() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-primary-100 dark:border-dark-border pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Cultural Hidden Gems</h1>
-          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Discover off-the-beaten-path locations with authentic heritage.</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Cultural Hidden Gems</h1>
+          <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Discover off-the-beaten-path locations with authentic heritage.</p>
         </div>
 
         {/* AI Gems Search Trigger */}
@@ -227,9 +227,7 @@ export default function HiddenGems() {
           >
             <LuSparkles className="text-lg animate-pulse" />
             {isAiLoading ? 'Searching...' : 'AI Find'}
-          </button>
-        </form>
-      </div>
+          </button> </form> </div>
 
       {/* AI Recommendations Section */}
       {isAiLoading ? (
@@ -251,8 +249,7 @@ export default function HiddenGems() {
                     <h3 className="font-bold text-lg text-primary-900 dark:text-white font-display">{gem.name}</h3>
                     <p className="text-xs text-primary-900/60 dark:text-dark-muted flex items-center gap-1 mt-1 font-semibold">
                       <LuMapPin className="text-accent" /> {gem.location}
-                    </p>
-                  </div>
+                    </p> </div>
                   <div className="flex items-center gap-2">
                     {user && (
                       <button
@@ -260,40 +257,30 @@ export default function HiddenGems() {
                         disabled={savingGem === idx}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/20 shadow-sm border border-primary-100/50 dark:border-dark-border cursor-pointer hover:scale-110 transition-transform disabled:opacity-50"
                       >
-                        <LuBookmark className={`text-sm ${bookmarkedGems[idx] ? 'text-accent fill-accent' : 'text-primary-900/40 dark:text-dark-muted'}`} />
-                      </button>
+                        <LuBookmark className={`text-sm ${bookmarkedGems[idx] ? 'text-accent fill-accent' : 'text-primary-900/40 dark:text-dark-muted'}`} /> </button>
                     )}
                     <span className="px-2.5 py-1 bg-primary-100/50 dark:bg-primary-900/20 text-accent text-[10px] font-extrabold rounded-lg capitalize flex items-center gap-1">
                       <LuActivity className="text-xs" /> {gem.difficulty || 'Easy'}
-                    </span>
-                  </div>
-                </div>
+                    </span> </div> </div>
                 <p className="text-xs text-primary-900/70 dark:text-slate-350 leading-relaxed font-semibold">{gem.whySpecial}</p>
                 <div className="text-xs space-y-2 border-t border-primary-100 dark:border-dark-border pt-3 text-primary-900/60 dark:text-dark-muted font-semibold">
                   <p className="flex items-start gap-1.5">
-                    <LuBus className="text-accent shrink-0 mt-0.5" /> 
-                    <span><strong>How to get there:</strong> {gem.howToGetThere}</span>
-                  </p>
+                    <LuBus className="text-accent shrink-0 mt-0.5" />
+                    <span><strong>How to get there:</strong> {gem.howToGetThere}</span> </p>
                   <p className="flex items-start gap-1.5">
-                    <LuKey className="text-accent shrink-0 mt-0.5" /> 
-                    <span><strong>Insider secret:</strong> {gem.localSecret}</span>
-                  </p>
+                    <LuKey className="text-accent shrink-0 mt-0.5" />
+                    <span><strong>Insider secret:</strong> {gem.localSecret}</span> </p>
                   <p className="flex items-start gap-1.5">
-                    <LuCoins className="text-accent shrink-0 mt-0.5" /> 
-                    <span><strong>Estimated daily cost:</strong> ₹{gem.estimatedCostPerDay}</span>
-                  </p>
-                </div>
-              </div>
+                    <LuCoins className="text-accent shrink-0 mt-0.5" />
+                    <span><strong>Estimated daily cost:</strong> ₹{gem.estimatedCostPerDay}</span> </p> </div> </div>
             ))}
           </div>
-          <div className="divider border-primary-100 dark:border-dark-border" />
-        </div>
+          <div className="divider border-primary-100 dark:border-dark-border" /> </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted flex flex-col items-center justify-center space-y-4 rounded-2xl shadow-sm">
-          <span className="text-6xl animate-float">💎</span>
+          <span className="text-6xl animate-float"></span>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Hidden Gems Discovered Yet</h3>
-          <p className="text-xs max-w-sm font-semibold leading-relaxed">Enter a country or region above to let CultureQuest AI find authentic local treasures.</p>
-        </div>
+          <p className="text-xs max-w-sm font-semibold leading-relaxed">Enter a country or region above to let CultureQuest AI find authentic local treasures.</p> </div>
       )}
     </div>
   );

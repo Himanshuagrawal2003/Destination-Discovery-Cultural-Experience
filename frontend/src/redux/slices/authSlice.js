@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api   from '../../services/api';
 import toast from 'react-hot-toast';
 
-// ─── Load initial state from localStorage ─────────────────────────────────────
+// Load initial state from localStorage 
 const storedToken = localStorage.getItem('cq_token');
 const storedUser  = localStorage.getItem('cq_user');
 
@@ -13,7 +13,7 @@ const initialState = {
   error:     null,
 };
 
-// ─── Async Thunks ─────────────────────────────────────────────────────────────
+// Async Thunks 
 
 export const registerUser = createAsyncThunk(
   'auth/register',
@@ -65,7 +65,7 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
-// ─── Slice ────────────────────────────────────────────────────────────────────
+// Slice 
 
 const authSlice = createSlice({
   name: 'auth',
@@ -91,7 +91,7 @@ const authSlice = createSlice({
         state.user      = action.payload.user;
         localStorage.setItem('cq_token', action.payload.token);
         localStorage.setItem('cq_user',  JSON.stringify(action.payload.user));
-        toast.success('Welcome to CultureQuest AI! 🌍');
+        toast.success('Welcome to CultureQuest AI! ');
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -108,7 +108,7 @@ const authSlice = createSlice({
         state.user      = action.payload.user;
         localStorage.setItem('cq_token', action.payload.token);
         localStorage.setItem('cq_user',  JSON.stringify(action.payload.user));
-        toast.success(`Welcome back, ${action.payload.user.name}! 👋`);
+        toast.success(`Welcome back, ${action.payload.user.name}! `);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;

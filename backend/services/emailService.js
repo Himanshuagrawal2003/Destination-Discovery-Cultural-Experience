@@ -4,15 +4,17 @@ const nodemailer = require('nodemailer');
  * Nodemailer transporter configured via environment variables.
  * Supports Gmail with App Password or any SMTP provider.
  */
-const transporter = nodemailer.createTransport({
-  host:   process.env.EMAIL_HOST,
-  port:   parseInt(process.env.EMAIL_PORT, 10) || 587,
-  secure: parseInt(process.env.EMAIL_PORT, 10) === 465,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const getTransporter = () => {
+  return nodemailer.createTransport({
+    host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port:   parseInt(process.env.EMAIL_PORT, 10) || 587,
+    secure: parseInt(process.env.EMAIL_PORT, 10) === 465,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+};
 
 /**
  * Send a generic email
@@ -20,7 +22,6 @@ const transporter = nodemailer.createTransport({
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   const isEmailConfigured = 
-    process.env.EMAIL_HOST &&
     process.env.EMAIL_USER &&
     process.env.EMAIL_PASS;
 
@@ -33,13 +34,14 @@ const sendEmail = async ({ to, subject, html, text }) => {
   const timeoutPromise = new Promise((resolve) => {
     setTimeout(() => {
       resolve({ timedOut: true });
-    }, 10000); // 10 seconds
+    }, 15000); // 15 seconds
   });
 
   // Always use the authenticated Gmail address as "from" to avoid spam
   const fromAddress = `"CultureQuest AI" <${process.env.EMAIL_USER}>`;
 
   try {
+    const transporter = getTransporter();
     const mailPromise = transporter.sendMail({
       from:        fromAddress,
       to,

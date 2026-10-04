@@ -14,7 +14,7 @@ import AuthLayout      from './layouts/AuthLayout';
 // Guards
 import ProtectedRoute from './components/common/ProtectedRoute';
 
-// ─── Pages ──────────────────────────────────────────────────────────────────
+// Pages 
 import Home              from './pages/Home';
 import Destinations      from './pages/Destinations';
 import DestinationDetail from './pages/DestinationDetail';
@@ -69,7 +69,7 @@ function ScrollToTop() {
   return null;
 }
 
-// ─── App Component ───────────────────────────────────────────────────────────
+// App Component 
 export default function App() {
   const dispatch = useDispatch();
   const token    = useSelector(selectToken);
@@ -89,7 +89,7 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        {/* ─ Public Routes (MainLayout) ─ */}
+        {/*  Public Routes (MainLayout)  */}
         <Route element={<MainLayout />}>
           <Route index              element={<Home />} />
           <Route path="destinations"element={<Destinations />} />
@@ -101,20 +101,29 @@ export default function App() {
           <Route path="contact"     element={<Contact />} />
           <Route path="faq"         element={<FAQ />} />
           <Route path="privacy"     element={<Privacy />} />
-          <Route path="terms"       element={<Terms />} />
-        </Route>
+          <Route path="terms"       element={<Terms />} /> </Route>
 
-        {/* ─ Auth Routes ─ */}
+        {/*  Auth Routes  */}
         <Route element={<AuthLayout />}>
           <Route path="login"           element={<Login />} />
           <Route path="register"        element={<Register />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
-          <Route path="reset-password/:token" element={<ResetPassword />} />
-        </Route>
+          <Route path="reset-password/:token" element={<ResetPassword />} /> </Route>
 
-        {/* ─ Protected User Routes (DashboardLayout) ─ */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<DashboardLayout />}>
+        {/*  Dashboard & AI Workspace (DashboardLayout)  */}
+        <Route element={<DashboardLayout />}>
+          {/* Publicly Accessible AI & Planning Tools */}
+          <Route path="ai/recommend"     element={<AIRecommendations />} />
+          <Route path="ai/budget"        element={<AIBudgetPlanner />} />
+          <Route path="ai/itinerary"     element={<AIItinerary />} />
+          <Route path="ai/food-guide"    element={<AIFoodGuide />} />
+          <Route path="ai/cultural-guide"element={<AICulturalGuide />} />
+          <Route path="ai/route-planner" element={<AIRoutePlanner />} />
+          <Route path="trip-planner"     element={<TripPlanner />} />
+          <Route path="trip-planner/:id" element={<TripDetail />} />
+
+          {/* Protected User Dashboard Pages */}
+          <Route element={<ProtectedRoute />}>
             <Route path="dashboard"        element={<Dashboard />} />
             <Route path="profile"          element={<Profile />} />
             <Route path="my-trips"         element={<MyTrips />} />
@@ -122,25 +131,11 @@ export default function App() {
             <Route path="notifications"    element={<Notifications />} />
             <Route path="bookmarks"        element={<Bookmarks />} />
             <Route path="manage-destinations" element={<ManageDestinations />} />
-            <Route path="trip-planner"     element={<TripPlanner />} />
-            <Route path="trip-planner/:id" element={<TripDetail />} />
-
-            {/* AI Routes */}
-            <Route path="ai/recommend"     element={<AIRecommendations />} />
-            <Route path="ai/budget"        element={<AIBudgetPlanner />} />
-            <Route path="ai/itinerary"     element={<AIItinerary />} />
-            <Route path="ai/food-guide"    element={<AIFoodGuide />} />
-            <Route path="ai/cultural-guide"element={<AICulturalGuide />} />
-            <Route path="ai/route-planner" element={<AIRoutePlanner />} />
-            <Route path="ai/history"       element={<AIHistory />} />
-          </Route>
-        </Route>
+            <Route path="ai/history"       element={<AIHistory />} /> </Route> </Route>
 
 
 
-        {/* ─ 404 ─ */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+        {/*  404  */}
+        <Route path="*" element={<NotFound />} /> </Routes> </BrowserRouter>
   );
 }

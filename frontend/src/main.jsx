@@ -24,7 +24,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
           error:   { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
         }}
-      />
-    </Provider>
-  </React.StrictMode>
+      /> </Provider> </React.StrictMode>
 );

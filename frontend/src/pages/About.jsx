@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { LuCompass, LuSparkles, LuBookOpen, LuCalendar, LuMessageCircle } from 'react-icons/lu';
 
 export default function About() {
   return (
@@ -11,9 +12,11 @@ export default function About() {
           className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-8 md:p-12 space-y-8 rounded-3xl shadow-sm"
         >
           <div className="text-center space-y-4">
-            <span className="text-5xl animate-float block">🏛️</span>
-            <h1 className="text-4xl font-extrabold text-primary-900 dark:text-white font-display">About CultureQuest AI</h1>
-            <p className="text-accent font-bold uppercase tracking-wider text-sm">
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 text-accent mx-auto flex items-center justify-center">
+              <LuCompass className="w-8 h-8 animate-pulse" />
+            </div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">About CultureQuest AI</h1>
+            <p className="text-accent font-bold uppercase tracking-wider text-xs sm:text-sm">
               Discovering destinations through cultural experiences
             </p>
           </div>
@@ -38,19 +41,27 @@ export default function About() {
             <h3 className="text-xl font-bold text-primary-900 dark:text-white pt-4 font-display">Key Features</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-primary-50/50 dark:bg-primary-950/20 border border-primary-100/50 dark:border-primary-900/10 rounded-2xl space-y-2">
-                <h4 className="font-bold text-accent font-display text-sm">🤖 AI Recommendation Engine</h4>
+                <h4 className="font-bold text-accent font-display text-sm flex items-center gap-1.5">
+                  <LuSparkles /> AI Recommendation Engine
+                </h4>
                 <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium">Personalized recommendations based on budget levels, travel seasons, and interests.</p>
               </div>
               <div className="p-4 bg-primary-50/50 dark:bg-primary-950/20 border border-primary-100/50 dark:border-primary-900/10 rounded-2xl space-y-2">
-                <h4 className="font-bold text-accent font-display text-sm">📝 Interactive Storytelling</h4>
+                <h4 className="font-bold text-accent font-display text-sm flex items-center gap-1.5">
+                  <LuBookOpen /> Interactive Storytelling
+                </h4>
                 <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium">Immersive descriptions covering ancient history, folklore, myths, and architecture.</p>
               </div>
               <div className="p-4 bg-primary-50/50 dark:bg-primary-950/20 border border-primary-100/50 dark:border-primary-900/10 rounded-2xl space-y-2">
-                <h4 className="font-bold text-accent font-display text-sm">📅 Day-Wise Itineraries</h4>
+                <h4 className="font-bold text-accent font-display text-sm flex items-center gap-1.5">
+                  <LuCalendar /> Day-Wise Itineraries
+                </h4>
                 <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium">Dynamic travel paths including morning, afternoon, and evening meal recommendations.</p>
               </div>
               <div className="p-4 bg-primary-50/50 dark:bg-primary-950/20 border border-primary-100/50 dark:border-primary-900/10 rounded-2xl space-y-2">
-                <h4 className="font-bold text-accent font-display text-sm">💬 Context-Aware Chatbot</h4>
+                <h4 className="font-bold text-accent font-display text-sm flex items-center gap-1.5">
+                  <LuMessageCircle /> Context-Aware Chatbot
+                </h4>
                 <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium">Your virtual pocket guide, ready to answer questions about any destination anytime.</p>
               </div>
             </div>

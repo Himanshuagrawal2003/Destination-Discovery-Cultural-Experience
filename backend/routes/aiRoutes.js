@@ -6,25 +6,26 @@ const {
   budgetPlanner, generateItinerary, chatbot, routePlanner,
   getHistory, updateHistory, deleteHistory, getQueueStatus,
 } = require('../controllers/aiController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, optionalAuth } = require('../middlewares/authMiddleware');
 
-// All AI routes require authentication
+// Public / Optional Auth AI Generation Endpoints
+router.post('/recommend-destinations', optionalAuth, recommendDestinations);
+router.post('/storytelling',           optionalAuth, storytelling);
+router.post('/hidden-gems',            optionalAuth, hiddenGems);
+router.post('/food-guide',             optionalAuth, foodGuide);
+router.post('/festival-guide',         optionalAuth, festivalGuide);
+router.post('/cultural-guide',         optionalAuth, culturalGuide);
+router.post('/language-helper',        optionalAuth, languageHelper);
+router.post('/budget-planner',         optionalAuth, budgetPlanner);
+router.post('/itinerary',              optionalAuth, generateItinerary);
+router.post('/chatbot',                optionalAuth, chatbot);
+router.post('/route-planner',          optionalAuth, routePlanner);
+router.get('/queue-status',            getQueueStatus);
+
+// Authenticated History Endpoints
 router.use(protect);
-
-router.post('/recommend-destinations', recommendDestinations);
-router.post('/storytelling',           storytelling);
-router.post('/hidden-gems',            hiddenGems);
-router.post('/food-guide',             foodGuide);
-router.post('/festival-guide',         festivalGuide);
-router.post('/cultural-guide',         culturalGuide);
-router.post('/language-helper',        languageHelper);
-router.post('/budget-planner',         budgetPlanner);
-router.post('/itinerary',              generateItinerary);
-router.post('/chatbot',                chatbot);
-router.post('/route-planner',          routePlanner);
 router.get('/history',                 getHistory);
 router.put('/history/:id',             updateHistory);
 router.delete('/history/:id',          deleteHistory);
-router.get('/queue-status',            getQueueStatus);
 
 module.exports = router;

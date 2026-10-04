@@ -5,15 +5,15 @@ const {
   updateDestination, deleteDestination, getFeaturedDestinations,
   getTrendingDestinations, getSearchSuggestions,
 } = require('../controllers/destinationController');
-const { protect }         = require('../middlewares/authMiddleware');
+const { protect, optionalAuth } = require('../middlewares/authMiddleware');
 const { uploadDestination } = require('../config/cloudinary');
 
-// Public
-router.get('/',           getDestinations);
+// Public (with optional user context)
+router.get('/',           optionalAuth, getDestinations);
 router.get('/featured',   getFeaturedDestinations);
 router.get('/trending',   getTrendingDestinations);
 router.get('/suggestions',getSearchSuggestions);
-router.get('/:id',        getDestination);
+router.get('/:id',        optionalAuth, getDestination);
 
 // Authenticated only
 router.use(protect);

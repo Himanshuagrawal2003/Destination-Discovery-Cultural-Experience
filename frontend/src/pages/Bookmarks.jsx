@@ -85,8 +85,8 @@ export default function Bookmarks() {
   return (
     <div className="space-y-8 min-h-screen pb-12 bg-[#FAF7FF] dark:bg-dark-bg">
       <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">My Bookmarks</h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review saved destinations, hidden gems, and cultural events.</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">My Bookmarks</h1>
+        <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review saved destinations, hidden gems, and cultural events.</p>
       </div>
 
       {/* Filter Tabs */}
@@ -150,13 +150,11 @@ export default function Bookmarks() {
                           <img src={img} alt={name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-primary-900/40">
-                            <LuBookmark className="text-4xl" />
-                          </div>
+                            <LuBookmark className="text-4xl" /> </div>
                         )}
                         <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-dark-card/95 text-accent font-extrabold text-2xs rounded-lg shadow-sm capitalize">
                           {bookmark.itemType.replace('-', ' ')}
-                        </span>
-                      </div>
+                        </span> </div>
                       <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
                         <h3 className="font-bold text-primary-900 dark:text-white truncate font-display text-sm">
                           {name}
@@ -166,8 +164,7 @@ export default function Bookmarks() {
                             <LuMapPin className="text-accent" /> {item.city ? `${item.city}, ` : ''}{item.country || ''}
                           </p>
                         )}
-                      </div>
-                    </div>
+                      </div> </div>
                   ) : (
                     <Link
                       to={bookmark.isAiHistory ? '#' : detailsLink}
@@ -184,13 +181,11 @@ export default function Bookmarks() {
                           <img src={img} alt={name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-primary-900/40">
-                            <LuBookmark className="text-4xl" />
-                          </div>
+                            <LuBookmark className="text-4xl" /> </div>
                         )}
                         <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-dark-card/95 text-accent font-extrabold text-2xs rounded-lg shadow-sm capitalize">
                           {bookmark.itemType.replace('-', ' ')}
-                        </span>
-                      </div>
+                        </span> </div>
                       <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
                         <h3 className="font-bold text-primary-900 dark:text-white truncate group-hover:text-accent transition-colors font-display text-sm">
                           {name}
@@ -200,8 +195,7 @@ export default function Bookmarks() {
                             <LuMapPin className="text-accent" /> {item.city ? `${item.city}, ` : ''}{item.country || ''}
                           </p>
                         )}
-                      </div>
-                    </Link>
+                      </div> </Link>
                   )}
 
                   <button
@@ -209,19 +203,15 @@ export default function Bookmarks() {
                     className="absolute right-3 top-3 p-2 bg-white/90 dark:bg-dark-card/90 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-xl shadow-sm border border-primary-100 dark:border-dark-border cursor-pointer transition-colors"
                     aria-label="Remove bookmark"
                   >
-                    <LuTrash2 className="text-base" />
-                  </button>
-                </motion.div>
+                    <LuTrash2 className="text-base" /> </button> </motion.div>
               );
             })}
-          </AnimatePresence>
-        </div>
+          </AnimatePresence> </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-4 rounded-2xl">
-          <span className="text-6xl block animate-float">🔖</span>
+          <span className="text-6xl block animate-float"></span>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Saved Bookmarks</h3>
-          <p className="text-xs max-w-sm mx-auto leading-relaxed font-semibold">Explore destinations, cultural experiences, or local events, and save your favorites here.</p>
-        </div>
+          <p className="text-xs max-w-sm mx-auto leading-relaxed font-semibold">Explore destinations, cultural experiences, or local events, and save your favorites here.</p> </div>
       )}
 
       {/* AI Bookmark Popup Modal */}
@@ -252,16 +242,13 @@ export default function Bookmarks() {
                   </span>
                   <h3 className="font-extrabold text-lg text-primary-900 dark:text-white font-display mt-1">
                     {selectedAiBookmark.aiItem.name || selectedAiBookmark.aiItem.title || 'Saved AI Guide'}
-                  </h3>
-                </div>
+                  </h3> </div>
                 <button
                   onClick={() => setSelectedAiBookmark(null)}
                   className="p-2 hover:bg-primary-50 dark:hover:bg-dark-border text-primary-900/60 dark:text-dark-muted rounded-xl transition-all cursor-pointer"
                   aria-label="Close modal"
                 >
-                  <LuX className="text-xl" />
-                </button>
-              </div>
+                  <LuX className="text-xl" /> </button> </div>
 
               {/* Scrollable Body */}
               <div className="p-6 overflow-y-auto space-y-6">
@@ -293,8 +280,7 @@ export default function Bookmarks() {
                         {parsed.bestRoute && (
                           <div className="p-3.5 bg-accent/5 dark:bg-accent/10 border border-accent/15 rounded-xl">
                             <p className="text-[10px] font-black uppercase text-accent tracking-wider">CultureQuest Tip</p>
-                            <p className="text-xs font-semibold italic text-primary-900/80 dark:text-slate-350">"{parsed.bestRoute}"</p>
-                          </div>
+                            <p className="text-xs font-semibold italic text-primary-900/80 dark:text-slate-350">"{parsed.bestRoute}"</p> </div>
                         )}
                         <div className="space-y-3">
                           {Array.isArray(parsed.options) && parsed.options.map((opt, oIdx) => (
@@ -303,9 +289,7 @@ export default function Bookmarks() {
                                 <h5 className="font-bold text-xs text-primary-900 dark:text-white">{opt.title}</h5>
                                 <div className="flex gap-2 text-[9px] font-bold">
                                   <span className="text-accent bg-accent/10 px-2 py-0.5 rounded-md">{opt.cost}</span>
-                                  <span className="text-primary-900/60 dark:text-dark-muted bg-primary-100/40 dark:bg-primary-900/25 px-2 py-0.5 rounded-md">{opt.duration}</span>
-                                </div>
-                              </div>
+                                  <span className="text-primary-900/60 dark:text-dark-muted bg-primary-100/40 dark:bg-primary-900/25 px-2 py-0.5 rounded-md">{opt.duration}</span> </div> </div>
                               
                               {Array.isArray(opt.pathway) && (
                                 <div className="pl-2 border-l border-primary-200 dark:border-dark-border/40 space-y-1">
@@ -327,13 +311,11 @@ export default function Bookmarks() {
                                         {bk}
                                       </span>
                                     ))}
-                                  </div>
-                                </div>
+                                  </div> </div>
                               )}
                             </div>
                           ))}
-                        </div>
-                      </div>
+                        </div> </div>
                     );
                   }
 
@@ -347,8 +329,7 @@ export default function Bookmarks() {
                       return (
                         <>
                           <strong className={`font-extrabold uppercase tracking-wide text-[10px] ${prefixColorClass} block sm:inline mr-1`}>{prefix}{symbol}</strong>
-                          <span>{rest}</span>
-                        </>
+                          <span>{rest}</span> </>
                       );
                     }
                     return text;
@@ -386,9 +367,8 @@ export default function Bookmarks() {
                                   if (isSpecial) {
                                     return (
                                       <div key={i} className={`p-3.5 rounded-lg border-l-4 ${colors.border} bg-white dark:bg-dark-bg/60 border flex items-start gap-2 shadow-2xs`}>
-                                        <span className="text-xs shrink-0 mt-0.5">⚠️</span>
-                                        <div className="text-xs leading-relaxed font-semibold">{formatText(text, colors.prefix)}</div>
-                                      </div>
+                                        <span className="text-xs shrink-0 mt-0.5"></span>
+                                        <div className="text-xs leading-relaxed font-semibold">{formatText(text, colors.prefix)}</div> </div>
                                     );
                                   }
                                   return <p key={i}>{formatText(text, colors.prefix)}</p>;
@@ -405,11 +385,9 @@ export default function Bookmarks() {
                                           {Object.entries(subV).map(([k, valVal]) => (
                                             <div key={k} className="flex justify-between border-b border-primary-100/30 pb-0.5 last:border-0">
                                               <span className="capitalize text-primary-900/60 dark:text-dark-muted font-bold">{k.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                                              <span className="font-extrabold text-accent">₹{String(valVal)}</span>
-                                            </div>
+                                              <span className="font-extrabold text-accent">₹{String(valVal)}</span> </div>
                                           ))}
-                                        </div>
-                                      </div>
+                                        </div> </div>
                                     );
                                   }
                                   
@@ -421,8 +399,7 @@ export default function Bookmarks() {
                                           {subV.map((tip, idx) => (
                                             <li key={idx}>{tip}</li>
                                           ))}
-                                        </ul>
-                                      </div>
+                                        </ul> </div>
                                     );
                                   }
                                   
@@ -432,20 +409,17 @@ export default function Bookmarks() {
                                   if (isSpecial) {
                                     return (
                                       <div key={i} className={`p-3.5 rounded-lg border-l-4 ${colors.border} bg-white dark:bg-dark-bg/60 border flex items-start gap-2 shadow-2xs`}>
-                                        <span className="text-xs shrink-0 mt-0.5">⚠️</span>
+                                        <span className="text-xs shrink-0 mt-0.5"></span>
                                         <div className="text-xs leading-relaxed">
                                           <strong className={`capitalize ${colors.prefix} font-extrabold block sm:inline mr-1`}>{subLabel}:</strong>
-                                          <span>{text}</span>
-                                        </div>
-                                      </div>
+                                          <span>{text}</span> </div> </div>
                                     );
                                   }
                                   
                                   return (
                                     <p key={i} className="text-[10px]">
                                       <strong className={`capitalize ${colors.prefix} font-extrabold block sm:inline mr-1`}>{subLabel}:</strong>
-                                      <span className="font-extrabold text-accent">{text}</span>
-                                    </p>
+                                      <span className="font-extrabold text-accent">{text}</span> </p>
                                   );
                                 })
                               ) : (
@@ -454,16 +428,14 @@ export default function Bookmarks() {
                                   if (isSpecial) {
                                     return (
                                       <div className={`p-3.5 rounded-lg border-l-4 ${colors.border} bg-white dark:bg-dark-bg/60 border flex items-start gap-2 shadow-2xs`}>
-                                        <span className="text-xs shrink-0 mt-0.5">⚠️</span>
-                                        <div className="text-xs leading-relaxed font-semibold">{formatText(String(val), colors.prefix)}</div>
-                                      </div>
+                                        <span className="text-xs shrink-0 mt-0.5"></span>
+                                        <div className="text-xs leading-relaxed font-semibold">{formatText(String(val), colors.prefix)}</div> </div>
                                     );
                                   }
                                   return <p>{formatText(String(val), colors.prefix)}</p>;
                                 })()
                               )}
-                            </div>
-                          </div>
+                            </div> </div>
                         );
                       })}
                     </div>
@@ -478,12 +450,8 @@ export default function Bookmarks() {
                   className="px-4 py-2 bg-accent hover:bg-accent/90 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer transition-all hover:shadow-glow"
                 >
                   Close Guide
-                </button>
-              </div>
-            </motion.div>
-          </div>
+                </button> </div> </motion.div> </div>
         )}
-      </AnimatePresence>
-    </div>
+      </AnimatePresence> </div>
   );
 }

@@ -21,7 +21,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "How do I add a new destination or event?",
-    answer: "If your user role is 'admin', you will see the 🛡️ Admin Sidebar link in your user profile dropdown. Through that panel, admins can perform full CRUD operations on Destinations, Events, Experiences, and manage registered users."
+    answer: "If your user role is 'admin', you will see the  Admin Sidebar link in your user profile dropdown. Through that panel, admins can perform full CRUD operations on Destinations, Events, Experiences, and manage registered users."
   }
 ];
 
@@ -42,9 +42,8 @@ export default function FAQ() {
           className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-8 md:p-12 space-y-8 rounded-3xl shadow-sm"
         >
           <div className="text-center space-y-3">
-            <span className="text-5xl animate-float block">❔</span>
-            <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Frequently Asked Questions</h1>
-            <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Frequently Asked Questions</h1>
+            <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium">
               Get quick answers to common questions about CultureQuest AI.
             </p>
           </div>
@@ -68,8 +67,7 @@ export default function FAQ() {
                       className={`text-xl text-primary-950/40 dark:text-dark-muted transition-transform duration-200 shrink-0 ${
                         isOpen ? 'rotate-180 text-accent' : ''
                       }`}
-                    />
-                  </button>
+                    /> </button>
                   <motion.div
                     initial={false}
                     animate={{ height: isOpen ? 'auto' : 0 }}
@@ -77,14 +75,9 @@ export default function FAQ() {
                   >
                     <div className="p-5 pt-0 text-xs text-primary-900/60 dark:text-dark-muted leading-relaxed border-t border-primary-50 dark:border-dark-border bg-primary-50/20 dark:bg-primary-950/10 font-semibold">
                       {item.answer}
-                    </div>
-                  </motion.div>
-                </div>
+                    </div> </motion.div> </div>
               );
             })}
-          </div>
-        </motion.div>
-      </div>
-    </div>
+          </div> </motion.div> </div> </div>
   );
 }

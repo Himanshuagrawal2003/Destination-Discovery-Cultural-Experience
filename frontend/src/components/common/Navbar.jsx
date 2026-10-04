@@ -5,7 +5,7 @@ import { motion, AnimatePresence }    from 'framer-motion';
 import {
   LuMenu, LuX, LuSearch, LuSun, LuMoon,
   LuBell, LuUser, LuSparkles, LuLogOut,
-  LuLayoutDashboard, LuBookmark, LuMap, LuCompass
+  LuLayoutDashboard, LuBookmark, LuMap, LuCompass, LuChevronDown
 } from 'react-icons/lu';
 import { logout, selectUser } from '../../redux/slices/authSlice';
 import { toggleDarkMode, toggleMobileMenu, closeMobileMenu,
@@ -82,18 +82,26 @@ export default function Navbar() {
       >
         <div className="container-cq">
           <div className="flex items-center justify-between h-16">
-            {/* ── Logo ── */}
-            <Link to="/" className="flex items-center gap-2 group" onClick={() => dispatch(closeMobileMenu())}>
-              <span className="text-2xl group-hover:animate-float inline-block transition-all">🌍</span>
-              <div>
-                <span className="font-extrabold text-lg text-primary-900 dark:text-dark-text font-display">
-                  Culture<span className="gradient-text">Quest</span>
-                </span>
-                <span className="hidden sm:inline text-xs text-primary-900/40 dark:text-dark-muted ml-1 font-bold">AI</span>
+            {/*  Logo  */}
+            <Link to="/" className="flex items-center gap-2 group shrink-0 min-w-0" onClick={() => dispatch(closeMobileMenu())}>
+              {/* Globe icon in accent color */}
+              <svg viewBox="0 0 32 32" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-accent group-hover:scale-110 transition-transform duration-200">
+                <circle cx="16" cy="13" r="9" stroke="currentColor" strokeWidth="1.8" fill="none"/>
+                <ellipse cx="16" cy="13" rx="9" ry="3.6" stroke="currentColor" strokeWidth="1.4" fill="none" opacity="0.55"/>
+                <line x1="16" y1="4" x2="16" y2="22" stroke="currentColor" strokeWidth="1.4" opacity="0.55"/>
+                <circle cx="16" cy="13" r="2.2" fill="currentColor"/>
+                <path d="M16 19 L16 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="16" cy="29.2" r="1.5" fill="currentColor" opacity="0.5"/>
+              </svg>
+              <div className="leading-tight">
+                <div className="font-extrabold text-[17px] text-primary-900 dark:text-white font-display tracking-tight whitespace-nowrap">
+                  Culture<span className="text-accent">Quest</span>
+                </div>
+                <div className="text-[10px] font-bold text-primary-900/40 dark:text-dark-muted tracking-widest uppercase whitespace-nowrap">AI Travel</div>
               </div>
             </Link>
 
-            {/* ── Desktop Nav ── */}
+            {/*  Desktop Nav  */}
             <nav className="hidden md:flex items-center gap-6">
               {NAV_LINKS.map((link) => (
                 <NavLink key={link.to} to={link.to} className={linkClass}>
@@ -105,12 +113,11 @@ export default function Navbar() {
                   <span className="flex items-center gap-1">
                     <LuSparkles className="text-accent text-sm shrink-0" />
                     AI Tools
-                  </span>
-                </NavLink>
+                  </span> </NavLink>
               )}
             </nav>
 
-            {/* ── Actions ── */}
+            {/*  Actions  */}
             <div className="flex items-center gap-2">
 
 
@@ -130,9 +137,7 @@ export default function Navbar() {
                     transition={{ duration: 0.2 }}
                   >
                     {isDark ? <LuSun className="text-lg text-accent" /> : <LuMoon className="text-lg" />}
-                  </motion.div>
-                </AnimatePresence>
-              </button>
+                  </motion.div> </AnimatePresence> </button>
 
               {user ? (
                 <>
@@ -150,71 +155,26 @@ export default function Navbar() {
                     )}
                   </Link>
 
-                  {/* User menu */}
-                  <div className="hidden md:block relative" ref={userMenuRef}>
-                    <button
-                      id="user-menu-btn"
-                      onClick={() => setIsUserMenu(!isUserMenu)}
-                      className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-primary-50 dark:hover:bg-dark-border transition-colors cursor-pointer"
-                    >
-                      <img
-                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=8b5cf6&color=fff`}
-                        alt={user.name}
-                        className="w-8 h-8 rounded-full object-cover border-2 border-accent shrink-0"
-                      />
-                      <span className="hidden sm:inline text-sm font-semibold text-primary-900 dark:text-dark-text max-w-[80px] truncate">
-                        {user.name.split(' ')[0]}
-                      </span>
-                    </button>
-
-                    <AnimatePresence>
-                      {isUserMenu && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                          transition={{ duration: 0.15 }}
-                          className="dropdown right-0 w-44 py-2 border border-primary-100 dark:border-dark-border"
-                        >
-                          <div className="px-4 py-2 border-b border-primary-100 dark:border-dark-border">
-                            <p className="font-semibold text-sm text-primary-900 dark:text-dark-text">{user.name}</p>
-                            <p className="text-xs text-primary-900/40 dark:text-dark-muted font-bold truncate mt-0.5">{user.email}</p>
-                          </div>
-                          {[
-                            { to: '/dashboard', icon: LuLayoutDashboard, label: 'Dashboard' },
-                            { to: '/profile',   icon: LuUser,    label: 'Profile' },
-                            { to: '/bookmarks', icon: LuBookmark,  label: 'Bookmarks' },
-                            { to: '/my-trips',  icon: LuMap,       label: 'My Trips' },
-                          ].map((item) => (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              onClick={() => setIsUserMenu(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-primary-900/70 dark:text-dark-text hover:bg-primary-50 dark:hover:bg-dark-border transition-colors font-semibold"
-                            >
-                              <item.icon className="text-base text-accent" />
-                              {item.label}
-                            </Link>
-                          ))}
-                          <div className="border-t border-primary-100 dark:border-dark-border mt-1 pt-1">
-                            <button
-                              onClick={handleLogout}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors w-full cursor-pointer font-bold"
-                            >
-                              <LuLogOut className="text-base" />
-                              Logout
-                            </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  {/* User avatar — direct link to /profile */}
+                  <Link
+                    to="/profile"
+                    onClick={() => { dispatch(closeMobileMenu()); }}
+                    className="flex items-center gap-2 rounded-xl px-1.5 py-1 hover:bg-primary-50 dark:hover:bg-dark-border transition-colors"
+                  >
+                    <img
+                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=8b5cf6&color=fff`}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-accent shrink-0"
+                    />
+                    <span className="hidden sm:inline text-sm font-semibold text-primary-900 dark:text-dark-text max-w-[80px] truncate">
+                      {user.name.split(' ')[0]}
+                    </span>
+                  </Link>
                 </>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
                   <Link to="/login"    className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2 rounded-xl text-sm transition-all">Log In</Link>
-                  <Link to="/register" className="btn bg-accent hover:bg-accent/90 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-sm hover:shadow-glow">Sign Up</Link>
-                </div>
+                  <Link to="/register" className="btn bg-accent hover:bg-accent/90 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-sm hover:shadow-glow">Sign Up</Link> </div>
               )}
 
               {/* Mobile hamburger */}
@@ -225,12 +185,9 @@ export default function Navbar() {
                 aria-label="Toggle menu"
               >
                 {isMobileOpen ? <LuX className="text-xl" /> : <LuMenu className="text-xl" />}
-              </button>
-            </div>
-          </div>
-        </div>
+              </button> </div> </div> </div>
 
-        {/* ── Mobile Menu ── */}
+        {/*  Mobile Menu  */}
         <AnimatePresence>
           {isMobileOpen && (
             <motion.div
@@ -241,21 +198,6 @@ export default function Navbar() {
               className="absolute top-16 left-0 right-0 md:hidden overflow-hidden border-t border-primary-100 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg z-[10000]"
             >
               <nav className="container-cq py-4 flex flex-col gap-1.5">
-                {/* User Info on Mobile */}
-                {user && (
-                  <div className="bg-primary-50/50 dark:bg-primary-950/20 border border-primary-100 dark:border-primary-900/20 rounded-2xl p-4 mb-3 flex items-center gap-3">
-                    <img
-                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=8b5cf6&color=fff`}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-accent shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm text-primary-900 dark:text-white truncate">{user.name}</p>
-                      <p className="text-2xs text-primary-900/40 dark:text-dark-muted font-bold truncate mt-0.5">{user.email}</p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Base Nav Links */}
                 {NAV_LINKS.map((link) => (
                   <NavLink
@@ -265,8 +207,7 @@ export default function Navbar() {
                     className={mobileLinkClass}
                   >
                     <LuCompass className="text-accent text-sm shrink-0" />
-                    <span>{link.label}</span>
-                  </NavLink>
+                    <span>{link.label}</span> </NavLink>
                 ))}
 
                 {/* User Specific Links */}
@@ -278,48 +219,42 @@ export default function Navbar() {
                       className={mobileLinkClass}
                     >
                       <LuLayoutDashboard className="text-accent text-sm shrink-0" />
-                      <span>Dashboard</span>
-                    </NavLink>
+                      <span>Dashboard</span> </NavLink>
                     <NavLink
                       to="/ai/recommend"
                       onClick={() => dispatch(closeMobileMenu())}
                       className={mobileLinkClass}
                     >
                       <LuSparkles className="text-accent text-sm shrink-0" />
-                      <span>AI Tools</span>
-                    </NavLink>
+                      <span>AI Tools</span> </NavLink>
                     <NavLink
                       to="/bookmarks"
                       onClick={() => dispatch(closeMobileMenu())}
                       className={mobileLinkClass}
                     >
                       <LuBookmark className="text-accent text-sm shrink-0" />
-                      <span>Bookmarks</span>
-                    </NavLink>
+                      <span>Bookmarks</span> </NavLink>
                     <NavLink
                       to="/my-trips"
                       onClick={() => dispatch(closeMobileMenu())}
                       className={mobileLinkClass}
                     >
                       <LuMap className="text-accent text-sm shrink-0" />
-                      <span>My Trips</span>
-                    </NavLink>
+                      <span>My Trips</span> </NavLink>
                     <NavLink
                       to="/profile"
                       onClick={() => dispatch(closeMobileMenu())}
                       className={mobileLinkClass}
                     >
                       <LuUser className="text-accent text-sm shrink-0" />
-                      <span>Profile</span>
-                    </NavLink>
+                      <span>Profile</span> </NavLink>
                     <NavLink
                       to="/notifications"
                       onClick={() => dispatch(closeMobileMenu())}
                       className={mobileLinkClass}
                     >
                       <LuBell className="text-accent text-sm shrink-0" />
-                      <span>Notifications {unreadCount > 0 ? `(${unreadCount})` : ''}</span>
-                    </NavLink>
+                      <span>Notifications {unreadCount > 0 ? `(${unreadCount})` : ''}</span> </NavLink>
 
 
 
@@ -329,24 +264,31 @@ export default function Navbar() {
                         className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors w-full cursor-pointer text-left"
                       >
                         <LuLogOut className="text-sm shrink-0" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  </>
+                        <span>Logout</span> </button> </div> </>
                 ) : (
                   <div className="flex gap-2 mt-2 px-4">
                     <Link to="/login" onClick={() => dispatch(closeMobileMenu())} className="btn bg-primary-100/50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-accent font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex-1 text-center">Log In</Link>
-                    <Link to="/register" onClick={() => dispatch(closeMobileMenu())} className="btn bg-accent hover:bg-accent/90 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex-1 text-center shadow-sm">Sign Up</Link>
-                  </div>
+                    <Link to="/register" onClick={() => dispatch(closeMobileMenu())} className="btn bg-accent hover:bg-accent/90 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex-1 text-center shadow-sm">Sign Up</Link> </div>
                 )}
-              </nav>
-            </motion.div>
+              </nav> </motion.div>
           )}
-        </AnimatePresence>
-      </header>
+        </AnimatePresence> </header>
+
+      {/* Mobile backdrop — click outside to close */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 top-16 z-[9998] md:hidden bg-black/20 backdrop-blur-[1px]"
+            onClick={() => dispatch(closeMobileMenu())}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Search Overlay */}
-      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-    </>
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} /> </>
   );
 }

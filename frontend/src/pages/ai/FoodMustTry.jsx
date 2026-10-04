@@ -60,10 +60,10 @@ export default function FoodMustTry() {
     <div className="space-y-8 min-h-screen pb-12 bg-[#FAF7FF] dark:bg-dark-bg">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
-          <LuHeart className="text-rose-500 animate-pulse fill-rose-500" /> Food Must Try
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display flex items-center gap-2 tracking-tight leading-snug">
+          <LuHeart className="text-rose-500 animate-pulse fill-rose-500 shrink-0 text-lg sm:text-2xl" /> Food Must Try
         </h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">
+        <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">
           Your bookmarked culinary discoveries, street foods, and traditional delicacies from around the world.
         </p>
       </div>
@@ -101,8 +101,7 @@ export default function FoodMustTry() {
                       </span>
                       <h2 className="text-xl font-extrabold text-primary-900 dark:text-white font-display mt-1">
                         {title}
-                      </h2>
-                    </div>
+                      </h2> </div>
                     <button
                       onClick={() => handleRemove(guideItem._id)}
                       className="btn border border-red-200 dark:border-red-950 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -110,8 +109,7 @@ export default function FoodMustTry() {
                     >
                       <LuTrash2 className="text-sm" />
                       Remove
-                    </button>
-                  </div>
+                    </button> </div>
 
                   {/* Traditional Dishes */}
                   {guide.traditionalDishes?.length > 0 && (
@@ -126,12 +124,9 @@ export default function FoodMustTry() {
                             <p className="text-xs text-primary-900/60 dark:text-dark-muted font-semibold leading-relaxed">{dish.description}</p>
                             <div className="flex gap-4 text-[10px] text-primary-900/40 dark:text-dark-muted/50 font-bold pt-1">
                               <span className="flex items-center gap-0.5"><LuMapPin /> {dish.bestWhereToTry || dish.bestPlace || 'Local places'}</span>
-                              <span className="flex items-center gap-0.5"><LuCoins /> {dish.priceRange || 'Moderate'}</span>
-                            </div>
-                          </div>
+                              <span className="flex items-center gap-0.5"><LuCoins /> {dish.priceRange || 'Moderate'}</span> </div> </div>
                         ))}
-                      </div>
-                    </div>
+                      </div> </div>
                   )}
 
                   {/* Street Food */}
@@ -147,12 +142,9 @@ export default function FoodMustTry() {
                             <p className="text-xs text-primary-900/60 dark:text-dark-muted font-semibold leading-relaxed">{sf.description}</p>
                             <div className="flex gap-4 text-[10px] text-amber-600/70 dark:text-amber-400 font-bold pt-1">
                               <span className="flex items-center gap-0.5"><LuMapPin /> Spot: {sf.whereToFind || sf.location || 'Street stalls'}</span>
-                              <span className="flex items-center gap-0.5"><LuCoins /> Price: {sf.price || 'Low'}</span>
-                            </div>
-                          </div>
+                              <span className="flex items-center gap-0.5"><LuCoins /> Price: {sf.price || 'Low'}</span> </div> </div>
                         ))}
-                      </div>
-                    </div>
+                      </div> </div>
                   )}
 
                   {/* Desserts */}
@@ -167,12 +159,11 @@ export default function FoodMustTry() {
                             <h4 className="font-extrabold text-sm text-primary-900 dark:text-white font-display">{dessert.name}</h4>
                             <p className="text-xs text-primary-900/60 dark:text-dark-muted font-semibold leading-relaxed">{dessert.description}</p>
                             {dessert.culturalSignificance && (
-                              <p className="text-[10px] text-purple-600/80 dark:text-purple-400 font-medium italic pt-1">★ {dessert.culturalSignificance}</p>
+                              <p className="text-[10px] text-purple-600/80 dark:text-purple-400 font-medium italic pt-1"> {dessert.culturalSignificance}</p>
                             )}
                           </div>
                         ))}
-                      </div>
-                    </div>
+                      </div> </div>
                   )}
 
                   {/* Dining Etiquette */}
@@ -185,23 +176,23 @@ export default function FoodMustTry() {
                         {typeof guide.diningEtiquette === 'string'
                           ? guide.diningEtiquette
                           : Array.isArray(guide.diningEtiquette)
-                          ? guide.diningEtiquette.map((tip, i) => <p key={i} className="mb-1">• {tip}</p>)
+                          ? guide.diningEtiquette.map((tip, i) => <p key={i} className="mb-1"> {tip}</p>)
                           : Object.entries(guide.diningEtiquette).map(([key, val], i) => (
                               <p key={i} className="mb-1.5">
                                 <strong className="text-accent font-bold capitalize">{key.replace(/([A-Z])/g, ' $1')}:</strong> {val}
                               </p>
                             ))}
-                      </div>
-                    </div>
+                      </div> </div>
                   )}
                 </motion.div>
               );
             })}
-          </AnimatePresence>
-        </div>
+          </AnimatePresence> </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/60 dark:text-dark-muted space-y-4 rounded-3xl shadow-sm">
-          <span className="text-6xl block animate-float">🍽️</span>
+          <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 mx-auto flex items-center justify-center">
+            <LuHeart className="w-8 h-8 animate-pulse" />
+          </div>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Saved Dishes</h3>
           <p className="text-xs max-w-xs mx-auto leading-relaxed font-semibold">
             When you generate a local food guide, click "Save Food Guide" to keep your favorite recipes and restaurants here!

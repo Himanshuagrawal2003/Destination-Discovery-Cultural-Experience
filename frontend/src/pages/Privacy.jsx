@@ -10,7 +10,7 @@ export default function Privacy() {
           transition={{ duration: 0.5 }}
           className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-8 md:p-12 space-y-6 rounded-3xl shadow-sm"
         >
-          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Privacy Policy</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Privacy Policy</h1>
           <p className="text-xs text-primary-900/40 dark:text-dark-muted font-bold">Last Updated: July 4, 2026</p>
           <div className="border-t border-primary-100 dark:border-dark-border" />
 
@@ -27,15 +27,10 @@ export default function Privacy() {
               <li>To provide, operate, and maintain our travel assistant service.</li>
               <li>To analyze and predict trending destinations based on searches.</li>
               <li>To process your profile photos via Cloudinary upload.</li>
-              <li>To manage your notification logs and save planned trip files.</li>
-            </ul>
+              <li>To manage your notification logs and save planned trip files.</li> </ul>
             <h3 className="text-sm font-bold text-primary-900 dark:text-white font-display pt-2">Gemini API Data</h3>
             <p>
               All queries sent to the AI Travel Assistant are processed using Google's Gemini API endpoints. We do not sell or distribute your search templates to external agencies.
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+            </p> </div> </motion.div> </div> </div>
   );
 }

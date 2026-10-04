@@ -174,9 +174,8 @@ export default function TripPlanner() {
           className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 md:p-8 space-y-6 rounded-3xl shadow-sm"
         >
           <div className="text-center space-y-2">
-            <span className="text-5xl animate-float block">🧭</span>
-            <h1 className="text-2xl font-black text-primary-900 dark:text-white font-display">Plan Your Next Trip</h1>
-            <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium">Design your upcoming travel itinerary with smart AI pre-population.</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Plan Your Next Trip</h1>
+            <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium">Design your upcoming travel itinerary with smart AI pre-population.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -208,8 +207,7 @@ export default function TripPlanner() {
                     {destinations.map((d) => (
                       <option key={d._id} value={d.name}>{d.city}, {d.country}</option>
                     ))}
-                  </datalist>
-                </>
+                  </datalist> </>
               )}
               {errors.destinationName && <p className="text-red-500 text-xs mt-1 font-semibold">{errors.destinationName.message}</p>}
             </div>
@@ -217,24 +215,19 @@ export default function TripPlanner() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Total Days</label>
-                <input type="number" min="1" max="14" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('days')} />
-              </div>
+                <input type="number" min="1" max="14" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('days')} /> </div>
               <div>
                 <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Travel Style</label>
                 <select className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('travelStyle')}>
                   <option value="solo">Solo</option>
                   <option value="couple">Couple</option>
                   <option value="family">Family</option>
-                  <option value="group">Group</option>
-                </select>
-              </div>
-            </div>
+                  <option value="group">Group</option> </select> </div> </div>
 
             {!watchLetAI && (
               <div>
                 <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Target Budget (INR, ₹)</label>
-                <input type="number" min="10" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('budgetTotal')} />
-              </div>
+                <input type="number" min="10" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('budgetTotal')} /> </div>
             )}
 
             {/* AI Generator Option Toggle */}
@@ -250,8 +243,7 @@ export default function TripPlanner() {
                   <LuSparkles className="animate-pulse text-sm shrink-0" /> Autocomplete with AI Story & Itinerary
                 </strong>
                 Generate day-wise activities, morning spots, afternoon meal spots, and budget breakdowns automatically.
-              </label>
-            </div>
+              </label> </div>
 
             <button
               type="submit"
@@ -265,10 +257,6 @@ export default function TripPlanner() {
                   <LuMap /> Plan Trip
                 </>
               )}
-            </button>
-          </form>
-        </motion.div>
-      </div>
-    </div>
+            </button> </form> </motion.div> </div> </div>
   );
 }

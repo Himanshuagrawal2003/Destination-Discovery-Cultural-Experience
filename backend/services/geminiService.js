@@ -87,17 +87,17 @@ const _callGroq = async (prompt, model) => {
     return result.choices[0].message.content;
   } catch (err) {
     console.warn(`⚠️ Groq API call failed for ${model} (${err.message}). Trying fallback model...`);
-    if (model !== 'llama-3.1-8b-instant') {
+    if (model !== 'openai/gpt-oss-20b') {
       try {
         const resultFallback = await groq.chat.completions.create({
           messages: [{ role: 'user', content: prompt }],
-          model: 'llama-3.1-8b-instant',
+          model: 'openai/gpt-oss-20b',
           temperature: 0.7,
           max_tokens: 4096,
         });
         return resultFallback.choices[0].message.content;
       } catch (fallbackErr) {
-        console.warn(`⚠️ Groq fallback model llama-3.1-8b-instant also failed (${fallbackErr.message}).`);
+        console.warn(`⚠️ Groq fallback model openai/gpt-oss-20b also failed (${fallbackErr.message}).`);
         throw new Error(`Groq API call failed: ${fallbackErr.message}`);
       }
     }
@@ -109,10 +109,10 @@ const _callGroq = async (prompt, model) => {
  * Generate text content with Groq via the request queue
  * Requests are queued and processed with limited concurrency to prevent rate limits.
  * @param {string} prompt - The full prompt to send
- * @param {string} model  - Model name (default: llama-3.3-70b-versatile)
+ * @param {string} model  - Model name (default: openai/gpt-oss-120b)
  * @returns {string} - Generated text response
  */
-const generateContent = async (prompt, model = 'llama-3.3-70b-versatile') => {
+const generateContent = async (prompt, model = 'openai/gpt-oss-120b') => {
   if (isMockMode || !groq) {
     throw new Error('Groq API is not configured. Please provide a valid GROQ_API_KEY in .env to use AI features.');
   }
@@ -131,7 +131,7 @@ const generateContent = async (prompt, model = 'llama-3.3-70b-versatile') => {
 /**
  * Generate a chat session for contextual conversations
  */
-const createChatSession = (history = [], model = 'llama-3.3-70b-versatile') => {
+const createChatSession = (history = [], model = 'openai/gpt-oss-120b') => {
   if (isMockMode || !groq) {
     throw new Error('Groq API is not configured. Please provide a valid GROQ_API_KEY in .env to use AI features.');
   }
@@ -166,29 +166,39 @@ You are an expert travel consultant. Based on the user's custom travel experienc
 ${experienceDescription ? `User's Desired Vibe/Experience Description: "${experienceDescription}"` : ''}
 
 Preferences:
-- Budget: ${budget} per person
+- Budget Tier / Style: ${budget} per person
 - Travel Style: ${travelStyle}
 - Season/Month: ${season}
 - Interests: ${interests.join(', ')}
 - Country/Region: ${country || 'anywhere in the world'}
 - Trip Duration: ${duration} days
 
-CRITICAL REQUIREMENT FOR GEOGRAPHIC RESTRICTION:
-- If a specific Country/Region is specified above (e.g., "${country}"), or if the user's Desired Vibe/Experience Description mentions or implies a specific country/region (e.g., "India"), you MUST strictly recommend destinations that are located ONLY within that specific country/region. Do NOT recommend any destinations outside of that country/region under any circumstances.
-
-For each destination provide:
-1. **Destination Name & Country**
-2. **Why It Matches**: 2-3 sentences based heavily on their desired vibe/experience or preferences.
-3. **Estimated Budget Breakdown**: Accommodation, Food, Transport, Activities (per day in INR, Indian Rupees, ₹)
-4. **Best Time to Visit**
-5. **Top 3 Activities**
-6. **Cultural Tips**: 2 key insights
-7. **3 Nearby Hidden Gems**: A list of 3 off-the-beaten-path hidden gems, each with a name and brief description of what makes it special.
-8. **3 Famous Local Foods**: A list of 3 must-try traditional foods/specialties, each with a name and brief description.
-9. **Map Coordinates**: Centered latitude and longitude (numeric values).
+CRITICAL REQUIREMENTS:
+- If a specific Country/Region is specified above (e.g., "${country}"), or if the user's Desired Vibe/Experience mentions a specific region (e.g., "India"), strictly recommend destinations located ONLY within that region.
+- All budget breakdowns and costs MUST be realistic AVERAGE ESTIMATED PRICES (Avg. Price) in Indian Rupees (INR, ₹).
+- Never return "N/A", null, or empty strings for any price field. Always calculate realistic estimated average amounts.
 
 Format the output strictly as a structured JSON array where each object has these exact keys:
-name, country, whyItMatches, budgetBreakdown (object with keys: accommodation, food, transport, activities), bestTime, topActivities (array of strings), culturalTips (array of strings), hiddenGems (array of objects with keys: name, description), famousFoods (array of objects with keys: name, description), latitude (number), longitude (number).
+[
+  {
+    "name": "Destination Name",
+    "country": "Country",
+    "whyItMatches": "2-3 sentences explanation...",
+    "budgetBreakdown": {
+      "accommodation": "₹2500/day",
+      "food": "₹1200/day",
+      "transport": "₹600/day",
+      "activities": "₹800/day"
+    },
+    "bestTime": "October to March",
+    "topActivities": ["Activity 1", "Activity 2", "Activity 3"],
+    "culturalTips": ["Tip 1", "Tip 2"],
+    "hiddenGems": [{"name": "Gem Name", "description": "Brief description"}],
+    "famousFoods": [{"name": "Dish Name", "description": "Brief description"}],
+    "latitude": 27.1751,
+    "longitude": 78.0421
+  }
+]
 `,
 
   generateDestinationProfile: (destinationNameOrSlug) => `
@@ -196,20 +206,20 @@ You are an expert travel guide. The user requested details for the destination/r
 Generate a complete, high-quality, and detailed travel profile for this destination.
 
 Provide:
-1. **Name & Country & City**
-2. **Category**: Choose one of ['beach', 'mountain', 'city', 'desert', 'forest', 'historical', 'adventure', 'cultural', 'wildlife', 'other']
-3. **Detailed Description** (up to 300 words)
-4. **History** (up to 200 words)
-5. **Culture** (up to 200 words)
-6. **Coordinates**: Numerical Latitude and Longitude.
-7. **Budget**: Min daily cost (number in INR, ₹), Max daily cost (number in INR, ₹), Level ('budget' / 'mid-range' / 'luxury')
-8. **Best Season**: Array of strings (e.g. ['spring', 'autumn'])
-9. **Highlights**: Array of 4-5 major tourist highlights.
-10. **Travel Tips**: Array of 3 essential travel guidelines.
-11. **Famous Places & Palaces**: 3 key landmarks (monuments, palaces, parks), each with a name and description.
-12. **Hidden Gems**: 3 off-the-beaten-path locations in the city/region, each with a name and description.
-13. **Famous Foods**: 3 must-try traditional dishes, each with a name and description.
-14. **Cover Image**: A valid, high-resolution Unsplash photo URL relevant to the city/destination (e.g., "https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=1200").
+1. Name, Country, City
+2. Category: Choose one of ['beach', 'mountain', 'city', 'desert', 'forest', 'historical', 'adventure', 'cultural', 'wildlife', 'other']
+3. Detailed Description (up to 300 words)
+4. History (up to 200 words)
+5. Culture (up to 200 words)
+6. Numerical Latitude and Longitude.
+7. Budget: Estimated average daily costs in INR (₹). min (number), max (number), level ('budget' / 'mid-range' / 'luxury')
+8. Best Season: Array of strings (e.g. ['spring', 'autumn'])
+9. Highlights: Array of 4-5 major tourist highlights.
+10. Travel Tips: Array of 3 essential travel guidelines.
+11. Famous Places: 3 key landmarks (monuments, palaces, parks), each with name and description.
+12. Hidden Gems: 3 off-the-beaten-path locations with name and description.
+13. Famous Foods: 3 must-try traditional dishes with name and description.
+14. Cover Image: A valid high-resolution Unsplash photo URL.
 
 Format the output strictly as JSON with keys:
 name, country, city, category, description, history, culture, latitude, longitude, budget (object with keys: min, max, level), bestSeason, highlights (array of strings), travelTips (array of strings), famousPlaces (array of objects with keys: name, description), hiddenGems (array of objects with keys: name, description), famousFoods (array of objects with keys: name, description), coverImage (string).
@@ -233,49 +243,29 @@ Write in first-person narrative style as if you're a passionate local guide show
   hiddenGems: ({ country, travelStyle, interests }) => `
 You are a local insider with deep knowledge of off-the-beaten-path destinations. Find 6 hidden gems in ${country || 'the world'}.
 
-These should be places that:
-- Are NOT famous tourist attractions
-- Offer authentic, unspoiled experiences
-- Align with: ${interests?.join(', ') || 'general travel'}
-- Suit travel style: ${travelStyle || 'solo'}
-
-For each hidden gem provide:
-1. **Name & Location**
-2. **Why It's Special** (what makes it unique)
-3. **How to Get There**
-4. **Best Time to Visit**
-5. **Local Secret**: Something only locals know
-6. **Difficulty Level**: Easy/Moderate/Challenging
-7. **Estimated Cost per Day (in INR, ₹)**
+CRITICAL REQUIREMENTS:
+- All costs MUST be estimated average prices (Avg. Price) in Indian Rupees (INR, ₹).
+- Never return "N/A" for costs; always give realistic average estimates.
 
 Format as JSON array with keys: name, location, whySpecial, howToGetThere, bestTime, localSecret, difficulty, estimatedCostPerDay.
 `,
 
   foodGuide: ({ country, city, dietaryPreferences }) => `
 You are a culinary expert and food anthropologist specializing in ${country}${city ? `, specifically ${city}` : ''}.
-${dietaryPreferences ? `CRITICAL DIETARY DIRECTIVE: The user has specified the following dietary preference: "${dietaryPreferences}". You MUST strictly comply with this. All suggested traditional dishes, street food gems, desserts, and recommended restaurants MUST be 100% compliant with this dietary preference (for example: if the preference is "veg" or "vegetarian", do NOT suggest any meat, poultry, chicken, beef, pork, seafood, fish, or egg dishes anywhere. Every single item must be vegetarian).` : ''}
+${dietaryPreferences ? `CRITICAL DIETARY DIRECTIVE: The user has specified the following dietary preference: "${dietaryPreferences}". You MUST strictly comply with this. All suggested traditional dishes, street food gems, desserts, and recommended restaurants MUST be 100% compliant with this dietary preference.` : ''}
 
-Create a comprehensive local food guide including:
+CRITICAL PRICING REQUIREMENT:
+- All dish prices, street food costs, and restaurant price ranges MUST be estimated average prices (Avg. Price) in Indian Rupees (INR, ₹) (e.g. "Avg. ₹150 - ₹300", "Avg. ₹50 - ₹100").
+- Never return "N/A" or empty values for price.
 
-**Must-Try Traditional Dishes** (5 dishes):
-- Name, description, best where to try, price range
-
-**Street Food Gems** (5 items):
-- Name, where to find, best time, price
-
-**Local Desserts & Sweets** (3 items):
-- Name, description, cultural significance
-
-**Recommended Restaurants** (4 restaurants):
-- Name, type, price range, specialty, area
-
-**Dining Etiquette**:
-- Table manners, tipping customs, ordering tips, things to avoid
-
-**Dietary Considerations**:
-${dietaryPreferences ? `- User preferences: ${dietaryPreferences}` : '- General tips for various dietary restrictions'}
-
-Format as structured JSON with sections: traditionalDishes, streetFood, desserts, restaurants, diningEtiquette.
+Create a comprehensive local food guide formatted as structured JSON with sections:
+{
+  "traditionalDishes": [{"name": "Dish Name", "description": "Description", "whereToTry": "Best spot", "priceRange": "Avg. ₹200 - ₹400"}],
+  "streetFood": [{"name": "Food Name", "description": "Description", "whereToFind": "Location", "bestTime": "Evening", "price": "Avg. ₹50 - ₹100"}],
+  "desserts": [{"name": "Sweet Name", "description": "Description", "culturalSignificance": "Significance", "price": "Avg. ₹80 - ₹150"}],
+  "restaurants": [{"name": "Restaurant Name", "type": "Casual / Fine Dining", "priceRange": "Avg. ₹500 - ₹1200 per person", "specialty": "Specialty dish", "area": "Area"}],
+  "diningEtiquette": ["Etiquette tip 1", "Etiquette tip 2", "Etiquette tip 3"]
+}
 `,
 
   festivalGuide: ({ country, month }) => `
@@ -297,39 +287,52 @@ Format as JSON array with above keys.
 `,
 
   culturalGuide: ({ country, city }) => `
-You are a cultural anthropologist and etiquette expert. Create a comprehensive cultural guide for travelers visiting ${country}${city ? `, ${city}` : ''}.
+You are a cultural anthropologist and etiquette expert. Create a comprehensive cultural customs guide for travelers visiting ${country}${city ? `, ${city}` : ''}.
 
-Format your output strictly as a structured JSON object inside a JSON code block (\`\`\`json ... \`\`\`) with the following exact keys:
-- "greetingsAndCustoms": detailed greetings and social customs (rules, bowing, handshakes, titles).
-- "religiousEtiquette": sacred sites etiquette, major practices, temple/mosque/church decorum.
-- "clothingEtiquette": what locals wear, modesty guidelines, clothing dos and don'ts for visitors.
-- "thingsToAvoid": cultural taboos, offensive gestures, and social faux pas.
+Return ONLY a raw JSON object (no markdown, no code fences). Follow this EXACT schema:
+
+{
+  "greetingsAndCustoms": {
+    "overview": "A 2-sentence summary of how people greet each other and general social customs.",
+    "dos": ["Do tip 1", "Do tip 2", "Do tip 3", "Do tip 4", "Do tip 5"],
+    "donts": ["Don't 1", "Don't 2", "Don't 3"],
+    "phrases": ["Local greeting phrase + meaning", "Farewell phrase + meaning", "Respectful address phrase + meaning"]
+  },
+  "religiousEtiquette": {
+    "overview": "A 2-sentence summary of the dominant religion(s) and sacred site rules.",
+    "dos": ["Do tip 1 for temples/mosques/churches", "Do tip 2", "Do tip 3", "Do tip 4"],
+    "donts": ["Don't 1", "Don't 2", "Don't 3", "Don't 4"],
+    "keyPlaces": ["Important sacred site 1 and its rule", "Sacred site 2 and its rule", "Sacred site 3 and its rule"]
+  },
+  "clothingEtiquette": {
+    "overview": "A 2-sentence summary of how locals dress and what visitors should know.",
+    "dos": ["Wear tip 1", "Wear tip 2", "Wear tip 3", "Wear tip 4"],
+    "donts": ["Avoid clothing item 1", "Avoid clothing item 2", "Avoid clothing item 3"],
+    "climateTip": "One sentence about climate and what fabric/layering to consider.",
+    "footwearTip": "One sentence about footwear expectations in temples, homes, or restaurants."
+  },
+  "thingsToAvoid": {
+    "overview": "A 2-sentence summary of the most important cultural taboos.",
+    "taboos": ["Taboo 1 with brief explanation", "Taboo 2 with brief explanation", "Taboo 3", "Taboo 4", "Taboo 5"],
+    "gestures": ["Offensive gesture 1 and why", "Offensive gesture 2 and why"],
+    "photographyRules": ["Photography rule 1", "Photography rule 2", "Photography rule 3"]
+  }
+}
+
+CRITICAL RULES:
+- All values must be plain readable strings or flat arrays of plain strings — NO nested objects.
+- Return ONLY the JSON object. No intro text, no explanation, no code fences.
 `,
 
   languageHelper: ({ country, language, situation }) => `
 You are a professional linguist specializing in ${language || country + '\'s language'}.
 
 Create a practical language guide for travelers with these sections:
-
-**Essential Greetings** (10 phrases):
-- Phrase in local language
-- Phonetic pronunciation
-- English meaning
-- When to use
-
-**Useful Daily Phrases** (15 phrases):
-- Shopping, directions, food ordering, emergencies
-
-**Emergency Phrases** (8 phrases):
-- I need help, Call police, I'm lost, Medical emergency, etc.
-
+**Essential Greetings** (10 phrases): Phrase in local language, Phonetic pronunciation, English meaning, When to use
+**Useful Daily Phrases** (15 phrases)
+**Emergency Phrases** (8 phrases)
 **Numbers 1-20** with pronunciation
-
-**Cultural Language Tips**:
-- Formal vs informal speech
-- Respectful words and titles
-- Common misunderstandings
-
+**Cultural Language Tips**
 ${situation ? `**Situation-Specific**: Extra phrases for: ${situation}` : ''}
 
 Format as JSON with sections: greetings, usefulPhrases, emergencyPhrases, numbers, culturalTips.
@@ -337,76 +340,142 @@ Format as JSON with sections: greetings, usefulPhrases, emergencyPhrases, number
 
   budgetPlanner: ({ destination, duration, travelStyle, groupSize }) => `
 You are an expert travel financial planner. Create a detailed budget plan for:
-
 - Destination: ${destination}
 - Duration: ${duration} days
 - Travel Style: ${travelStyle || 'mid-range'}
 - Group Size: ${groupSize || 1} person(s)
 
-Provide three budget tiers (Budget / Mid-Range / Luxury). All monetary values, daily breakdowns, emergency buffers, and total costs MUST be calculated and represented in Indian Rupees (INR, ₹).
+CRITICAL PRICING RULES:
+- Provide three budget tiers: "budget", "midRange", and "luxury".
+- All figures MUST be realistic AVERAGE ESTIMATED PRICES (Avg. Price) calculated and displayed in Indian Rupees (INR, ₹).
+- Every single key in "dailyBreakdown" (accommodation, meals, transport, activities, shopping, misc) MUST be filled with a realistic average price estimate (e.g. "₹1,500", "₹800", "₹500").
+- NEVER return "N/A", null, 0, or empty strings for any daily breakdown cost or total cost.
 
-For each tier include:
-1. **Daily Cost Breakdown**:
-   - Accommodation (per night)
-   - Breakfast / Lunch / Dinner
-   - Local Transport
-   - Activities & Entrance Fees
-   - Shopping allowance
-   - Misc/Tips
-
-2. **Total Trip Cost** (for ${duration} days, ${groupSize} person(s))
-
-3. **Money-Saving Tips** (5 specific tips for this destination)
-
-4. **Emergency Buffer**: Recommended amount (10-15%)
-
-5. **Payment Tips**:
-   - Best currency to carry
-   - ATM availability
-   - Credit card acceptance
-   - Best exchange locations
-
-Format as JSON with tiers: budget, midRange, luxury and sections: dailyBreakdown, totalCost, savingTips, emergencyBuffer, paymentTips.
+Format your output STRICTLY as a JSON object with the following exact keys:
+{
+  "budget": {
+    "dailyBreakdown": {
+      "accommodation": "₹1200",
+      "meals": "₹800",
+      "transport": "₹400",
+      "activities": "₹500",
+      "shopping": "₹300",
+      "misc": "₹200"
+    },
+    "totalCost": "₹23800"
+  },
+  "midRange": {
+    "dailyBreakdown": {
+      "accommodation": "₹3500",
+      "meals": "₹1800",
+      "transport": "₹1000",
+      "activities": "₹1200",
+      "shopping": "₹800",
+      "misc": "₹500"
+    },
+    "totalCost": "₹61600"
+  },
+  "luxury": {
+    "dailyBreakdown": {
+      "accommodation": "₹9000",
+      "meals": "₹4000",
+      "transport": "₹2500",
+      "activities": "₹3000",
+      "shopping": "₹2000",
+      "misc": "₹1200"
+    },
+    "totalCost": "₹151900"
+  },
+  "savingTips": [
+    "Tip 1...",
+    "Tip 2...",
+    "Tip 3...",
+    "Tip 4...",
+    "Tip 5..."
+  ],
+  "emergencyBuffer": "₹5000 (approx 10-15%)",
+  "paymentTips": {
+    "bestCurrency": "INR (Indian Rupee, ₹) / UPI / Cash",
+    "atmAvailability": "High across city centers and transport hubs",
+    "creditCardAcceptance": "Widely accepted at hotels, restaurants, and retail stores",
+    "exchangeTips": "Use official bank counters or verified exchange outlets"
+  }
+}
 `,
 
   itinerary: ({ destination, days, interests, budget, travelStyle }) => `
 You are a master travel itinerary planner. Create a detailed ${days}-day itinerary for ${destination}.
-All estimated daily costs, restaurant prices/costs, activity costs, and other money values MUST be calculated and represented strictly in Indian Rupees (INR, ₹).
+
+CRITICAL PRICING RULES:
+- All activity costs, breakfast/lunch/dinner costs, and daily summary totals MUST be realistic AVERAGE ESTIMATED PRICES (Avg. Price) strictly in Indian Rupees (INR, ₹) (e.g. "Avg. ₹300", "Avg. ₹150 - ₹250", "Free").
+- NEVER return "N/A" for costs or estimates. Provide realistic estimated average numbers.
 
 Travel preferences:
 - Interests: ${interests?.join(', ') || 'general tourism'}
-- Budget: ${budget || 'mid-range'}
+- Budget Tier: ${budget || 'mid-range'}
 - Travel style: ${travelStyle || 'solo'}
 
-For each day provide:
-**Day X: [Theme Title]**
-
-Morning (6 AM - 12 PM):
-- Activity 1: Name, description, duration, cost, address
-- Breakfast spot: Name, dish recommendation, price
-
-Afternoon (12 PM - 6 PM):
-- Activity 2 & 3: Name, description, duration, cost
-- Lunch spot: Name, specialty, price
-
-Evening (6 PM - 11 PM):
-- Activity 4: Name, description
-- Dinner spot: Name, cuisine, price range
-- Optional: Nightlife or cultural show
-
-**Day Summary**:
-- Estimated daily cost
-- Distance covered
-- Transport between locations
-- Pro tips for the day
-
-Format strictly as a JSON array of days. You MUST generate exactly ${days} elements in this array, one for each day. Each day MUST have:
-- dayNumber (number)
-- theme (string)
-- morning (array of activity objects: name, description, duration, cost, address. INCLUDE breakfast spot here as an activity)
-- afternoon (array of activity objects. INCLUDE lunch spot here as an activity)
-- evening (array of activity objects. INCLUDE dinner spot here as an activity)
-- summary (object with estimatedDailyCost, distanceCovered, transportBetweenLocations, proTips)
+Format strictly as a JSON array of days with exactly ${days} elements:
+[
+  {
+    "dayNumber": 1,
+    "theme": "Historical Highlights & Local Culture",
+    "morning": [
+      {
+        "title": "Visit Top Monument",
+        "description": "Explore the famous heritage complex with a local guide.",
+        "duration": "2.5 hours",
+        "cost": "Avg. ₹250",
+        "address": "Monument Road, City"
+      },
+      {
+        "title": "Traditional Breakfast Spot",
+        "description": "Enjoy freshly made local breakfast specialties.",
+        "duration": "45 mins",
+        "cost": "Avg. ₹150",
+        "address": "Old Bazaar"
+      }
+    ],
+    "afternoon": [
+      {
+        "title": "Art & Heritage Museum",
+        "description": "Immerse in artifacts and royal history.",
+        "duration": "2 hours",
+        "cost": "Avg. ₹100",
+        "address": "Museum Square"
+      },
+      {
+        "title": "Authentic Lunch Spot",
+        "description": "Traditional thali and local delicacies.",
+        "duration": "1 hour",
+        "cost": "Avg. ₹350",
+        "address": "Main Market"
+      }
+    ],
+    "evening": [
+      {
+        "title": "Sunset Viewpoint & River Walk",
+        "description": "Watch the sunset followed by evening musical/cultural lights.",
+        "duration": "1.5 hours",
+        "cost": "Free",
+        "address": "Scenic Promenade"
+      },
+      {
+        "title": "Dinner at Rooftop Restaurant",
+        "description": "Panoramic night views with regional cuisine.",
+        "duration": "1.5 hours",
+        "cost": "Avg. ₹600",
+        "address": "City Center"
+      }
+    ],
+    "summary": {
+      "estimatedDailyCost": "Avg. ₹1,450 per person",
+      "distanceCovered": "approx 8 km",
+      "transportBetweenLocations": "Metro & Auto Rickshaws (Avg. ₹200)",
+      "proTips": "Start early to avoid peak mid-day heat and queues."
+    }
+  }
+]
 `,
 
   routePlanner: ({ origin, destination, preferences }) => `
@@ -414,26 +483,27 @@ You are a transit and logistics expert specializing in travel route optimization
 Recommend the best pathways/routes to travel from "${origin}" to "${destination}".
 ${preferences ? `Consider these traveler preferences/restrictions: "${preferences}".` : ''}
 
-Provide structured route recommendations across travel options like budget, luxury, fastest, and scenic, utilizing transport modes like bus, car, train, and airplane.
+CRITICAL PRICING RULES:
+- All route costs MUST be realistic AVERAGE ESTIMATED PRICES (Avg. Price) in Indian Rupees (INR, ₹) (e.g. "Avg. ₹1,200 - ₹1,800").
+- Never return "N/A" for costs or travel durations.
 
-For each option, detail:
-1. **Option Title**: (e.g., "Budget Route (Train & Bus)", "Luxury & Comfort Route (Flight & Private Car)")
-2. **Total Estimated Cost**: in INR (₹)
-3. **Total Travel Duration**: (e.g., "14 hours", "3 hours")
-4. **Step-by-Step Pathway**: A list of steps (where to get the transport, transit points, terminal/station names, etc.)
-5. **Best Booking Platforms/Places**: Where to book the tickets or rent/hire the transport.
-6. **Pros & Cons**: 2 pros and 2 cons.
+Provide structured route recommendations across options like budget, luxury, fastest, and scenic.
 
-Format the output strictly as a structured JSON object with the following keys:
-- "bestRoute": A short, user-friendly recommendation of the overall best route option.
-- "options": An array of route option objects. Each route option object must have the keys:
-  - "title": (string)
-  - "cost": (string)
-  - "duration": (string)
-  - "pathway": (array of strings, detailing step-by-step transition points and transit modes)
-  - "bookingInfo": (array of strings, showing websites/apps or offline counters to book)
-  - "pros": (array of strings)
-  - "cons": (array of strings)
+Format the output strictly as a structured JSON object:
+{
+  "bestRoute": "Recommendation summary...",
+  "options": [
+    {
+      "title": "Budget Route (Train / Bus)",
+      "cost": "Avg. ₹800 - ₹1,500",
+      "duration": "6-8 hours",
+      "pathway": ["Step 1: Board express train at origin station", "Step 2: Transit via junction", "Step 3: Arrive at destination"],
+      "bookingInfo": ["IRCTC Portal", "RedBus App", "Station Counters"],
+      "pros": ["Cost effective", "Scenic journey"],
+      "cons": ["Takes longer duration", "Advance booking needed"]
+    }
+  ]
+}
 `,
 
   chatbot: (message, conversationHistory) => `

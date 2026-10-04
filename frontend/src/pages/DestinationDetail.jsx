@@ -59,8 +59,12 @@ export default function DestinationDetail() {
       setIsLoading(true);
       try {
         const destRes = await api.get(`/destinations/${id}`);
-        const currentDest = destRes.data.destination;
+        const currentDest = destRes.data?.destination || destRes.data?.data?.destination || destRes.data?.data || destRes.data;
+        if (!currentDest || !currentDest._id) {
+          throw new Error('Destination data invalid');
+        }
         setDestination(currentDest);
+        setHeroBroken(false);
 
         // Check if bookmarked
         if (user) {
@@ -230,8 +234,7 @@ export default function DestinationDetail() {
       <div className="container-cq py-12 space-y-8 animate-pulse">
         <div className="h-96 skeleton w-full" />
         <div className="h-20 skeleton w-2/3" />
-        <div className="h-40 skeleton w-full" />
-      </div>
+        <div className="h-40 skeleton w-full" /> </div>
     );
   }
 
@@ -240,8 +243,7 @@ export default function DestinationDetail() {
       <div className="container-cq py-24 text-center">
         <h2 className="text-2xl font-bold">Destination Not Found</h2>
         <p className="text-slate-500 mt-2">The requested place doesn't exist or is currently inactive.</p>
-        <Link to="/destinations" className="btn btn-primary mt-6 inline-block">Back to Destinations</Link>
-      </div>
+        <Link to="/destinations" className="btn btn-primary mt-6 inline-block">Back to Destinations</Link> </div>
     );
   }
 
@@ -249,18 +251,17 @@ export default function DestinationDetail() {
 
   return (
     <div className="pb-16 space-y-10">
-      {/* ── Hero Poster ── */}
+      {/*  Hero Poster  */}
       <section className="relative h-[520px] sm:h-[580px] overflow-hidden bg-slate-950 text-white flex items-end">
 
-        {/* Background Image — full bleed poster */}
+        {/* Background Image  full bleed poster */}
         {(() => {
-          // Build a smart Unsplash fallback using destination name + city
-          const searchTerms = [destination.name, destination.city, destination.country, 'landmark', 'tourism']
-            .filter(Boolean).join(',');
-          const unsplashFallback = `https://source.unsplash.com/1600x900/?${encodeURIComponent(searchTerms)}`;
+          const fallbackImage = (destination.images && destination.images.length > 0)
+            ? destination.images[0]
+            : 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=1600&auto=format&fit=crop&q=80';
 
-          const heroSrc = (!destination.coverImage || heroBroken)
-            ? unsplashFallback
+          const heroSrc = (heroBroken || !destination.coverImage)
+            ? fallbackImage
             : destination.coverImage;
 
           return (
@@ -288,12 +289,11 @@ export default function DestinationDetail() {
             <span className="badge badge-primary bg-teal-500/20 text-teal-300 border border-teal-500/30 font-bold capitalize">
               {destination.category}
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold font-display leading-tight drop-shadow-lg">{destination.name}</h1>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black font-display leading-tight drop-shadow-lg tracking-tight">{destination.name}</h1>
             <p className="text-slate-200 font-medium flex items-center gap-1 drop-shadow">
               <MdPlace className="text-teal-400 text-lg shrink-0" />
               {destination.city}, {destination.country}
-            </p>
-          </div>
+            </p> </div>
 
           <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2.5 w-full sm:w-auto shrink-0 mt-4 md:mt-0">
             <button
@@ -332,9 +332,7 @@ export default function DestinationDetail() {
                 <LuTrash className="text-lg shrink-0" /> Delete
               </button>
             )}
-          </div>
-        </div>
-      </section>
+          </div> </div> </section>
 
 
       <div className="container-cq max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -343,10 +341,9 @@ export default function DestinationDetail() {
           <div className="card p-6 space-y-5 bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border">
             <div className="border-b border-primary-50 dark:border-dark-border pb-3">
               <h3 className="font-bold text-lg text-primary-900 dark:text-white font-display flex items-center gap-2">
-                ⚡ Quick Facts
+                 Quick Facts
               </h3>
-              <p className="text-2xs text-primary-900/60 dark:text-dark-muted font-medium mt-0.5">Essential details for your visit</p>
-            </div>
+              <p className="text-2xs text-primary-900/60 dark:text-dark-muted font-medium mt-0.5">Essential details for your visit</p> </div>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Rating fact */}
@@ -354,70 +351,52 @@ export default function DestinationDetail() {
                 <span className="text-[10px] font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Rating</span>
                 <span className="text-sm font-black text-primary-900 dark:text-white flex items-center gap-1 mt-1">
                   <MdStar className="text-amber-400 text-lg shrink-0" /> {destination.rating?.average || '0.0'} / 5.0
-                </span>
-              </div>
+                </span> </div>
 
               {/* Budget fact */}
               <div className="bg-primary-50/50 dark:bg-dark-bg p-3.5 rounded-xl border border-primary-100/30 dark:border-dark-border flex flex-col justify-between">
                 <span className="text-[10px] font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Budget Level</span>
                 <span className="text-sm font-black text-primary-900 dark:text-white capitalize mt-1">
-                  💰 {destination.budget?.level || 'Mid-range'}
-                </span>
-              </div>
-            </div>
+                   {destination.budget?.level || 'Mid-range'}
+                </span> </div> </div>
 
             {/* Daily range if exists */}
             {destination.budget?.min !== undefined && (
               <div className="bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 p-3 rounded-xl flex items-center justify-between text-2xs text-emerald-600 dark:text-emerald-400 font-bold">
                 <span>Avg Daily Cost:</span>
-                <span>₹{destination.budget.min} - ₹{destination.budget.max}</span>
-              </div>
+                <span>₹{destination.budget.min} - ₹{destination.budget.max}</span> </div>
             )}
 
             <div className="space-y-4 pt-1">
               {/* Best Season */}
               {destination.bestSeason && (
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    ☀️
-                  </div>
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0"> </div>
                   <div>
                     <h4 className="text-2xs font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Best Season to Visit</h4>
-                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5 capitalize">{destination.bestSeason.join(', ')}</p>
-                  </div>
-                </div>
+                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5 capitalize">{destination.bestSeason.join(', ')}</p> </div> </div>
               )}
 
               {/* Opening Hours */}
               {destination.openingHours && (
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    ⏰
-                  </div>
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0"> </div>
                   <div>
                     <h4 className="text-2xs font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Opening Hours</h4>
-                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5">{destination.openingHours}</p>
-                  </div>
-                </div>
+                    <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5">{destination.openingHours}</p> </div> </div>
               )}
 
               {/* Entry Fee */}
               {destination.entryFee && (
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                    🎫
-                  </div>
+                  <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0"> </div>
                   <div>
                     <h4 className="text-2xs font-bold text-primary-900/50 dark:text-dark-muted uppercase tracking-wider">Entry Fee</h4>
                     <p className="text-xs font-bold text-primary-900 dark:text-white mt-0.5">
                       {destination.entryFee.amount === 0 ? 'Free Entry' : `₹${destination.entryFee.amount}`} {destination.entryFee.notes}
-                    </p>
-                  </div>
-                </div>
+                    </p> </div> </div>
               )}
-            </div>
-          </div>
-        </div>
+            </div> </div> </div>
 
         {/* 2. Left Column (Primary Details - Middle on Mobile, Left on Desktop) */}
         <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:row-span-3 space-y-8">
@@ -432,12 +411,10 @@ export default function DestinationDetail() {
               >
                 <div className="flex items-center gap-2 text-accent font-bold border-b border-primary-100 dark:border-dark-border pb-3 font-display">
                   <LuBookOpen className="text-xl shrink-0" />
-                  <h3>Immersive AI Cultural Story</h3>
-                </div>
+                  <h3>Immersive AI Cultural Story</h3> </div>
                 <div className="text-sm text-primary-900/80 dark:text-slate-200 leading-relaxed whitespace-pre-line prose max-w-none font-medium">
                   {aiStory}
-                </div>
-              </motion.div>
+                </div> </motion.div>
             )}
           </AnimatePresence>
 
@@ -451,19 +428,17 @@ export default function DestinationDetail() {
             {destination.history && (
               <div className="space-y-2 pt-4">
                 <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  📜 Ancient History
+                   Ancient History
                 </h3>
-                <p className="text-sm text-slate-650 dark:text-slate-350 leading-relaxed">{destination.history}</p>
-              </div>
+                <p className="text-sm text-slate-650 dark:text-slate-350 leading-relaxed">{destination.history}</p> </div>
             )}
 
             {destination.culture && (
               <div className="space-y-2 pt-4">
                 <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  ⛩️ Cultural Roots
+                   Cultural Roots
                 </h3>
-                <p className="text-sm text-slate-650 dark:text-slate-350 leading-relaxed">{destination.culture}</p>
-              </div>
+                <p className="text-sm text-slate-650 dark:text-slate-350 leading-relaxed">{destination.culture}</p> </div>
             )}
           </div>
 
@@ -472,16 +447,15 @@ export default function DestinationDetail() {
             {destination.highlights?.length > 0 && (
               <div className="card p-6 space-y-3">
                 <h3 className="font-bold text-slate-850 dark:text-white flex items-center gap-1 text-teal-650 dark:text-teal-400">
-                  ⭐ Cultural Highlights
+                   Cultural Highlights
                 </h3>
                 <ul className="space-y-2">
                   {destination.highlights.map((h, i) => (
                     <li key={i} className="text-xs text-slate-650 dark:text-slate-350 flex items-start gap-1.5">
-                      <span className="text-teal-500 shrink-0">✓</span> {h}
+                      <span className="text-teal-500 shrink-0"></span> {h}
                     </li>
                   ))}
-                </ul>
-              </div>
+                </ul> </div>
             )}
 
             {destination.travelTips?.length > 0 && (
@@ -492,11 +466,10 @@ export default function DestinationDetail() {
                 <ul className="space-y-2">
                   {destination.travelTips.map((t, i) => (
                     <li key={i} className="text-xs text-slate-650 dark:text-slate-350 flex items-start gap-1.5">
-                      <span className="text-amber-500 shrink-0">•</span> {t}
+                      <span className="text-amber-500 shrink-0"></span> {t}
                     </li>
                   ))}
-                </ul>
-              </div>
+                </ul> </div>
             )}
           </div>
 
@@ -504,24 +477,22 @@ export default function DestinationDetail() {
           {destination.famousPlacesList?.length > 0 && (
             <div className="card p-6 space-y-4">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
-                🏰 Famous Places & Palaces
+                 Famous Places & Palaces
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {destination.famousPlacesList.map((place, i) => (
                   <div key={i} className="bg-primary-50 dark:bg-primary-950/20 p-4 rounded-xl border border-primary-100/60 dark:border-primary-900/10 shadow-sm transition-all hover:-translate-y-1">
                     <h4 className="font-bold text-accent mb-2">{place.name}</h4>
-                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{place.description}</p>
-                  </div>
+                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{place.description}</p> </div>
                 ))}
-              </div>
-            </div>
+              </div> </div>
           )}
 
           {/* Hidden Gems */}
           {destination.hiddenGemsList?.length > 0 && (
             <div className="card p-6 space-y-4 border-l-4 border-l-amber-500 bg-amber-50/10 dark:bg-amber-950/10">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
-                💎 Local Hidden Gems
+                 Local Hidden Gems
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {destination.hiddenGemsList.map((gem, i) => (
@@ -530,77 +501,80 @@ export default function DestinationDetail() {
                       <MdLightbulb className="text-lg shrink-0 animate-pulse" />
                       {gem.name}
                     </h4>
-                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium">{gem.description}</p>
-                  </div>
+                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium">{gem.description}</p> </div>
                 ))}
-              </div>
-            </div>
+              </div> </div>
           )}
 
           {/* Famous Foods */}
           {destination.famousFoodsList?.length > 0 && (
             <div className="card p-6 space-y-4">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
-                🍲 Famous Local Food
+                 Famous Local Food
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {destination.famousFoodsList.map((food, i) => (
                   <div key={i} className="bg-orange-50 dark:bg-orange-950/20 p-4 rounded-xl border border-orange-100 dark:border-orange-900/10 shadow-sm transition-all hover:-translate-y-1">
                     <h4 className="font-bold text-orange-600 dark:text-orange-400 mb-2 flex items-start gap-1.5">
-                      <span>🍽️</span> <span>{food.name}</span>
-                    </h4>
-                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{food.description}</p>
-                  </div>
+                      <span></span> <span>{food.name}</span> </h4>
+                    <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{food.description}</p> </div>
                 ))}
-              </div>
-            </div>
+              </div> </div>
           )}
 
           {/* Photo Gallery */}
-          {destination.images && destination.images.length > 0 && (
-            <div className="card p-6 md:p-8 space-y-4">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
-                🖼️ Gallery & Photo Tour
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {destination.images.map((img, i) => (
-                  <div key={i} onClick={() => setActiveImageIndex(i)} className="aspect-video sm:aspect-square rounded-2xl overflow-hidden bg-primary-50 relative group cursor-pointer border border-primary-100/50 dark:border-dark-border shadow-sm">
-                    <img 
-                      src={img} 
-                      alt={`${destination.name} gallery ${i+1}`} 
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                ))}
+          {(() => {
+            const rawList = (destination.gallery && destination.gallery.length > 0)
+              ? destination.gallery
+              : (destination.images && destination.images.length > 0)
+              ? destination.images
+              : [];
+            const galleryList = rawList.filter(url => url && !url.includes('destination_gallery'));
+            if (galleryList.length === 0) return null;
+            return (
+              <div className="card p-6 md:p-8 space-y-4">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
+                   Gallery & Photo Tour
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {galleryList.map((img, i) => (
+                    <div key={i} onClick={() => setActiveImageIndex(i)} className="aspect-video sm:aspect-square rounded-2xl overflow-hidden bg-primary-50 relative group cursor-pointer border border-primary-100/50 dark:border-dark-border shadow-sm">
+                      <img 
+                        src={img} 
+                        alt={`${destination.name} gallery ${i+1}`} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Upcoming Festivals & Events */}
           {destinationEvents && destinationEvents.length > 0 && (
             <div className="card p-6 md:p-8 space-y-6">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 font-display">
-                🎉 Upcoming Festivals & Cultural Events
+                 Upcoming Festivals & Cultural Events
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {destinationEvents.map((event) => (
                   <div key={event._id} className="group flex flex-col bg-primary-50/30 dark:bg-primary-950/10 rounded-2xl overflow-hidden border border-primary-100/60 dark:border-primary-900/10 transition-all hover:-translate-y-1 hover:shadow-sm">
                     <div className="relative h-36 overflow-hidden bg-primary-100/30">
-                      {event.coverImage ? (
+                      {(event.coverImage || event.image) ? (
                         <img 
-                          src={event.coverImage} 
+                          src={event.coverImage || event.image} 
                           alt={event.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-primary-900/40 text-xs font-bold">
-                          🎉 Event Cover
+                           Event Cover
                         </div>
                       )}
                       <span className="absolute top-2 left-2 px-2 py-0.5 bg-white/95 dark:bg-dark-card/95 text-accent font-black text-3xs rounded-md shadow-sm uppercase tracking-wider">
                         {event.type.replace('-', ' ')}
-                      </span>
-                    </div>
+                      </span> </div>
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                       <div className="space-y-1">
                         <h4 className="font-bold text-slate-800 dark:text-white text-xs leading-snug group-hover:text-accent transition-colors font-display line-clamp-1">
@@ -608,8 +582,7 @@ export default function DestinationDetail() {
                         </h4>
                         <p className="text-3xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mt-1 font-medium">
                           {event.description}
-                        </p>
-                      </div>
+                        </p> </div>
                       
                       {event.price?.isFree ? (
                         <span className="text-[10px] font-bold text-teal-600">Free Entry</span>
@@ -618,30 +591,25 @@ export default function DestinationDetail() {
                           ₹{event.price?.amount || 0}
                         </span>
                       )}
-                    </div>
-                  </div>
+                    </div> </div>
                 ))}
-              </div>
-            </div>
+              </div> </div>
           )}
 
           {/* Mobile-only Location Map (Above Reviews) */}
           <div className="block lg:hidden card overflow-hidden border border-primary-100 dark:border-dark-border">
             <div className="p-4 border-b border-primary-50 dark:border-dark-border bg-white dark:bg-dark-card">
               <h3 className="font-bold text-primary-900 dark:text-white text-sm flex items-center gap-1.5 font-display">
-                🗺️ Location Map
-              </h3>
-            </div>
+                 Location Map
+              </h3> </div>
             <div className="h-64 bg-slate-100 relative">
               <LeafletMap 
                 lat={destination.location?.coordinates?.[1]} 
                 lng={destination.location?.coordinates?.[0]} 
                 popupText={`${destination.name}, ${destination.city}`} 
-              />
-            </div>
-          </div>
+              /> </div> </div>
 
-          {/* ── Reviews ── */}
+          {/*  Reviews  */}
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white font-display">User Reviews</h2>
 
@@ -658,12 +626,9 @@ export default function DestinationDetail() {
                       type="button"
                       onClick={() => setRating(star)}
                       className={`text-2xl ${star <= rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-700'}`}
-                    >
-                      ★
-                    </button>
+                    > </button>
                   ))}
-                </div>
-              </div>
+                </div> </div>
 
               <div>
                 <input
@@ -672,8 +637,7 @@ export default function DestinationDetail() {
                   value={reviewTitle}
                   onChange={(e) => setReviewTitle(e.target.value)}
                   className="input"
-                />
-              </div>
+                /> </div>
 
               <div>
                 <textarea
@@ -682,8 +646,7 @@ export default function DestinationDetail() {
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
                   className="input h-auto resize-none py-3"
-                />
-              </div>
+                /> </div>
 
               <button
                 type="submit"
@@ -695,8 +658,7 @@ export default function DestinationDetail() {
                 ) : (
                   'Post Review'
                 )}
-              </button>
-            </form>
+              </button> </form>
 
             {/* Reviews list */}
             <div className="space-y-4">
@@ -712,26 +674,21 @@ export default function DestinationDetail() {
                         />
                         <div>
                           <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{rev.user?.name}</h4>
-                          <p className="text-2xs text-slate-400">{new Date(rev.createdAt).toLocaleDateString()}</p>
-                        </div>
-                      </div>
+                          <p className="text-2xs text-slate-400">{new Date(rev.createdAt).toLocaleDateString()}</p> </div> </div>
                       <div className="flex gap-0.5 text-amber-400 text-sm">
                         {Array.from({ length: rev.rating }).map((_, i) => (
                           <MdStar key={i} />
                         ))}
-                      </div>
-                    </div>
+                      </div> </div>
 
                     <div className="space-y-2">
                       {rev.title && <h5 className="font-bold text-sm text-slate-850 dark:text-white">{rev.title}</h5>}
-                      <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{rev.comment}</p>
-                    </div>
+                      <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed">{rev.comment}</p> </div>
 
                     <div className="flex items-center gap-4 text-xs font-semibold text-slate-400 border-t border-slate-50 dark:border-slate-800/80 pt-3">
                       <button onClick={() => handleLikeReview(rev._id)} className="flex items-center gap-1 hover:text-teal-600 transition-colors">
                         <MdThumbUp className="text-sm" /> Like ({rev.likes?.length || 0})
-                      </button>
-                    </div>
+                      </button> </div>
 
                     {/* Replies */}
                     {rev.replies?.length > 0 && (
@@ -745,9 +702,7 @@ export default function DestinationDetail() {
                             />
                             <div className="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl flex-1 text-xs">
                               <p className="font-bold text-slate-800 dark:text-white">{rep.user?.name}</p>
-                              <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{rep.comment}</p>
-                            </div>
-                          </div>
+                              <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{rep.comment}</p> </div> </div>
                         ))}
                       </div>
                     )}
@@ -762,15 +717,11 @@ export default function DestinationDetail() {
                         className="input flex-1 py-1 px-3 text-xs rounded-lg"
                       />
                       <button type="submit" className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
-                        <MdReply />
-                      </button>
-                    </form>
-                  </div>
+                        <MdReply /> </button> </form> </div>
                 ))
               ) : (
                 <div className="card p-8 text-center text-slate-500">
-                  <p className="text-sm">No reviews yet. Be the first to share your cultural experience!</p>
-                </div>
+                  <p className="text-sm">No reviews yet. Be the first to share your cultural experience!</p> </div>
               )}
             </div>
 
@@ -793,91 +744,92 @@ export default function DestinationDetail() {
                   className="px-4 py-2 text-xs font-bold bg-white dark:bg-dark-card border border-primary-200 dark:border-dark-border text-primary-900/70 dark:text-dark-muted rounded-xl hover:bg-primary-50 dark:hover:bg-primary-955/20 disabled:opacity-50 transition-all cursor-pointer select-none"
                 >
                   Next
-                </button>
-              </div>
+                </button> </div>
             )}
-          </div>
-        </div>
+          </div> </div>
 
         {/* 3. Interactive Map (Bottom on Mobile, Sidebar Bottom on Desktop) */}
         <div className="hidden lg:block lg:col-span-1 lg:col-start-3 lg:row-start-2 h-fit">
           <div className="card overflow-hidden border border-primary-100 dark:border-dark-border">
             <div className="p-4 border-b border-primary-50 dark:border-dark-border bg-white dark:bg-dark-card">
               <h3 className="font-bold text-primary-900 dark:text-white text-sm flex items-center gap-1.5 font-display">
-                🗺️ Location Map
-              </h3>
-            </div>
+                 Location Map
+              </h3> </div>
             <div className="h-64 bg-slate-100 relative">
               <LeafletMap 
                 lat={destination.location?.coordinates?.[1]} 
                 lng={destination.location?.coordinates?.[0]} 
                 popupText={`${destination.name}, ${destination.city}`} 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+              /> </div> </div> </div> </div>
 
       {/* Lightbox Modal */}
       <AnimatePresence>
-        {activeImageIndex !== null && destination.images && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActiveImageIndex(null)}
-            className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out select-none"
-          >
-            {/* Close button */}
-            <button
+        {activeImageIndex !== null && (() => {
+          const rawList = (destination.gallery && destination.gallery.length > 0)
+            ? destination.gallery
+            : (destination.images && destination.images.length > 0)
+            ? destination.images
+            : [];
+          const galleryList = rawList.filter(url => url && !url.includes('destination_gallery'));
+          if (galleryList.length === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setActiveImageIndex(null)}
-              className="absolute top-6 right-6 z-[999999] text-white/75 hover:text-white text-3xl font-bold p-2 transition-colors cursor-pointer"
+              className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out select-none"
             >
-              ✕
-            </button>
+              {/* Close button */}
+              <button
+                onClick={() => setActiveImageIndex(null)}
+                className="absolute top-6 right-6 z-[999999] text-white/75 hover:text-white text-3xl font-bold p-2 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
 
-            {/* Left/Previous button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveImageIndex(prev => (prev - 1 + destination.images.length) % destination.images.length);
-              }}
-              className="absolute left-4 sm:left-8 z-[999999] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 sm:p-4 rounded-full transition-all cursor-pointer shadow-lg"
-            >
-              <LuChevronLeft className="text-2xl sm:text-3xl" />
-            </button>
+              {/* Left/Previous button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImageIndex(prev => (prev - 1 + galleryList.length) % galleryList.length);
+                }}
+                className="absolute left-4 sm:left-8 z-[999999] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 sm:p-4 rounded-full transition-all cursor-pointer shadow-lg"
+              >
+                <LuChevronLeft className="text-2xl sm:text-3xl" />
+              </button>
 
-            {/* Main image container */}
-            <div className="relative max-w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-              <motion.img
-                key={activeImageIndex}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                src={destination.images[activeImageIndex]}
-                alt={`Enlarged gallery view ${activeImageIndex + 1}`}
-                className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl border border-white/10"
-              />
-              {/* Image indicator */}
-              <div className="absolute bottom-[-40px] text-white/75 text-xs font-bold bg-black/50 px-3 py-1.5 rounded-full border border-white/10">
-                {activeImageIndex + 1} / {destination.images.length}
+              {/* Main image container */}
+              <div className="relative max-w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                <motion.img
+                  key={activeImageIndex}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  src={galleryList[activeImageIndex]}
+                  alt={`Enlarged gallery view ${activeImageIndex + 1}`}
+                  className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl border border-white/10"
+                />
+                {/* Image indicator */}
+                <div className="absolute bottom-[-40px] text-white/75 text-xs font-bold bg-black/50 px-3 py-1.5 rounded-full border border-white/10">
+                  {activeImageIndex + 1} / {galleryList.length}
+                </div>
               </div>
-            </div>
 
-            {/* Right/Next button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveImageIndex(prev => (prev + 1) % destination.images.length);
-              }}
-              className="absolute right-4 sm:right-8 z-[999999] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 sm:p-4 rounded-full transition-all cursor-pointer shadow-lg"
-            >
-              <LuChevronRight className="text-2xl sm:text-3xl" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+              {/* Right/Next button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImageIndex(prev => (prev + 1) % galleryList.length);
+                }}
+                className="absolute right-4 sm:right-8 z-[999999] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 sm:p-4 rounded-full transition-all cursor-pointer shadow-lg"
+              >
+                <LuChevronRight className="text-2xl sm:text-3xl" />
+              </button>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence> </div>
   );
 }

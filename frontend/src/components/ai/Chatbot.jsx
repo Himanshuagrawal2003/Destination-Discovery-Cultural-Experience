@@ -10,7 +10,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hello! 🌍 I'm your CultureQuest AI assistant. How can I help you plan your next adventure or explore a destination today?",
+      content: "Hello!  I'm your CultureQuest AI assistant. How can I help you plan your next adventure or explore a destination today?",
     },
   ]);
   const [input, setInput] = useState('');
@@ -82,7 +82,7 @@ export default function Chatbot() {
   if (!user) return null; // Show chatbot only for authenticated users
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
       {/* Chat Panel */}
       <AnimatePresence>
         {isOpen && (
@@ -99,17 +99,13 @@ export default function Chatbot() {
                 <LuSparkles className="text-xl animate-pulse text-amber-300" />
                 <div className="text-left">
                   <h3 className="font-bold text-sm font-display">Travel Assistant</h3>
-                  <p className="text-[10px] text-primary-50/90 font-bold uppercase tracking-wider">Powered by Gemini AI</p>
-                </div>
-              </div>
+                  <p className="text-[10px] text-primary-50/90 font-bold uppercase tracking-wider">Powered by Gemini AI</p> </div> </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
                 aria-label="Close chat"
               >
-                <LuX className="text-xl" />
-              </button>
-            </div>
+                <LuX className="text-xl" /> </button> </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-primary-50/30 dark:bg-slate-900/50">
@@ -120,8 +116,7 @@ export default function Chatbot() {
                 >
                   {m.role !== 'user' && (
                     <div className="w-8 h-8 rounded-full bg-primary-100/50 dark:bg-primary-900/20 flex items-center justify-center text-accent shrink-0 border border-primary-100">
-                      <LuSparkles className="text-sm" />
-                    </div>
+                      <LuSparkles className="text-sm" /> </div>
                   )}
                   <div
                     className={`max-w-[75%] rounded-2xl p-3 text-sm leading-relaxed font-medium whitespace-pre-line ${
@@ -134,25 +129,20 @@ export default function Chatbot() {
                   </div>
                   {m.role === 'user' && (
                     <div className="w-8 h-8 rounded-full bg-primary-200/50 dark:bg-primary-950 flex items-center justify-center text-accent shrink-0 border border-primary-100">
-                      <LuUser className="text-sm" />
-                    </div>
+                      <LuUser className="text-sm" /> </div>
                   )}
                 </div>
               ))}
               {isLoading && (
                 <div className="flex gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-primary-100/50 dark:bg-primary-900/20 flex items-center justify-center text-accent shrink-0 border border-primary-100 animate-bounce">
-                    <LuSparkles className="text-sm" />
-                  </div>
+                    <LuSparkles className="text-sm" /> </div>
                   <div className="bg-white dark:bg-dark-bg rounded-2xl p-3 rounded-bl-none shadow-sm border border-primary-100/50 dark:border-dark-border/60 flex items-center gap-1.5 py-4">
                     <span className="w-2 h-2 bg-accent/70 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-accent/70 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-accent/70 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
+                    <span className="w-2 h-2 bg-accent/70 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} /> </div> </div>
               )}
-              <div ref={messagesEndRef} />
-            </div>
+              <div ref={messagesEndRef} /> </div>
 
             {/* Input Form */}
             <form onSubmit={handleSend} className="p-3 bg-white dark:bg-dark-card border-t border-primary-100 dark:border-dark-border flex gap-2">
@@ -169,10 +159,7 @@ export default function Chatbot() {
                 disabled={!input.trim() || isLoading}
                 className="p-2.5 bg-accent hover:bg-accent/90 hover:shadow-glow text-white rounded-xl disabled:opacity-50 transition-colors shrink-0 flex items-center justify-center cursor-pointer shadow-sm"
               >
-                <LuSend className="text-sm" />
-              </button>
-            </form>
-          </motion.div>
+                <LuSend className="text-sm" /> </button> </form> </motion.div>
         )}
       </AnimatePresence>
 
@@ -181,11 +168,10 @@ export default function Chatbot() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-14 h-14 bg-accent hover:bg-accent/90 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-glow cursor-pointer transition-all border border-primary-200/20"
+        className="w-12 h-12 sm:w-14 sm:h-14 bg-accent hover:bg-accent/90 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-glow cursor-pointer transition-all border border-primary-200/20"
         aria-label="Chat with AI"
       >
-        {isOpen ? <LuX className="text-2xl" /> : <LuMessageSquare className="text-2xl" />}
-      </motion.button>
-    </div>
+        {isOpen ? <LuX className="text-xl sm:text-2xl" /> : <LuMessageSquare className="text-xl sm:text-2xl" />}
+      </motion.button> </div>
   );
 }

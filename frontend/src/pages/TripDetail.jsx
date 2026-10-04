@@ -207,8 +207,7 @@ export default function TripDetail() {
     return (
       <div className="container-cq py-12 space-y-8 animate-pulse">
         <div className="h-64 skeleton w-full rounded-3xl" />
-        <div className="h-40 skeleton w-full rounded-3xl" />
-      </div>
+        <div className="h-40 skeleton w-full rounded-3xl" /> </div>
     );
   }
 
@@ -220,13 +219,12 @@ export default function TripDetail() {
       <div className="bg-gradient-to-r from-accent to-[#C4B5FD] p-6 md:p-8 rounded-3xl text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border border-primary-100/10 animate-fade-in">
         <div className="space-y-2">
           <span className="badge bg-white/20 text-white font-extrabold text-[9px] tracking-widest border border-white/10 px-2 py-0.5 rounded-md uppercase">
-            {trip.isAIGenerated ? '🤖 AI Crafted' : '🗺️ Self Planned'}
+            {trip.isAIGenerated ? ' AI Crafted' : ' Self Planned'}
           </span>
-          <h1 className="text-2xl md:text-3xl font-black font-display">{trip.name}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black font-display tracking-tight leading-snug">{trip.name}</h1>
           <p className="text-xs text-primary-50 flex items-center gap-1 font-semibold">
-            📍 {trip.destinations?.map((d) => `${d.name} (${d.city}, ${d.country})`).join(' | ')}
-          </p>
-        </div>
+             {trip.destinations?.map((d) => `${d.name} (${d.city}, ${d.country})`).join(' | ')}
+          </p> </div>
 
         <div className="flex gap-2">
           <button onClick={handleExportPDF} className="btn bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center gap-1 text-xs border border-white/20 font-bold py-2.5 px-4 cursor-pointer">
@@ -234,9 +232,7 @@ export default function TripDetail() {
           </button>
           <button onClick={handleToggleSharing} className="btn bg-white dark:bg-dark-card text-accent hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-xl text-xs flex items-center gap-1 font-bold py-2.5 px-4 shadow-sm cursor-pointer transition-all border border-transparent dark:border-dark-border">
             <LuShare2 /> {trip.isPublic ? 'Unshare Trip' : 'Share Feed'}
-          </button>
-        </div>
-      </div>
+          </button> </div> </div>
 
       {/* Grid panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -276,17 +272,14 @@ export default function TripDetail() {
                             <h4 className="font-bold text-xs text-primary-900 dark:text-white font-display">{act.title}</h4>
                             {act.description && <p className="text-[11px] text-primary-900/60 dark:text-dark-muted leading-relaxed font-semibold">{act.description}</p>}
                             <div className="flex gap-4 text-[10px] text-primary-900/40 dark:text-dark-muted/65 font-bold pt-1">
-                              {act.time && <span>⏰ {act.time}</span>}
-                              {act.cost !== undefined && <span>💰 ₹{act.cost}</span>}
-                            </div>
-                          </div>
+                              {act.time && <span> {act.time}</span>}
+                              {act.cost !== undefined && <span> ₹{act.cost}</span>}
+                            </div> </div>
                           <button
                             onClick={() => handleDeleteActivity(day.day, actIdx)}
                             className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/10 text-red-500 rounded-lg cursor-pointer transition-colors"
                           >
-                            <LuTrash2 className="text-base" />
-                          </button>
-                        </div>
+                            <LuTrash2 className="text-base" /> </button> </div>
                       ))}
                     </div>
                   ) : (
@@ -314,8 +307,7 @@ export default function TripDetail() {
                       value={activityCost || ''}
                       onChange={(e) => setActivityCost(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
-                    />
-                  </div>
+                    /> </div>
                   <input
                     type="text"
                     placeholder="Description / address notes..."
@@ -325,9 +317,7 @@ export default function TripDetail() {
                   />
                   <button type="submit" className="btn bg-accent hover:bg-accent/90 text-white font-bold py-2 px-5 rounded-xl text-xs shadow-sm hover:shadow-glow cursor-pointer transition-all w-fit">
                     Add Activity
-                  </button>
-                </form>
-              </div>
+                  </button> </form> </div>
             );
           })}
         </div>
@@ -341,31 +331,24 @@ export default function TripDetail() {
               <span className="text-xs font-bold text-primary-900/50 dark:text-dark-muted">Total Budget:</span>
               <span className="text-lg font-black text-accent flex items-center">
                 <LuCoins className="mr-1 text-sm" /> ₹{trip.budget?.total || 0}
-              </span>
-            </div>
+              </span> </div>
             {trip.budget?.breakdown && (
               <div className="space-y-2.5 text-[11px] font-bold text-primary-900/60 dark:text-dark-muted">
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1"><LuHotel className="text-accent" /> Accommodation:</span>
-                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.accommodation || 0}</span>
-                </div>
+                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.accommodation || 0}</span> </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1"><LuBus className="text-accent" /> Local Transport:</span>
-                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.transport || 0}</span>
-                </div>
+                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.transport || 0}</span> </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1"><LuUtensils className="text-accent" /> Food & Meals:</span>
-                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.food || 0}</span>
-                </div>
+                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.food || 0}</span> </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1"><LuActivity className="text-accent" /> Entrance & Tours:</span>
-                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.activities || 0}</span>
-                </div>
+                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.activities || 0}</span> </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1"><LuCompass className="text-accent" /> Emergency Buffer:</span>
-                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.emergency || 0}</span>
-                </div>
-              </div>
+                  <span className="text-primary-900 dark:text-white">₹{trip.budget.breakdown.emergency || 0}</span> </div> </div>
             )}
           </div>
 
@@ -384,9 +367,7 @@ export default function TripDetail() {
                   <option value="bus">Bus</option>
                   <option value="car">Car rental</option>
                   <option value="ship">Cruise / Ferry</option>
-                  <option value="mixed">Mixed transit</option>
-                </select>
-              </div>
+                  <option value="mixed">Mixed transit</option> </select> </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Transit Details</label>
@@ -396,8 +377,7 @@ export default function TripDetail() {
                   value={transportDetails}
                   onChange={(e) => setTransportDetails(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
-                />
-              </div>
+                /> </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">General Trip Notes</label>
@@ -407,8 +387,7 @@ export default function TripDetail() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-semibold h-auto resize-none leading-relaxed"
-                />
-              </div>
+                /> </div>
 
               <button
                 onClick={handleUpdateNotesAndTransport}
@@ -416,11 +395,6 @@ export default function TripDetail() {
                 className="w-full btn bg-accent hover:bg-accent/90 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm hover:shadow-glow cursor-pointer transition-all"
               >
                 Save Details
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              </button> </div> </div> </div> </div> </div>
   );
 }

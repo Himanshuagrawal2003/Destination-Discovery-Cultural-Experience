@@ -26,8 +26,7 @@ export default function ForgotPassword() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-primary-900 dark:text-white font-display">Reset Password</h2>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted mt-1 font-medium">We'll send you instructions to reset your password</p>
-      </div>
+        <p className="text-sm text-primary-900/60 dark:text-dark-muted mt-1 font-medium">We'll send you instructions to reset your password</p> </div>
 
       {isSent ? (
         <div className="space-y-4 text-center">
@@ -36,8 +35,7 @@ export default function ForgotPassword() {
           </div>
           <Link to="/login" className="w-full btn bg-accent hover:bg-accent/90 text-white font-bold py-3 rounded-xl shadow-md transition-all inline-block text-center mt-4">
             Back to Sign In
-          </Link>
-        </div>
+          </Link> </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
@@ -66,8 +64,7 @@ export default function ForgotPassword() {
             ) : (
               'Send Reset Link'
             )}
-          </button>
-        </form>
+          </button> </form>
       )}
 
       {!isSent && (
@@ -75,8 +72,7 @@ export default function ForgotPassword() {
           Remembered your password?{' '}
           <Link to="/login" className="text-accent hover:underline font-semibold">
             Sign In
-          </Link>
-        </p>
+          </Link> </p>
       )}
     </div>
   );

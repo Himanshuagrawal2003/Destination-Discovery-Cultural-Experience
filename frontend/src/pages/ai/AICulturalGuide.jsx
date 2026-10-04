@@ -1,123 +1,254 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
-import { 
-  LuSparkles, 
-  LuGlobe, 
-  LuBookOpen, 
-  LuTriangleAlert, 
-  LuShirt, 
-  LuMapPin,
-  LuCompass,
-  LuBookmark
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  LuSparkles, LuGlobe, LuBookOpen, LuTriangleAlert,
+  LuShirt, LuMapPin, LuCompass, LuBookmark,
+  LuCheck, LuX, LuMessageCircle, LuCamera, LuHand
 } from 'react-icons/lu';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
-// Helper to repair truncated/cut-off JSON strings by closing open structures
-const repairTruncatedJSON = (jsonString) => {
-  if (!jsonString) return '';
-  let cleaned = jsonString.trim();
-  let inString = false;
-  let escape = false;
-  const stack = [];
-  
-  for (let i = 0; i < cleaned.length; i++) {
-    const char = cleaned[i];
-    if (escape) {
-      escape = false;
-      continue;
-    }
-    if (char === '\\') {
-      escape = true;
-      continue;
-    }
-    if (char === '"') {
-      inString = !inString;
-      continue;
-    }
-    if (!inString) {
-      if (char === '{' || char === '[') {
-        stack.push(char);
-      } else if (char === '}') {
-        if (stack.length > 0 && stack[stack.length - 1] === '{') stack.pop();
-      } else if (char === ']') {
-        if (stack.length > 0 && stack[stack.length - 1] === '[') stack.pop();
-      }
-    }
+// Safely parse JSON from raw AI text 
+const safeParseGuide = (raw) => {
+  if (!raw) return null;
+  if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  try {
+    const cleaned = String(raw)
+      .replace(/```json/gi, '').replace(/```/g, '')
+      .trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return null;
   }
-  
-  let repaired = cleaned;
-  if (inString) repaired += '"';
-  while (stack.length > 0) {
-    const openChar = stack.pop();
-    repaired += (openChar === '{' ? '}' : ']');
-  }
-  return repaired;
 };
 
-// Helper to safely format or extract key-value sections from raw JSON text
-const formatRawText = (text) => {
-  if (!text) return '';
-  let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-  
-  // Clean and repair truncated JSON
-  cleaned = repairTruncatedJSON(cleaned);
-  
-  if (cleaned.startsWith('{') && cleaned.endsWith('}')) {
-    try {
-      const formattedJson = cleaned
-        .replace(/,\s*([\]}])/g, '$1') // remove trailing commas
-        .replace(/\\"/g, '"'); // unescape quotes
-      return JSON.parse(formattedJson);
-    } catch {
-      // Extract key-value pairs via regex if standard JSON.parse fails
-      const parsed = {};
-      const regex = /"([^"]+)"\s*:\s*(?:"([^"]*)"|(\[[^\]]*\])|([^,\n}]+))/g;
-      let match;
-      while ((match = regex.exec(cleaned)) !== null) {
-        const key = match[1];
-        let val = match[2] || match[3] || match[4];
-        if (val) {
-          const trimmedVal = val.trim();
-          // Skip syntax markers that are not actual text values
-          if (trimmedVal === '{' || trimmedVal === '}' || trimmedVal === '[' || trimmedVal === ']') {
-            continue;
-          }
-          let cleanVal = trimmedVal;
-          if (cleanVal.startsWith('[') && cleanVal.endsWith(']')) {
-            try {
-              cleanVal = JSON.parse(cleanVal);
-            } catch {
-              cleanVal = cleanVal.replace(/[\[\]"]/g, '').split(',').map(s => s.trim());
-            }
-          } else {
-            cleanVal = cleanVal.replace(/^"|"$/g, '').trim();
-          }
-          parsed[key] = cleanVal;
-        }
-      }
-      if (Object.keys(parsed).length > 0) return parsed;
+// Section config 
+const SECTIONS = [
+  {
+    key: 'greetingsAndCustoms',
+    label: 'Greetings & Customs',
+    icon: LuCompass,
+    color: 'amber',
+    subKeys: {
+      overview: { label: 'Overview', type: 'text' },
+      dos: { label: 'Cultural Dos', type: 'do-list' },
+      donts: { label: 'Cultural Don\'ts', type: 'dont-list' },
+      phrases: { label: 'Local Phrases', type: 'phrase-list' },
     }
-  }
-  return cleaned;
+  },
+  {
+    key: 'religiousEtiquette',
+    label: 'Religious Etiquette',
+    icon: LuMapPin,
+    color: 'purple',
+    subKeys: {
+      overview: { label: 'Overview', type: 'text' },
+      dos: { label: 'Sacred Site Dos', type: 'do-list' },
+      donts: { label: 'Sacred Site Don\'ts', type: 'dont-list' },
+      keyPlaces: { label: 'Key Sacred Sites', type: 'place-list' },
+    }
+  },
+  {
+    key: 'clothingEtiquette',
+    label: 'Clothing Etiquette',
+    icon: LuShirt,
+    color: 'blue',
+    subKeys: {
+      overview: { label: 'Overview', type: 'text' },
+      dos: { label: 'Dress Dos', type: 'do-list' },
+      donts: { label: 'Dress Don\'ts', type: 'dont-list' },
+      climateTip: { label: 'Climate Tip', type: 'tip' },
+      footwearTip: { label: 'Footwear Tip', type: 'tip' },
+    }
+  },
+  {
+    key: 'thingsToAvoid',
+    label: 'Things to Avoid',
+    icon: LuTriangleAlert,
+    color: 'rose',
+    subKeys: {
+      overview: { label: 'Overview', type: 'text' },
+      taboos: { label: 'Cultural Taboos', type: 'taboo-list' },
+      gestures: { label: 'Offensive Gestures', type: 'gesture-list' },
+      photographyRules: { label: 'Photography Rules', type: 'photo-list' },
+    }
+  },
+];
+
+const colorMap = {
+  amber: {
+    tab: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    tabActive: 'bg-amber-500 text-white shadow-amber-200/50 shadow-md',
+    border: 'border-l-amber-500',
+    badge: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
+    icon: 'text-amber-500',
+    do: 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
+    dont: 'bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300',
+  },
+  purple: {
+    tab: 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    tabActive: 'bg-purple-500 text-white shadow-purple-200/50 shadow-md',
+    border: 'border-l-purple-500',
+    badge: 'bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800',
+    icon: 'text-purple-500',
+    do: 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
+    dont: 'bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300',
+  },
+  blue: {
+    tab: 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    tabActive: 'bg-blue-500 text-white shadow-blue-200/50 shadow-md',
+    border: 'border-l-blue-500',
+    badge: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
+    icon: 'text-blue-500',
+    do: 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
+    dont: 'bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300',
+  },
+  rose: {
+    tab: 'bg-rose-100 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+    tabActive: 'bg-rose-500 text-white shadow-rose-200/50 shadow-md',
+    border: 'border-l-rose-500',
+    badge: 'bg-rose-50 dark:bg-rose-900/10 border-rose-200 dark:border-rose-800',
+    icon: 'text-rose-500',
+    do: 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
+    dont: 'bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300',
+  },
 };
 
+// Sub-content renderers 
+function RenderSubKey({ type, value, colors }) {
+  if (!value) return null;
+
+  if (type === 'text') {
+    return (
+      <p className="text-sm text-primary-900/80 dark:text-dark-muted leading-relaxed font-medium">
+        {value}
+      </p>
+    );
+  }
+
+  if (type === 'tip') {
+    return (
+      <div className={`p-3.5 rounded-xl border ${colors.badge} text-sm text-primary-900/80 dark:text-dark-muted font-medium leading-relaxed`}>
+        {value}
+      </div>
+    );
+  }
+
+  if (type === 'do-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className={`flex items-start gap-2.5 p-3 rounded-xl ${colors.do} text-xs font-semibold`}>
+            <LuCheck className="shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'dont-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className={`flex items-start gap-2.5 p-3 rounded-xl ${colors.dont} text-xs font-semibold`}>
+            <LuX className="shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'phrase-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className={`flex items-start gap-2.5 p-3 rounded-xl border ${colors.badge} text-xs font-semibold text-primary-900/80 dark:text-dark-muted`}>
+            <LuMessageCircle className={`shrink-0 mt-0.5 ${colors.icon}`} />
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'place-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className={`flex items-start gap-2.5 p-3 rounded-xl border ${colors.badge} text-xs font-semibold text-primary-900/80 dark:text-dark-muted`}>
+            <LuMapPin className={`shrink-0 mt-0.5 ${colors.icon}`} />
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'taboo-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800 text-xs font-semibold text-rose-700 dark:text-rose-300">
+            <span className="shrink-0"></span>
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'gesture-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 text-xs font-semibold text-orange-700 dark:text-orange-300">
+            <LuHand className="shrink-0 mt-0.5" />
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'photo-list') {
+    const items = Array.isArray(value) ? value : [value];
+    return (
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <LuCamera className="shrink-0 mt-0.5" />
+            <span>{item}</span> </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Fallback
+  if (Array.isArray(value)) {
+    return (
+      <ul className="space-y-1.5 list-disc list-inside text-xs text-primary-900/80 dark:text-dark-muted font-medium">
+        {value.map((item, i) => <li key={i}>{String(item)}</li>)}
+      </ul>
+    );
+  }
+
+  return <p className="text-xs text-primary-900/70 dark:text-dark-muted">{String(value)}</p>;
+}
+
+// Main Component 
 export default function AICulturalGuide() {
   const [isLoading, setIsLoading] = useState(false);
   const [culturalGuide, setCulturalGuide] = useState(null);
-  const [activeTab, setActiveTab] = useState('');
-  
-  // Independent save states
+  const [activeTab, setActiveTab] = useState('greetingsAndCustoms');
   const [historyId, setHistoryId] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: {
-      country: '',
-      city: '',
-    }
+    defaultValues: { country: '', city: '' }
   });
 
   const onSubmit = async (data) => {
@@ -127,215 +258,51 @@ export default function AICulturalGuide() {
     setIsSaved(false);
     try {
       const res = await api.post('/ai/cultural-guide', data);
-      setCulturalGuide(res.data.culturalGuide);
+      const raw = res.data?.culturalGuide ?? res.data?.rawText ?? null;
+      const parsed = safeParseGuide(raw) || safeParseGuide(res.data?.rawText);
+      setCulturalGuide(parsed);
       setHistoryId(res.data.historyId || null);
+      setActiveTab('greetingsAndCustoms');
       toast.success('Cultural guide ready!');
     } catch (err) {
-      toast.error(err.message || 'Failed to generate cultural guide');
+      toast.error(err.response?.data?.message || err.message || 'Failed to generate cultural guide');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleToggleSave = async () => {
-    if (!historyId) {
-      toast.error('No generated guide found to save');
-      return;
-    }
-    const token = localStorage.getItem('cq_token');
-    if (!token) {
-      toast.error('Please login to save the cultural guide');
-      return;
-    }
-
+    if (!historyId) { toast.error('No guide to save'); return; }
+    if (!localStorage.getItem('cq_token')) { toast.error('Please login to save'); return; }
     setIsSaving(true);
     try {
       await api.put(`/ai/history/${historyId}`, { isSaved: !isSaved });
       setIsSaved(!isSaved);
-      toast.success(!isSaved ? 'Cultural guide saved to your Bookmarks!' : 'Removed from Bookmarks');
-    } catch (err) {
-      toast.error(err.message || 'Failed to update save status');
+      toast.success(!isSaved ? 'Saved to Bookmarks!' : 'Removed from Bookmarks');
+    } catch {
+      toast.error('Failed to update save status');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const getSectionIcon = (sectionKey) => {
-    switch (sectionKey) {
-      case 'greetingsAndCustoms':
-        return <LuCompass className="text-accent text-lg shrink-0" />;
-      case 'religiousEtiquette':
-        return <LuMapPin className="text-purple-500 text-lg shrink-0" />;
-      case 'clothingEtiquette':
-        return <LuShirt className="text-blue-500 text-lg shrink-0" />;
-      case 'thingsToAvoid':
-        return <LuTriangleAlert className="text-rose-500 text-lg shrink-0" />;
-      default:
-        return <LuBookOpen className="text-accent text-lg shrink-0" />;
-    }
-  };
-
-  const getSectionBorder = (sectionKey) => {
-    switch (sectionKey) {
-      case 'greetingsAndCustoms':
-        return 'border-l-accent';
-      case 'religiousEtiquette':
-        return 'border-l-purple-500';
-      case 'clothingEtiquette':
-        return 'border-l-blue-500';
-      case 'thingsToAvoid':
-        return 'border-l-rose-500';
-      default:
-        return 'border-l-primary-200';
-    }
-  };
-
-  const getSectionColors = (sectionKey) => {
-    switch (sectionKey) {
-      case 'greetingsAndCustoms':
-        return {
-          bg: 'bg-amber-50/30 dark:bg-amber-950/5',
-          border: 'border-amber-200/60 dark:border-amber-900/20',
-          text: 'text-amber-900/80 dark:text-amber-250',
-          prefix: 'text-amber-600 dark:text-amber-400'
-        };
-      case 'religiousEtiquette':
-        return {
-          bg: 'bg-purple-50/30 dark:bg-purple-950/5',
-          border: 'border-purple-200/60 dark:border-purple-900/20',
-          text: 'text-purple-900/80 dark:text-purple-250',
-          prefix: 'text-purple-600 dark:text-purple-400'
-        };
-      case 'clothingEtiquette':
-        return {
-          bg: 'bg-blue-50/30 dark:bg-blue-950/5',
-          border: 'border-blue-200/60 dark:border-blue-900/20',
-          text: 'text-blue-900/80 dark:text-blue-250',
-          prefix: 'text-blue-600 dark:text-blue-400'
-        };
-      case 'thingsToAvoid':
-        return {
-          bg: 'bg-rose-50/30 dark:bg-rose-950/5',
-          border: 'border-rose-200/60 dark:border-rose-900/20',
-          text: 'text-rose-900/80 dark:text-rose-250',
-          prefix: 'text-rose-600 dark:text-rose-400'
-        };
-      default:
-        return {
-          bg: 'bg-primary-50/20 dark:bg-dark-bg/40',
-          border: 'border-primary-100/50 dark:border-dark-border',
-          text: 'text-primary-900/80 dark:text-dark-muted',
-          prefix: 'text-accent'
-        };
-    }
-  };
-
-  const renderSection = (title, key, data) => {
-    if (!data) return null;
-    const colors = getSectionColors(key);
-    
-    const formatText = (text) => {
-      if (typeof text !== 'string') return String(text);
-      const separatorIndex = text.indexOf(':') > -1 ? text.indexOf(':') : text.indexOf('-');
-      if (separatorIndex > 0 && separatorIndex < 40) {
-        const prefix = text.substring(0, separatorIndex).trim();
-        const symbol = text[separatorIndex];
-        const rest = text.substring(separatorIndex + 1).trim();
-        return (
-          <>
-            <strong className={`font-extrabold uppercase tracking-wide text-[10px] ${colors.prefix} block sm:inline mr-1`}>{prefix}{symbol}</strong>
-            <span>{rest}</span>
-          </>
-        );
-      }
-      return text;
-    };
-
-    return (
-      <div className={`card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 border-l-4 ${getSectionBorder(key)} space-y-4 rounded-2xl shadow-sm hover:shadow-md transition-all`}>
-        <h4 className="font-bold text-primary-900 dark:text-white text-sm capitalize flex items-center gap-1.5 font-display border-b border-primary-100 dark:border-dark-border pb-3">
-          {getSectionIcon(key)}
-          <span>{title.replace(/([A-Z])/g, ' $1')}</span>
-        </h4>
-        <div className="grid grid-cols-1 gap-2.5">
-          {typeof data === 'string' ? (
-            <div className={`p-4 ${colors.bg} border ${colors.border} rounded-xl text-xs font-semibold ${colors.text} leading-relaxed whitespace-pre-wrap`}>
-              {data.split(/\n+/).map((p, idx) => {
-                const isSpecial = /critical|important|warning|danger|never|do not|avoid|must/i.test(p);
-                if (isSpecial) {
-                  return (
-                    <div key={idx} className={`p-3.5 mt-2.5 rounded-lg border-l-4 ${colors.border} bg-white dark:bg-dark-bg/60 shadow-xs border flex items-start gap-2`}>
-                      <span className="text-xs shrink-0 mt-0.5">⚠️</span>
-                      <div className="text-xs leading-relaxed">{formatText(p)}</div>
-                    </div>
-                  );
-                }
-                return <p key={idx} className={idx > 0 ? 'mt-2.5' : ''}>{formatText(p)}</p>;
-              })}
-            </div>
-          ) : Array.isArray(data) ? (
-            <div className={`p-4 ${colors.bg} border ${colors.border} rounded-xl text-xs font-semibold ${colors.text} leading-relaxed space-y-3`}>
-              {data.map((item, idx) => {
-                const text = typeof item === 'object' && item !== null
-                  ? `${item.title || item.name || ''}: ${item.description || item.value || JSON.stringify(item)}`
-                  : item;
-                const isSpecial = /critical|important|warning|danger|never|do not|avoid|must/i.test(text);
-                if (isSpecial) {
-                  return (
-                    <div key={idx} className={`p-3.5 rounded-lg border-l-4 ${colors.border} bg-white dark:bg-dark-bg/60 shadow-xs border flex items-start gap-2`}>
-                      <span className="text-xs shrink-0 mt-0.5">⚠️</span>
-                      <div className="text-xs leading-relaxed">{formatText(text)}</div>
-                    </div>
-                  );
-                }
-                return <p key={idx}>{formatText(text)}</p>;
-              })}
-            </div>
-          ) : (
-            <div className={`p-4 ${colors.bg} border ${colors.border} rounded-xl text-xs font-semibold ${colors.text} leading-relaxed space-y-3`}>
-              {Object.entries(data).map(([k, val], idx) => {
-                const text = typeof val === 'object' && val !== null
-                  ? Array.isArray(val) ? val.join(', ') : JSON.stringify(val)
-                  : val;
-                const fieldTitle = k.replace(/([A-Z])/g, ' $1').trim();
-                const isSpecial = /critical|important|warning|danger|never|do not|avoid|must/i.test(text) || /critical|important|warning|danger|never|do not|avoid|must/i.test(fieldTitle);
-                
-                if (isSpecial) {
-                  return (
-                    <div key={idx} className={`p-3.5 rounded-lg border-l-4 ${colors.border} bg-white dark:bg-dark-bg/60 shadow-xs border flex items-start gap-2`}>
-                      <span className="text-xs shrink-0 mt-0.5">⚠️</span>
-                      <div className="text-xs leading-relaxed">
-                        <strong className={`capitalize ${colors.prefix} font-extrabold block sm:inline mr-1`}>{fieldTitle}: </strong>
-                        {text}
-                      </div>
-                    </div>
-                  );
-                }
-                
-                return (
-                  <p key={idx}>
-                    <strong className={`capitalize ${colors.prefix} font-extrabold block sm:inline mr-1`}>{fieldTitle}: </strong>
-                    {text}
-                  </p>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
+  const activeSection = SECTIONS.find(s => s.key === activeTab) || SECTIONS[0];
+  const colors = colorMap[activeSection.color];
+  const sectionData = culturalGuide?.[activeTab] || null;
 
   return (
     <div className="space-y-8 pb-12 bg-[#FAF7FF] dark:bg-dark-bg min-h-screen">
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
-            <LuSparkles className="text-accent animate-pulse" /> AI Cultural Customs Guide
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display flex items-center gap-2 tracking-tight leading-snug">
+            <LuSparkles className="text-accent animate-pulse shrink-0 text-lg sm:text-2xl" /> AI Cultural Customs Guide
           </h1>
-          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Learn local etiquette, dress code rules, sacred site regulations, and greetings.</p>
+          <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">
+            Learn local etiquette, dress codes, sacred site rules, and greetings.
+          </p>
         </div>
-        
         {culturalGuide && historyId && (
           <button
             onClick={handleToggleSave}
@@ -347,21 +314,24 @@ export default function AICulturalGuide() {
             }`}
           >
             <LuBookmark className={isSaved ? 'fill-white text-white' : 'text-primary-900/50'} />
-            {isSaved ? 'Saved to Bookmarks' : 'Save Cultural Guide'}
+            {isSaved ? 'Saved' : 'Save Guide'}
           </button>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form panel */}
+
+        {/*  Form Panel  */}
         <form onSubmit={handleSubmit(onSubmit)} className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 space-y-5 h-fit rounded-2xl shadow-sm">
-          <h3 className="font-bold text-lg text-primary-900 dark:text-white border-b border-primary-100 dark:border-dark-border pb-3 font-display">Destination</h3>
+          <h3 className="font-bold text-lg text-primary-900 dark:text-white border-b border-primary-100 dark:border-dark-border pb-3 font-display">
+            Destination
+          </h3>
 
           <div>
-            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Country</label>
+            <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">Country *</label>
             <input
               type="text"
-              placeholder="e.g. India, Japan"
+              placeholder="e.g. India, Japan, France"
               className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
               {...register('country', { required: 'Country is required' })}
             />
@@ -370,8 +340,12 @@ export default function AICulturalGuide() {
 
           <div>
             <label className="block text-xs font-bold text-primary-900 dark:text-dark-text uppercase tracking-wider mb-2">City (Optional)</label>
-            <input type="text" placeholder="e.g. Kyoto, Varanasi" className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all" {...register('city')} />
-          </div>
+            <input
+              type="text"
+              placeholder="e.g. Varanasi, Kyoto"
+              className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-sm font-medium transition-all"
+              {...register('city')}
+            /> </div>
 
           <button
             type="submit"
@@ -381,97 +355,122 @@ export default function AICulturalGuide() {
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              <>
-                <LuGlobe /> Load Cultural Customs
-              </>
+              <><LuGlobe /> Load Cultural Customs</>
             )}
           </button>
-        </form>
 
-        {/* Results panel */}
-        <div className="lg:col-span-2 space-y-6">
-          {isLoading ? (
-            <div className="space-y-6">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-64 skeleton w-full animate-pulse rounded-2xl" />
+          {/* Quick tips */}
+          {!culturalGuide && !isLoading && (
+            <div className="space-y-2 pt-2">
+              <p className="text-[10px] font-bold text-primary-900/40 dark:text-dark-muted uppercase tracking-wider">What you'll get</p>
+              {['Greetings & social customs', 'Religious site etiquette', 'Dress code guidelines', 'Cultural taboos & gestures'].map((t) => (
+                <div key={t} className="flex items-center gap-2 text-xs text-primary-900/60 dark:text-dark-muted font-medium">
+                  <LuCheck className="text-accent shrink-0" /> {t}
+                </div>
               ))}
             </div>
-          ) : culturalGuide ? (() => {
-            let parsedGuide = culturalGuide;
-            if (culturalGuide.rawText) {
-              parsedGuide = formatRawText(culturalGuide.rawText);
-            } else if (typeof culturalGuide === 'string') {
-              parsedGuide = formatRawText(culturalGuide);
-            }
+          )}
+        </form>
 
-            const isStructured = parsedGuide && 
-                                 typeof parsedGuide === 'object' && 
-                                 !parsedGuide.rawText && 
-                                 Object.keys(parsedGuide).length > 0;
+        {/*  Results Panel  */}
+        <div className="lg:col-span-2 space-y-5">
+          {isLoading ? (
+            <div className="space-y-5">
+              <div className="h-14 skeleton w-full animate-pulse rounded-2xl" />
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-40 skeleton w-full animate-pulse rounded-2xl" />
+              ))}
+            </div>
+          ) : culturalGuide ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="space-y-5"
+              >
+                {/* Tab bar */}
+                <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-2.5 rounded-2xl shadow-sm flex flex-wrap gap-2">
+                  {SECTIONS.map((sec) => {
+                    const Icon = sec.icon;
+                    const isActive = activeTab === sec.key;
+                    const c = colorMap[sec.color];
+                    return (
+                      <button
+                        key={sec.key}
+                        type="button"
+                        onClick={() => setActiveTab(sec.key)}
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          isActive ? c.tabActive : c.tab
+                        }`}
+                      >
+                        {Icon && <Icon className="text-sm shrink-0" />}
+                        <span>{sec.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-             const guideKeys = Object.keys(parsedGuide);
-            const currentTab = activeTab && guideKeys.includes(activeTab) ? activeTab : guideKeys[0];
+                {/* Active section */}
+                {sectionData ? (
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={`card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border rounded-2xl shadow-sm border-l-4 ${colors.border} overflow-hidden`}
+                  >
+                    {/* Section header */}
+                    <div className="px-6 py-4 border-b border-primary-50 dark:border-dark-border flex items-center gap-3">
+                      {activeSection?.icon && (() => {
+                        const SecIcon = activeSection.icon;
+                        return <div className={`p-2 rounded-xl ${colors.badge}`}><SecIcon className={`text-xl ${colors.icon}`} /></div>;
+                      })()}
+                      <div>
+                        <h3 className="font-extrabold text-primary-900 dark:text-white font-display text-base">
+                          {activeSection.label}
+                        </h3>
+                        <p className="text-[10px] text-primary-900/50 dark:text-dark-muted font-semibold uppercase tracking-wider">
+                          Cultural etiquette guide
+                        </p>
+                      </div>
+                    </div>
 
-            return (
-              <div className="space-y-6">
-                {isStructured ? (
-                  <div className="space-y-6">
-                    {/* Tab Navigation Box */}
-                    <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-3 rounded-2xl shadow-sm flex flex-wrap gap-2.5 justify-center md:justify-start">
-                      {guideKeys.map((key) => {
-                        const title = key
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/_/g, ' ')
-                          .trim();
-                        const isActive = currentTab === key;
+                    {/* Sub-key content */}
+                    <div className="p-6 space-y-6">
+                      {Object.entries(activeSection.subKeys).map(([subKey, { label, type }]) => {
+                        const val = sectionData[subKey];
+                        if (!val || (Array.isArray(val) && val.length === 0)) return null;
                         return (
-                           <button
-                            key={key}
-                            type="button"
-                            onClick={() => setActiveTab(key)}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                              isActive
-                                ? 'bg-accent text-white shadow-sm shadow-accent/15'
-                                : 'bg-primary-50/50 dark:bg-primary-950/10 text-primary-900/60 dark:text-dark-muted hover:bg-primary-50 dark:hover:bg-primary-950/20'
-                            }`}
-                          >
-                            {getSectionIcon(key)}
-                            <span>{title}</span>
-                          </button>
+                          <div key={subKey} className="space-y-3">
+                            <h4 className={`text-[11px] font-extrabold uppercase tracking-widest ${colors.icon}`}>
+                              {label}
+                            </h4>
+                            <RenderSubKey type={type} value={val} colors={colors} />
+                          </div>
                         );
                       })}
                     </div>
-
-                    {/* Active Section Content */}
-                    {(() => {
-                      const title = currentTab
-                        .replace(/([A-Z])/g, ' $1')
-                        .replace(/_/g, ' ')
-                        .trim();
-                      return renderSection(title, currentTab, parsedGuide[currentTab]);
-                    })()}
-                  </div>
+                  </motion.div>
                 ) : (
-                  /* Fallback: render cleaned raw text */
-                  <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-6 rounded-2xl shadow-sm whitespace-pre-line text-xs font-semibold leading-relaxed text-primary-900/70 dark:text-dark-muted">
-                    <h4 className="font-extrabold text-sm text-primary-900 dark:text-white mb-3 flex items-center gap-1.5 border-b border-primary-50 dark:border-dark-border pb-2.5 font-display">
-                      <LuBookOpen className="text-accent text-lg" />
-                      <span>Cultural Guide Details</span>
-                    </h4>
-                    {typeof parsedGuide === 'string' ? parsedGuide : JSON.stringify(parsedGuide, null, 2)}
+                  <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-10 rounded-2xl text-center text-primary-900/40 dark:text-dark-muted">
+                    <p className="text-sm font-semibold">No data available for this section.</p>
                   </div>
                 )}
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-16 text-center text-primary-900/40 dark:text-dark-muted flex flex-col items-center justify-center space-y-4 rounded-2xl shadow-sm">
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-500">
+                <LuCompass className="w-10 h-10 animate-pulse" />
               </div>
-            );
-          })() : (
-            <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted flex flex-col items-center justify-center space-y-4 rounded-2xl shadow-sm">
-              <span className="text-6xl animate-float">⛩️</span>
-              <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">Awaiting Customs Parameters</h3>
-              <p className="text-xs max-w-sm font-semibold leading-relaxed">Enter destination details and read authentic greetings, taboos, and site rules guidelines.</p>
+              <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">Awaiting Destination</h3>
+              <p className="text-xs max-w-sm font-semibold leading-relaxed">
+                Enter a country or city to get a complete cultural etiquette guide with dos & don'ts, greetings, and religious customs.
+              </p>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </div> </div> </div>
   );
 }

@@ -223,17 +223,15 @@ export default function ManageDestinations() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-accent to-[#C4B5FD] p-6 rounded-3xl text-white shadow-md">
         <div className="space-y-1">
           <h1 className="text-2xl font-extrabold font-display leading-tight flex items-center gap-2">
-            🛡️ Manage Destinations
+             Manage Destinations
           </h1>
-          <p className="text-xs text-primary-50/90 font-medium">Add, update, or remove cultural travel destinations from the platform.</p>
-        </div>
+          <p className="text-xs text-primary-50/90 font-medium">Add, update, or remove cultural travel destinations from the platform.</p> </div>
         <button
           onClick={handleOpenCreate}
           className="btn bg-white dark:bg-dark-card text-accent hover:bg-primary-50 dark:hover:bg-primary-900/30 flex items-center gap-1.5 shrink-0 shadow-md font-bold text-xs transition-all cursor-pointer border border-transparent dark:border-dark-border"
         >
           <LuPlus className="text-base" /> Add Destination
-        </button>
-      </div>
+        </button> </div>
 
       {/* Search and Filters */}
       <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-4 rounded-2xl flex items-center gap-3">
@@ -244,8 +242,7 @@ export default function ManageDestinations() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-transparent border-none text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none text-sm font-semibold"
-        />
-      </div>
+        /> </div>
 
       {/* Destinations List */}
       {isLoading ? (
@@ -270,9 +267,7 @@ export default function ManageDestinations() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary-100 dark:bg-dark-border flex items-center justify-center text-primary-400">
-                    🏜️
-                  </div>
+                  <div className="w-full h-full bg-primary-100 dark:bg-dark-border flex items-center justify-center text-primary-400"> </div>
                 )}
               </div>
 
@@ -285,15 +280,13 @@ export default function ManageDestinations() {
                     </h3>
                     <span className="px-2 py-0.5 bg-primary-50 dark:bg-primary-950 text-accent text-[9px] font-black uppercase rounded shrink-0 tracking-wider">
                       {dest.category}
-                    </span>
-                  </div>
+                    </span> </div>
                   <p className="text-2xs text-primary-900/50 dark:text-dark-muted font-bold flex items-center gap-1 mt-1">
                     <LuMapPin className="text-accent" /> {dest.city}, {dest.country}
                   </p>
                   <p className="text-2xs text-primary-900/60 dark:text-dark-muted/80 mt-2 line-clamp-2 leading-relaxed">
                     {dest.description}
-                  </p>
-                </div>
+                  </p> </div>
 
                 {/* Actions */}
                 <div className="flex justify-end gap-2 pt-2 border-t border-primary-50 dark:border-dark-border mt-2">
@@ -302,26 +295,20 @@ export default function ManageDestinations() {
                     className="p-2 text-primary-600 hover:text-accent dark:text-dark-muted hover:dark:text-white rounded-lg hover:bg-primary-50 dark:hover:bg-dark-border transition-colors cursor-pointer"
                     title="Edit Destination"
                   >
-                    <LuPencil className="text-sm" />
-                  </button>
+                    <LuPencil className="text-sm" /> </button>
                   <button
                     onClick={() => handleDelete(dest._id, dest.name)}
                     className="p-2 text-red-500 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
                     title="Delete Destination"
                   >
-                    <LuTrash2 className="text-sm" />
-                  </button>
-                </div>
-              </div>
-            </div>
+                    <LuTrash2 className="text-sm" /> </button> </div> </div> </div>
           ))}
         </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-3 rounded-2xl">
-          <span className="text-5xl block">🏜️</span>
+          <span className="text-5xl block"></span>
           <h3 className="text-base font-bold text-primary-900 dark:text-white">No Destinations Found</h3>
-          <p className="text-2xs max-w-xs mx-auto leading-relaxed">Try typing a different name or add a new destination to the system.</p>
-        </div>
+          <p className="text-2xs max-w-xs mx-auto leading-relaxed">Try typing a different name or add a new destination to the system.</p> </div>
       )}
 
       {/* CRUD Overlay Form Modal */}
@@ -338,19 +325,16 @@ export default function ManageDestinations() {
               <div className="flex justify-between items-center px-6 py-4 border-b border-primary-100 dark:border-dark-border sticky top-0 bg-white dark:bg-dark-card z-10">
                 <div>
                   <h2 className="text-lg font-black text-primary-900 dark:text-white font-display">
-                    {editingDest ? '✏️ Edit Destination' : '✨ Add New Destination'}
+                    {editingDest ? ' Edit Destination' : ' Add New Destination'}
                   </h2>
                   <p className="text-[10px] text-primary-900/40 dark:text-dark-muted font-bold uppercase mt-0.5">
                     {editingDest ? `Updating ${editingDest.name}` : 'Create a new cultural place'}
-                  </p>
-                </div>
+                  </p> </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 text-primary-900/40 dark:text-dark-muted hover:text-primary-900 dark:hover:text-white hover:bg-primary-50 dark:hover:bg-dark-border rounded-xl transition-colors"
                 >
-                  <LuX className="text-lg" />
-                </button>
-              </div>
+                  <LuX className="text-lg" /> </button> </div>
 
               {/* Form Body */}
               <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-1">
@@ -367,8 +351,7 @@ export default function ManageDestinations() {
                       />
                       <LuUpload className="text-2xl text-accent mb-2 group-hover:scale-110 transition-transform" />
                       <p className="text-2xs font-bold text-primary-900/60 dark:text-dark-muted">Upload Image File</p>
-                      <p className="text-[9px] text-primary-900/40 dark:text-dark-muted/50 mt-1">JPEG, PNG, WEBP up to 5MB</p>
-                    </div>
+                      <p className="text-[9px] text-primary-900/40 dark:text-dark-muted/50 mt-1">JPEG, PNG, WEBP up to 5MB</p> </div>
 
                     <div className="flex flex-col justify-between gap-3">
                       <div className="space-y-1">
@@ -382,8 +365,7 @@ export default function ManageDestinations() {
                             if (!coverImageFile) setImagePreview(e.target.value);
                           }}
                           className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                        />
-                      </div>
+                        /> </div>
                       
                       {imagePreview && (
                         <div className="h-20 rounded-xl overflow-hidden bg-primary-50 relative border border-primary-100 dark:border-dark-border">
@@ -398,13 +380,9 @@ export default function ManageDestinations() {
                             className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full text-[10px]"
                             title="Clear image"
                           >
-                            <LuX />
-                          </button>
-                        </div>
+                            <LuX /> </button> </div>
                       )}
-                    </div>
-                  </div>
-                </div>
+                    </div> </div> </div>
 
                 <div className="divider border-primary-100 dark:border-dark-border my-2" />
 
@@ -422,8 +400,7 @@ export default function ManageDestinations() {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Category *</label>
                       <select 
@@ -435,8 +412,7 @@ export default function ManageDestinations() {
                         {['beach', 'mountain', 'city', 'desert', 'forest', 'historical', 'adventure', 'cultural', 'wildlife', 'other'].map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
-                      </select>
-                    </div>
+                      </select> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">City *</label>
                       <input 
@@ -445,8 +421,7 @@ export default function ManageDestinations() {
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Country *</label>
                       <input 
@@ -455,9 +430,7 @@ export default function ManageDestinations() {
                         value={formData.country}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
-                  </div>
+                      /> </div> </div>
                   
                   <div className="space-y-1.5">
                     <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Description *</label>
@@ -468,9 +441,7 @@ export default function ManageDestinations() {
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Write a rich description about this place..."
                       className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                    />
-                  </div>
-                </div>
+                    /> </div> </div>
 
                 <div className="divider border-primary-100 dark:border-dark-border my-2" />
 
@@ -488,8 +459,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, history: e.target.value })}
                         placeholder="Share local legends or history..."
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Cultural Norms & Sacred Taboos</label>
                       <textarea 
@@ -498,10 +468,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, culture: e.target.value })}
                         placeholder="Sacred guidelines, local taboos, dress codes..."
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
+                      /> </div> </div> </div>
 
                 <div className="divider border-primary-100 dark:border-dark-border my-2" />
 
@@ -520,8 +487,7 @@ export default function ManageDestinations() {
                         value={formData.budgetMin}
                         onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Daily Max Budget (₹) *</label>
                       <input 
@@ -530,8 +496,7 @@ export default function ManageDestinations() {
                         value={formData.budgetMax}
                         onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Budget Level *</label>
                       <select 
@@ -543,9 +508,7 @@ export default function ManageDestinations() {
                         {['budget', 'mid-range', 'luxury'].map(lvl => (
                           <option key={lvl} value={lvl}>{lvl}</option>
                         ))}
-                      </select>
-                    </div>
-                  </div>
+                      </select> </div> </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -555,8 +518,7 @@ export default function ManageDestinations() {
                         value={formData.entryFeeAmount}
                         onChange={(e) => setFormData({ ...formData, entryFeeAmount: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Entry Fee Notes</label>
                       <input 
@@ -565,9 +527,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, entryFeeNotes: e.target.value })}
                         placeholder="e.g. per person, free for children"
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
-                  </div>
+                      /> </div> </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -579,8 +539,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                         placeholder="e.g. 27.1751"
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Longitude</label>
                       <input 
@@ -590,9 +549,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                         placeholder="e.g. 78.0421"
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
-                  </div>
+                      /> </div> </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -603,8 +560,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, highlights: e.target.value })}
                         placeholder="Taj Mahal, Agra Fort, Mughal Gardens"
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
+                      /> </div>
                     <div className="space-y-1.5">
                       <label className="block text-[10px] font-bold text-primary-900/60 dark:text-dark-muted uppercase tracking-wider">Travel Tips (comma separated)</label>
                       <input 
@@ -613,10 +569,7 @@ export default function ManageDestinations() {
                         onChange={(e) => setFormData({ ...formData, travelTips: e.target.value })}
                         placeholder="Visit early morning, hire guides, dress modest"
                         className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-bg text-primary-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent/50 text-xs font-medium transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
+                      /> </div> </div> </div>
 
                 {/* Actions */}
                 <div className="flex justify-end gap-3 pt-6 border-t border-primary-100 dark:border-dark-border sticky bottom-0 bg-white dark:bg-dark-card z-10 py-4">
@@ -639,13 +592,8 @@ export default function ManageDestinations() {
                         <LuSparkles className="text-sm" /> Save Destination
                       </>
                     )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
+                  </button> </div> </form> </motion.div> </div>
         )}
-      </AnimatePresence>
-    </div>
+      </AnimatePresence> </div>
   );
 }

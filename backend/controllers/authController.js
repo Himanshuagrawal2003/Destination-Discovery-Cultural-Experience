@@ -132,15 +132,21 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  // Auto-detect the correct frontend URL:
+  // 1. Use FRONTEND_URL env var (set this on your deployment platform)
+  // 2. Fallback to request Origin header (works for deployed apps)
+  // 3. Last resort: CLIENT_URL env var
+  const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '');
+  const clientUrl = process.env.FRONTEND_URL || origin || process.env.CLIENT_URL || 'http://localhost:5173';
+  const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
-  // Always log reset URL in development for easy access
+  // Always log reset URL for debugging
   console.log('\n============================================================');
   console.log(`🔑 PASSWORD RESET TOKEN for: ${user.email}`);
   console.log(`🔗 Reset URL: ${resetUrl}`);
   console.log('============================================================\n');
 
-  // Attempt to send email (non-blocking — if it fails, the link is still in console)
+  // Attempt to send email — do NOT delete token on failure, user can retry
   try {
     const result = await sendPasswordResetEmail(user.email, user.name, resetUrl);
     if (result && result.skipped) {
@@ -152,11 +158,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     console.error('⚠️ Email error:', err.message, '— Use the console URL above.');
-    // Clean up token on hard email failure
-    user.resetPasswordToken  = undefined;
-    user.resetPasswordExpire = undefined;
-    await user.save({ validateBeforeSave: false });
-    return next(new AppError('Error sending email. Please try again later.', 500));
+    // Token is preserved — user can request again
   }
 
   sendSuccess(res, {}, 'If that email is registered, a reset link has been sent.');

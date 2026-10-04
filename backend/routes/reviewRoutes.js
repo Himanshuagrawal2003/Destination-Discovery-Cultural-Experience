@@ -3,10 +3,12 @@ const router  = express.Router();
 const {
   getDestinationReviews, createReview, updateReview,
   deleteReview, toggleLike, addReply, getMyReviews,
+  getFeaturedReviews,
 } = require('../controllers/reviewController');
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadGeneral } = require('../config/cloudinary');
 
+router.get('/featured', getFeaturedReviews);
 router.get('/destination/:destinationId', getDestinationReviews);
 router.get('/my', protect, getMyReviews);
 router.post('/', protect, uploadGeneral.array('images', 5), createReview);

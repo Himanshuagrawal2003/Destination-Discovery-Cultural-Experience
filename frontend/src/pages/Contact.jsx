@@ -27,9 +27,8 @@ export default function Contact() {
           className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-8 md:p-12 space-y-8 rounded-3xl shadow-sm"
         >
           <div className="text-center space-y-3">
-            <span className="text-5xl animate-float block">✉️</span>
-            <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">Contact Us</h1>
-            <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Contact Us</h1>
+            <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium">
               Have questions, feedback, or need assistance? Drop us a line below.
             </p>
           </div>
@@ -92,10 +91,6 @@ export default function Contact() {
               ) : (
                 'Send Message'
               )}
-            </button>
-          </form>
-        </motion.div>
-      </div>
-    </div>
+            </button> </form> </motion.div> </div> </div>
   );
 }

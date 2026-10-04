@@ -37,8 +37,8 @@ export default function MyReviews() {
   return (
     <div className="space-y-8 min-h-screen pb-12 bg-[#FAF7FF] dark:bg-dark-bg">
       <div>
-        <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display">My Written Reviews</h1>
-        <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review ratings and stories you've written on destination pages.</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">My Written Reviews</h1>
+        <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review ratings and stories you've written on destination pages.</p>
       </div>
 
       {isLoading ? (
@@ -61,8 +61,7 @@ export default function MyReviews() {
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold flex items-center gap-0.5 text-accent">
-                      <LuStar className="fill-accent text-accent text-xs" /> <span>{rev.rating || 0}</span>
-                    </span>
+                      <LuStar className="fill-accent text-accent text-xs" /> <span>{rev.rating || 0}</span> </span>
                     {rev.destination && (
                       <Link to={`/destinations/${rev.destination.slug || rev.destination._id}`} className="text-xs font-bold text-accent hover:underline">
                         Reviewing: {rev.destination.name}
@@ -70,26 +69,21 @@ export default function MyReviews() {
                     )}
                   </div>
                   {rev.title && <h3 className="font-bold text-sm text-primary-900 dark:text-white font-display">{rev.title}</h3>}
-                  <p className="text-xs text-primary-900/60 dark:text-dark-muted leading-relaxed font-semibold">{rev.comment}</p>
-                </div>
+                  <p className="text-xs text-primary-900/60 dark:text-dark-muted leading-relaxed font-semibold">{rev.comment}</p> </div>
 
                 <button
                   onClick={() => handleDelete(rev._id)}
                   className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl shrink-0 h-fit cursor-pointer transition-colors"
                   aria-label="Delete review"
                 >
-                  <LuTrash2 className="text-lg" />
-                </button>
-              </motion.div>
+                  <LuTrash2 className="text-lg" /> </button> </motion.div>
             ))}
-          </AnimatePresence>
-        </div>
+          </AnimatePresence> </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-4 rounded-2xl">
-          <span className="text-6xl block animate-float">✍️</span>
+          <span className="text-6xl block animate-float"></span>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Reviews Written</h3>
-          <p className="text-xs max-w-sm mx-auto leading-relaxed font-semibold">Explore destinations and write reviews to share your local travel experience and tips.</p>
-        </div>
+          <p className="text-xs max-w-sm mx-auto leading-relaxed font-semibold">Explore destinations and write reviews to share your local travel experience and tips.</p> </div>
       )}
     </div>
   );

@@ -17,12 +17,8 @@ export default function MainLayout() {
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
           >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
-      </main>
+            <Outlet /> </motion.div> </AnimatePresence> </main>
       <Footer />
-      <Chatbot />
-    </div>
+      <Chatbot /> </div>
   );
 }

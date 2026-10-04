@@ -84,8 +84,14 @@ reviewSchema.post('save', function () {
   this.constructor.calcAverageRatings(this.destination);
 });
 
-reviewSchema.post('remove', function () {
+reviewSchema.post('deleteOne', { document: true, query: false }, function () {
   this.constructor.calcAverageRatings(this.destination);
+});
+
+reviewSchema.post('findOneAndDelete', async function (doc) {
+  if (doc) {
+    await doc.constructor.calcAverageRatings(doc.destination);
+  }
 });
 
 const Review = mongoose.model('Review', reviewSchema);

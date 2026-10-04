@@ -145,10 +145,10 @@ export default function AIHistory() {
     <div className="space-y-8 min-h-screen pb-12 bg-[#FAF7FF] dark:bg-dark-bg">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-primary-900 dark:text-white font-display flex items-center gap-2">
-            <LuHistory className="text-accent animate-pulse" /> AI Query History
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display flex items-center gap-2 tracking-tight leading-snug">
+            <LuHistory className="text-accent animate-pulse shrink-0 text-lg sm:text-2xl" /> AI Query History
           </h1>
-          <p className="text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review all past recommendations, itineraries, custom guides, and chatbot prompt logs.</p>
+          <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Review all past recommendations, itineraries, custom guides, and chatbot prompt logs.</p>
         </div>
 
         <button
@@ -161,8 +161,7 @@ export default function AIHistory() {
         >
           <LuBookmark className={onlySaved ? 'fill-white text-white' : 'text-primary-900/50'} />
           {onlySaved ? 'Showing Saved Guides' : 'Filter by Saved Only'}
-        </button>
-      </div>
+        </button> </div>
 
       {/* Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 border-b border-primary-100 dark:border-dark-border no-scrollbar">
@@ -214,11 +213,9 @@ export default function AIHistory() {
                     </span>
                     <span className="text-[10px] text-primary-900/40 dark:text-dark-muted font-bold">
                       {new Date(item.createdAt).toLocaleString()}
-                    </span>
-                  </div>
+                    </span> </div>
                   <p className="text-xs font-bold text-primary-900 dark:text-white leading-relaxed">
-                    💡 Prompt / Input: <span className="text-primary-900/70 dark:text-slate-350 font-semibold italic">"{getCleanPromptText(item)}"</span>
-                  </p>
+                     Prompt / Input: <span className="text-primary-900/70 dark:text-slate-350 font-semibold italic">"{getCleanPromptText(item)}"</span> </p>
                   <div className="divider border-primary-100 dark:border-dark-border my-2" />
                   <div className="bg-primary-50 dark:bg-primary-950/20 p-4 rounded-xl text-xs text-primary-900/80 dark:text-slate-350 leading-relaxed font-sans max-h-64 overflow-y-auto border border-primary-100 dark:border-primary-900/10 font-medium">
                     {(() => {
@@ -266,20 +263,17 @@ export default function AIHistory() {
                                                       <span className="w-1 h-1 bg-accent rounded-full shrink-0" />
                                                       {cardTitle}
                                                     </h6>
-                                                    <p className="text-[10px] text-primary-900/60 dark:text-dark-muted font-medium pl-2.5 leading-normal">{cardDesc}</p>
-                                                  </>
+                                                    <p className="text-[10px] text-primary-900/60 dark:text-dark-muted font-medium pl-2.5 leading-normal">{cardDesc}</p> </>
                                                 ) : (
                                                   <div className="flex items-start gap-1.5">
                                                     <span className="w-1 h-1 bg-accent rounded-full mt-1.5 shrink-0" />
-                                                    <p className="text-[10px] text-primary-900/80 dark:text-dark-muted font-semibold leading-normal">{cardDesc}</p>
-                                                  </div>
+                                                    <p className="text-[10px] text-primary-900/80 dark:text-dark-muted font-semibold leading-normal">{cardDesc}</p> </div>
                                                 )}
                                               </div>
                                             );
                                           });
                                         })()}
-                                      </div>
-                                    </div>
+                                      </div> </div>
                                   );
                                 })}
                               </div>
@@ -316,8 +310,7 @@ export default function AIHistory() {
                                             ))}
                                           </ul>
                                         )}
-                                      </div>
-                                    </div>
+                                      </div> </div>
                                   );
                                 })}
                               </div>
@@ -351,11 +344,9 @@ export default function AIHistory() {
                                                       {Object.entries(subV).map(([k, valVal]) => (
                                                         <div key={k} className="flex justify-between border-b border-primary-100/30 pb-0.5 last:border-0">
                                                           <span className="capitalize text-primary-900/60 dark:text-dark-muted">{k.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                                                          <span className="font-extrabold text-accent">₹{String(valVal)}</span>
-                                                        </div>
+                                                          <span className="font-extrabold text-accent">₹{String(valVal)}</span> </div>
                                                       ))}
-                                                    </div>
-                                                  </div>
+                                                    </div> </div>
                                                 );
                                               }
                                               if (Array.isArray(subV)) {
@@ -364,23 +355,20 @@ export default function AIHistory() {
                                                     <span className="font-bold capitalize text-[10px] text-accent">{subLabel}:</span>
                                                     <ul className="list-disc list-inside text-[10px] text-primary-900/70 dark:text-slate-300 space-y-0.5 pl-2 mt-0.5">
                                                       {subV.map((tip, idx) => <li key={idx}>{tip}</li>)}
-                                                    </ul>
-                                                  </div>
+                                                    </ul> </div>
                                                 );
                                               }
                                               return (
                                                 <p key={subK} className="pl-2 mt-1">
                                                   <span className="font-bold capitalize text-[10px] text-accent mr-1">{subLabel}:</span>
-                                                  <span className="text-primary-900 dark:text-white font-extrabold">{String(subV)}</span>
-                                                </p>
+                                                  <span className="text-primary-900 dark:text-white font-extrabold">{String(subV)}</span> </p>
                                               );
                                             })}
                                           </div>
                                         ) : (
                                           <p className="pl-2 font-medium">{String(val)}</p>
                                         )}
-                                      </div>
-                                    </div>
+                                      </div> </div>
                                   );
                                 })}
                               </div>
@@ -394,8 +382,7 @@ export default function AIHistory() {
                                 {parsed.bestRoute && (
                                   <div className="p-3 bg-accent/5 dark:bg-accent/10 border border-accent/10 rounded-xl">
                                     <p className="text-[10px] font-black uppercase text-accent tracking-wider">CultureQuest Tip</p>
-                                    <p className="text-[11px] font-semibold italic text-primary-900/80 dark:text-slate-350">"{parsed.bestRoute}"</p>
-                                  </div>
+                                    <p className="text-[11px] font-semibold italic text-primary-900/80 dark:text-slate-350">"{parsed.bestRoute}"</p> </div>
                                 )}
                                 <div className="space-y-3">
                                   {Array.isArray(parsed.options) && parsed.options.map((opt, oIdx) => (
@@ -404,9 +391,7 @@ export default function AIHistory() {
                                         <h5 className="font-bold text-xs text-primary-900 dark:text-white">{opt.title}</h5>
                                         <div className="flex gap-2 text-[9px] font-bold">
                                           <span className="text-accent bg-accent/10 px-2 py-0.5 rounded-md">{opt.cost}</span>
-                                          <span className="text-primary-900/60 dark:text-dark-muted bg-primary-100/40 dark:bg-primary-900/25 px-2 py-0.5 rounded-md">{opt.duration}</span>
-                                        </div>
-                                      </div>
+                                          <span className="text-primary-900/60 dark:text-dark-muted bg-primary-100/40 dark:bg-primary-900/25 px-2 py-0.5 rounded-md">{opt.duration}</span> </div> </div>
                                       
                                       {Array.isArray(opt.pathway) && (
                                         <div className="pl-2 border-l border-primary-200 dark:border-dark-border/40 space-y-1">
@@ -420,8 +405,7 @@ export default function AIHistory() {
                                       )}
                                     </div>
                                   ))}
-                                </div>
-                              </div>
+                                </div> </div>
                             );
                           }
                           
@@ -437,8 +421,7 @@ export default function AIHistory() {
                       }
                       return <div className="whitespace-pre-line">{item.response}</div>;
                     })()}
-                  </div>
-                </div>
+                  </div> </div>
 
                 <div className="flex gap-2 shrink-0 md:flex-col items-center">
                   {/* Bookmark Toggle */}
@@ -451,8 +434,7 @@ export default function AIHistory() {
                     }`}
                     title={item.isSaved ? 'Remove from Saved' : 'Save Guide'}
                   >
-                    <LuBookmark className={`text-lg ${item.isSaved ? 'fill-amber-500 text-amber-500' : ''}`} />
-                  </button>
+                    <LuBookmark className={`text-lg ${item.isSaved ? 'fill-amber-500 text-amber-500' : ''}`} /> </button>
 
                   {/* Delete button */}
                   <button
@@ -460,16 +442,14 @@ export default function AIHistory() {
                     className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors cursor-pointer"
                     aria-label="Delete entry"
                   >
-                    <LuTrash className="text-lg" />
-                  </button>
-                </div>
-              </motion.div>
+                    <LuTrash className="text-lg" /> </button> </div> </motion.div>
             ))}
-          </AnimatePresence>
-        </div>
+          </AnimatePresence> </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/60 dark:text-dark-muted space-y-4 rounded-2xl shadow-sm">
-          <span className="text-6xl block animate-float">📜</span>
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 text-accent mx-auto flex items-center justify-center">
+            <LuHistory className="w-8 h-8 animate-pulse" />
+          </div>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Query History</h3>
           <p className="text-xs max-w-xs mx-auto leading-relaxed font-semibold">Your past queries and generated guides will appear here once you interact with our AI features.</p>
         </div>

@@ -6,25 +6,25 @@ const { sendSuccess, sendError, sendPaginated } = require('../utils/apiResponse'
 const { generateContent, prompts } = require('../services/geminiService');
 
 // Helper to fetch with retry & exponential back-off
-const fetchWithRetry = async (url, options = {}, retries = 3, backoff = 1000) => {
+const fetchWithRetry = async (url, options = {}, retries = 2, backoff = 500) => {
   let attempt = 0;
   while (attempt < retries) {
     try {
-      console.log(`[HTTP Request] Fetching URL: ${url} (Attempt ${attempt + 1}/${retries})`);
       const response = await fetch(url, {
         ...options,
         headers: {
-          'User-Agent': 'CultureQuestAI/1.0 (himanshuagrawal7766@gmail.com; developer)',
+          'User-Agent': 'CultureQuestApp/1.0 (contact@culturequest.com; developer)',
           ...(options.headers || {})
         }
       });
 
-      console.log(`[HTTP Response] Status Code: ${response.status} for ${url}`);
+      if (response.status === 404 || response.status === 400) {
+        return response; // Return immediately without retrying
+      }
 
       if (response.status === 429) {
         const retryAfter = response.headers.get('retry-after');
         const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : backoff * Math.pow(2, attempt);
-        console.warn(`⚠️ Received 429 Rate Limit for ${url}. Retrying after ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         attempt++;
         continue;
@@ -36,7 +36,6 @@ const fetchWithRetry = async (url, options = {}, retries = 3, backoff = 1000) =>
 
       return response;
     } catch (err) {
-      console.error(`❌ Fetch failed for ${url} (Attempt ${attempt + 1}/${retries}):`, err.message);
       attempt++;
       if (attempt >= retries) throw err;
       const delay = backoff * Math.pow(2, attempt - 1);
@@ -259,13 +258,24 @@ const uploadImageToCloudinary = async (imgUrl) => {
 
 // @GET /api/destinations
 exports.getDestinations = asyncHandler(async (req, res) => {
+  let baseQuery = { isActive: true };
+
+  // If user is logged in and not performing a text search across all places, scope to their own explored/created destinations
+  if (req.user && !req.query.search) {
+    const userExplored = req.user.exploredDestinations || [];
+    baseQuery.$or = [
+      { _id: { $in: userExplored } },
+      { createdBy: req.user._id }
+    ];
+  }
+
   const features = new APIFeatures(
-    Destination.find({ isActive: true }).select('-gallery'),
+    Destination.find(baseQuery).select('-gallery'),
     req.query
   ).filter().search(['name', 'description', 'city', 'country']).sort().limitFields().paginate();
 
   const destinations = await features.query;
-  const total = await Destination.countDocuments({ isActive: true });
+  const total = await Destination.countDocuments(baseQuery);
   sendPaginated(res, destinations, total, req.query.page || 1, req.query.limit || 12);
 });
 
@@ -329,62 +339,77 @@ exports.getDestination = asyncHandler(async (req, res, next) => {
       const cleanInput = req.params.id.replace(/-/g, ' ');
       const prompt = prompts.generateDestinationProfile(cleanInput);
       
-      // 🚀 PARALLEL: Run AI generation + Unsplash scraping simultaneously
-      const [rawText, scrapedCover, galleryUrls] = await Promise.all([
-        generateContent(prompt),
-        fetchRealUnsplashImage(cleanInput),
-        fetchMultipleUnsplashImages(cleanInput, 6)
-      ]);
-
+      const rawText = await generateContent(prompt);
       const data = parseJSON(rawText);
       
       if (!data.name) {
         throw new Error('Failed to parse Gemini output or name missing');
       }
 
-      // Find any user to assign createdBy
-      const User = require('../models/User');
-      const admin = await User.findOne({});
-      if (!admin) {
-        throw new Error('A user is required to seed dynamic destination');
+      // Collect landmark search candidates: destination name + famous places + highlights
+      const landmarkCandidates = [
+        cleanInput,
+        data.name,
+        ...(Array.isArray(data.famousPlaces) ? data.famousPlaces.map(p => typeof p === 'string' ? p : p.name || p) : []),
+        ...(Array.isArray(data.highlights) ? data.highlights.slice(0, 3) : [])
+      ].filter(Boolean);
+
+      // Fetch real images for each landmark in parallel
+      const summaryPromises = landmarkCandidates.slice(0, 8).map(async (lm) => {
+        try {
+          const res = await fetchWithRetry(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(lm)}`);
+          if (res && res.ok) {
+            const json = await res.json();
+            return json.originalimage?.source || json.thumbnail?.source || null;
+          }
+        } catch (e) {
+          // ignore
+        }
+        return null;
+      });
+
+      const summaryResults = await Promise.all(summaryPromises);
+      const realImageUrls = Array.from(new Set(summaryResults.filter(Boolean)));
+
+      // Fallback if needed to query Wikipedia PageImages
+      if (realImageUrls.length < 4) {
+        const moreWiki = await queryWikipediaPageImages(cleanInput, 6);
+        for (const mw of moreWiki) {
+          if (!realImageUrls.includes(mw)) realImageUrls.push(mw);
+          if (realImageUrls.length >= 6) break;
+        }
       }
 
-      // Fallback categories map
-      const CATEGORY_FALLBACKS = {
-        beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
-        mountain: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200',
-        city: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200',
-        desert: 'https://images.unsplash.com/photo-1509316975850-ff9c5edd0cd9?q=80&w=1200',
-        forest: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200',
-        historical: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200',
-        adventure: 'https://images.unsplash.com/photo-1533240332313-0db49b439ad3?q=80&w=1200',
-        cultural: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200',
-        wildlife: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?q=80&w=1200',
-        other: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1200'
-      };
+      // Find user to assign createdBy
+      const User = require('../models/User');
+      let creatorId = req.user?._id;
+      if (!creatorId) {
+        const admin = await User.findOne({});
+        if (!admin) {
+          throw new Error('A user is required to seed dynamic destination');
+        }
+        creatorId = admin._id;
+      }
 
-      const categoryKey = (data.category || 'other').toLowerCase();
-      const defaultFallback = CATEGORY_FALLBACKS[categoryKey] || CATEGORY_FALLBACKS.other;
-      let coverImageUrl = scrapedCover || defaultFallback;
+      const destSlug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      let coverImageUrl = realImageUrls[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1200';
+      let uploadedImages = [];
 
       const isCloudinaryConfigured = 
         process.env.CLOUDINARY_API_SECRET && 
         !process.env.CLOUDINARY_API_SECRET.startsWith('your_');
       
-      // 🚀 PARALLEL: Upload cover + all gallery images to Cloudinary concurrently
-      if (isCloudinaryConfigured) {
-        const coverUploadPromise = uploadImageToCloudinary(coverImageUrl);
-        const galleryUploadPromises = galleryUrls.map(imgUrl => uploadImageToCloudinary(imgUrl));
-
-        console.log(`📤 Uploading cover + ${galleryUrls.length} gallery images for ${data.name} to Cloudinary (parallel)...`);
-        const [uploadedCover, ...uploadedGallery] = await Promise.all([
-          coverUploadPromise,
-          ...galleryUploadPromises
-        ]);
-        coverImageUrl = uploadedCover;
-        var uploadedImages = uploadedGallery;
+      // Upload all genuine landmark images directly to Cloudinary
+      if (isCloudinaryConfigured && realImageUrls.length > 0) {
+        console.log(`📤 Uploading ${realImageUrls.length} genuine real landmark images for ${data.name} to Cloudinary...`);
+        const uploadPromises = realImageUrls.map((imgUrl, idx) => 
+          uploadImageToCloudinary(imgUrl)
+        );
+        const uploaded = await Promise.all(uploadPromises);
+        coverImageUrl = uploaded[0] || coverImageUrl;
+        uploadedImages = uploaded;
       } else {
-        var uploadedImages = galleryUrls;
+        uploadedImages = realImageUrls;
       }
 
       try {
@@ -414,7 +439,7 @@ exports.getDestination = asyncHandler(async (req, res, next) => {
           hiddenGemsList: Array.isArray(data.hiddenGems) ? data.hiddenGems : [],
           famousFoodsList: Array.isArray(data.famousFoods) ? data.famousFoods : [],
           famousPlacesList: Array.isArray(data.famousPlaces) ? data.famousPlaces : [],
-          createdBy: admin._id
+          createdBy: creatorId
         });
       } catch (createErr) {
         if (createErr.code === 11000) {
@@ -424,6 +449,11 @@ exports.getDestination = asyncHandler(async (req, res, next) => {
           if (destination) {
             destination.viewCount += 1;
             await destination.save({ validateBeforeSave: false });
+            if (req.user) {
+              await User.findByIdAndUpdate(req.user._id, {
+                $addToSet: { exploredDestinations: destination._id }
+              });
+            }
             return sendSuccess(res, { destination }, 'Destination fetched');
           }
         }
@@ -441,6 +471,14 @@ exports.getDestination = asyncHandler(async (req, res, next) => {
     // Increment view count for existing destination
     destination.viewCount += 1;
     await destination.save({ validateBeforeSave: false });
+  }
+
+  // If user is authenticated, add destination to their personal explored list
+  if (req.user && destination) {
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { exploredDestinations: destination._id }
+    });
   }
 
   sendSuccess(res, { destination }, 'Destination fetched');

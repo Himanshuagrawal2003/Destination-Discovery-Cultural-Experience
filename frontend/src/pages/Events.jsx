@@ -135,8 +135,8 @@ export default function Events() {
       {/* Header & Trip Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-dark-card p-6 rounded-3xl border border-primary-100 dark:border-dark-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-extrabold text-primary-900 dark:text-white font-display">Cultural Events & Festivals</h1>
-          <p className="text-xs text-primary-900/60 dark:text-dark-muted font-medium mt-1">Immerse yourself in traditional music, food celebrations, and regional religious festivals.</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-primary-900 dark:text-white font-display tracking-tight leading-snug">Cultural Events & Festivals</h1>
+          <p className="text-xs sm:text-sm text-primary-900/60 dark:text-dark-muted font-medium mt-1">Immerse yourself in traditional music, food celebrations, and regional religious festivals.</p>
         </div>
         
         {trips.length > 0 && (
@@ -158,8 +158,7 @@ export default function Events() {
                   </option>
                 );
               })}
-            </select>
-          </div>
+            </select> </div>
         )}
       </div>
 
@@ -180,9 +179,7 @@ export default function Events() {
               onClick={() => { setCityInput(''); setCitySearch(''); setSelectedTripId(''); }}
               className="absolute right-2 p-1 rounded-full hover:bg-primary-50 dark:hover:bg-primary-900/30 text-primary-900/40 dark:text-dark-muted hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center"
               title="Clear search"
-            >
-              ✕
-            </button>
+            > </button>
           )}
         </div>
         <button 
@@ -191,21 +188,19 @@ export default function Events() {
         >
           <LuSearch className="text-sm" />
           Search
-        </button>
-      </form>
+        </button> </form>
 
       {selectedTripId && citySearch && (
         <div className="flex items-center justify-between p-4 bg-primary-50/50 dark:bg-primary-950/20 border border-primary-100 dark:border-dark-border rounded-2xl shadow-sm">
           <p className="text-xs font-bold text-primary-900/80 dark:text-slate-350">
-            📍 Showing events and traditional festivals in <strong className="text-accent">{citySearch}</strong> matching your planned trip.
+             Showing events and traditional festivals in <strong className="text-accent">{citySearch}</strong> matching your planned trip.
           </p>
           <button 
             onClick={() => { setSelectedTripId(''); setCitySearch(''); }}
             className="text-xs font-black text-accent hover:underline cursor-pointer border-none bg-transparent"
           >
             Clear Filter
-          </button>
-        </div>
+          </button> </div>
       )}
 
       {/* Tabs */}
@@ -246,7 +241,7 @@ export default function Events() {
                     />
                   ) : (
                     <div className="w-full h-full bg-primary-100 dark:bg-dark-border flex items-center justify-center text-primary-900/40">
-                      🎉 Event Cover
+                       Event Cover
                     </div>
                   )}
                   <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 dark:bg-dark-card/95 text-accent font-black text-2xs rounded-lg shadow-sm capitalize">
@@ -257,8 +252,7 @@ export default function Events() {
                       onClick={() => handleEventBookmark(item._id)}
                       className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 dark:bg-dark-card/90 shadow-sm border border-primary-100/50 dark:border-dark-border cursor-pointer hover:scale-110 transition-transform"
                     >
-                      <LuBookmark className={`text-sm ${bookmarkedEvents[item._id] ? 'text-accent fill-accent' : 'text-primary-900/40 dark:text-dark-muted'}`} />
-                    </button>
+                      <LuBookmark className={`text-sm ${bookmarkedEvents[item._id] ? 'text-accent fill-accent' : 'text-primary-900/40 dark:text-dark-muted'}`} /> </button>
                   )}
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -272,8 +266,7 @@ export default function Events() {
                     </p>
                     <p className="text-xs text-primary-900/60 dark:text-dark-muted line-clamp-3 leading-relaxed font-medium">
                       {item.description}
-                    </p>
-                  </div>
+                    </p> </div>
 
                   <div className="border-t border-primary-50 dark:border-dark-border pt-4 flex items-center justify-between text-2xs text-primary-900/50 dark:text-dark-muted font-bold">
                     <span className="flex items-center gap-1">
@@ -283,11 +276,7 @@ export default function Events() {
                       <LuBookmark className="hidden" /> {/* Placeholder spacing */}
                       <span className="text-sm font-black text-accent flex items-center gap-0.5">
                         <LuCoins className="text-accent text-sm" /> {item.price?.isFree ? 'Free' : `₹${item.price?.amount}`}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </div>
+                      </span> </span> </div> </div> </div>
             ))}
           </div>
 
@@ -310,16 +299,14 @@ export default function Events() {
                 className="px-4 py-2 text-xs font-bold bg-white dark:bg-dark-card border border-primary-200 dark:border-dark-border text-primary-900/70 dark:text-dark-muted rounded-xl hover:bg-primary-50 dark:hover:bg-primary-955/20 disabled:opacity-50 transition-all cursor-pointer select-none"
               >
                 Next
-              </button>
-            </div>
+              </button> </div>
           )}
         </div>
       ) : (
         <div className="card bg-white dark:bg-dark-card border border-primary-100 dark:border-dark-border p-12 text-center text-primary-900/40 dark:text-dark-muted space-y-4 rounded-2xl">
-          <span className="text-6xl block animate-float">🗓️</span>
+          <span className="text-6xl block animate-float"></span>
           <h3 className="text-lg font-bold text-primary-900 dark:text-white font-display">No Events Found</h3>
-          <p className="text-xs max-w-md mx-auto leading-relaxed font-semibold">We couldn't find any events matching this city. Please adjust your query.</p>
-        </div>
+          <p className="text-xs max-w-md mx-auto leading-relaxed font-semibold">We couldn't find any events matching this city. Please adjust your query.</p> </div>
       )}
     </div>
   );

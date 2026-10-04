@@ -10,7 +10,7 @@ const api = axios.create({
   timeout: 30000,
 });
 
-// ─── Request interceptor: attach JWT ─────────────────────────────────────────
+// Request interceptor: attach JWT 
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('cq_token');
@@ -22,7 +22,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ─── Response interceptor: handle errors globally ────────────────────────────
+// Response interceptor: handle errors globally 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
