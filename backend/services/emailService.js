@@ -2,17 +2,37 @@ const nodemailer = require('nodemailer');
 
 /**
  * Nodemailer transporter configured via environment variables.
- * Supports Gmail with App Password or any SMTP provider.
+ * Supports Gmail with App Password or any SMTP provider with cloud optimizations.
  */
 const getTransporter = () => {
+  const isGmail = 
+    process.env.EMAIL_HOST?.includes('gmail') || 
+    process.env.EMAIL_USER?.includes('@gmail.com');
+
+  if (isGmail) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS?.replace(/\s+/g, ''), // remove any accidental spaces in app password
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+  }
+
   return nodemailer.createTransport({
     host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
     port:   parseInt(process.env.EMAIL_PORT, 10) || 587,
     secure: parseInt(process.env.EMAIL_PORT, 10) === 465,
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      pass: process.env.EMAIL_PASS?.replace(/\s+/g, ''),
     },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 };
 
