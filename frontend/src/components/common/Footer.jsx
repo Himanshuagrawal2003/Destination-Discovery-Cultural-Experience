@@ -36,19 +36,18 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
           {/* Brand column — spans 2 cols on mobile */}
           <div className="col-span-2 md:col-span-1 space-y-4">
-            <Link to="/" className="inline-flex items-center gap-2 group">
-              <svg viewBox="0 0 32 32" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                <circle cx="16" cy="13" r="9" stroke="#8b5cf6" strokeWidth="1.8" fill="none"/>
-                <ellipse cx="16" cy="13" rx="9" ry="3.6" stroke="#8b5cf6" strokeWidth="1.4" fill="none" opacity="0.5"/>
-                <line x1="16" y1="4" x2="16" y2="22" stroke="#8b5cf6" strokeWidth="1.4" opacity="0.5"/>
-                <circle cx="16" cy="13" r="2" fill="#8b5cf6"/>
-                <path d="M16 19 L16 27" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="16" cy="28.2" r="1.4" fill="#8b5cf6" opacity="0.5"/>
-              </svg>
+            <Link to="/" className="inline-flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#8B5CF6] to-[#6D28D9] flex items-center justify-center text-white shadow-lg shadow-purple-500/25 shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                </svg>
+              </div>
               <span className="font-black text-base text-primary-900 dark:text-white font-display tracking-tight whitespace-nowrap">
                 Culture<span className="text-accent">Quest</span><span className="text-primary-900/40 dark:text-dark-muted font-bold text-sm ml-1">AI</span>
               </span>
             </Link>
+
             <p className="text-sm leading-relaxed max-w-xs">
               Explore ancient history, discover local culture, uncover hidden gems, and plan customized itineraries with our advanced AI travel planner.
             </p>

@@ -1,0 +1,46 @@
+{
+  "name": "CultureQuest AI",
+  "short_name": "CultureQuest",
+  "description": "AI-powered destination discovery and cultural experience platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1528",
+  "theme_color": "#8B5CF6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Destinations",
+      "short_name": "Discover",
+      "url": "/destinations",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Trip Planner",
+      "short_name": "Plan Trip",
+      "url": "/trip-planner",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Hidden Gems",
+      "short_name": "Gems",
+      "url": "/hidden-gems",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["travel", "lifestyle"],
+  "screenshots": []
+}

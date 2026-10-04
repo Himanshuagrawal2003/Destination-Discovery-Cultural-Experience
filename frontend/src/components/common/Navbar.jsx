@@ -83,16 +83,14 @@ export default function Navbar() {
         <div className="container-cq">
           <div className="flex items-center justify-between h-16">
             {/*  Logo  */}
-            <Link to="/" className="flex items-center gap-2 group shrink-0 min-w-0" onClick={() => dispatch(closeMobileMenu())}>
-              {/* Globe icon in accent color */}
-              <svg viewBox="0 0 32 32" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-accent group-hover:scale-110 transition-transform duration-200">
-                <circle cx="16" cy="13" r="9" stroke="currentColor" strokeWidth="1.8" fill="none"/>
-                <ellipse cx="16" cy="13" rx="9" ry="3.6" stroke="currentColor" strokeWidth="1.4" fill="none" opacity="0.55"/>
-                <line x1="16" y1="4" x2="16" y2="22" stroke="currentColor" strokeWidth="1.4" opacity="0.55"/>
-                <circle cx="16" cy="13" r="2.2" fill="currentColor"/>
-                <path d="M16 19 L16 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="16" cy="29.2" r="1.5" fill="currentColor" opacity="0.5"/>
-              </svg>
+            <Link to="/" className="flex items-center gap-2.5 group shrink-0 min-w-0" onClick={() => dispatch(closeMobileMenu())}>
+              {/* Purple rounded-square compass logo */}
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-accent to-primary-600 flex items-center justify-center text-white shadow-lg shadow-accent/25 shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                </svg>
+              </div>
               <div className="leading-tight">
                 <div className="font-extrabold text-[17px] text-primary-900 dark:text-white font-display tracking-tight whitespace-nowrap">
                   Culture<span className="text-accent">Quest</span>
@@ -100,6 +98,7 @@ export default function Navbar() {
                 <div className="text-[10px] font-bold text-primary-900/40 dark:text-dark-muted tracking-widest uppercase whitespace-nowrap">AI Travel</div>
               </div>
             </Link>
+
 
             {/*  Desktop Nav  */}
             <nav className="hidden md:flex items-center gap-6">

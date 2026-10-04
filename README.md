@@ -1,101 +1,199 @@
-# 🌍 CultureQuest AI – AI-Powered Cultural Tourism Platform
-
-CultureQuest AI is a next-generation MERN travel application that enables travelers to explore immersive local stories, discover authentic hidden gems, participate in traditional festivals, and build smart travel plans powered by **Gemini AI**.
-
-The application features a premium UI/UX design with **Royal Indigo & Electric Cyan** aesthetics, fully responsive layouts, active **Cloudinary** media storage, and offline-ready **Leaflet + OpenStreetMap** maps.
+# CultureQuest — AI-Powered Destination Discovery & Cultural Experience Platform
+A modern, AI-powered **travel discovery and cultural experience platform** designed to help users discover authentic destinations, explore local culture, find hidden gems, and create personalized travel itineraries. Built using the modern **MERN Stack (MongoDB, Express.js, React.js (Vite), Node.js)** with **Google Gemini AI**, CultureQuest brings destination discovery, trip planning, cultural events, interactive maps, and personalized travel experiences together in one platform. 🚀
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **🤖 AI Travel Tools:** Generate day-wise itineraries, target budget plans, food guides, and cultural guidelines powered by `gemini-2.5-flash`. Includes a mock engine fallback if no API key is set.
-- **🗺️ Interactive Map Views:** Leaflet maps and markers populated directly from MongoDB GeoJSON coordinates.
-- **🌅 Image Uploads:** Live image storage on Cloudinary, supporting automatic configuration string parsing (`cloudinary://`).
-- **🛡️ Admin & Control Panel:** Track total users, manage destinations, experiences, events, and reviews.
-- **📱 Fully Responsive:** Collapsible filters on mobile, horizontal scrollable tab bars for sub-navigation on tablets, and dynamic layouts.
-- **🌓 Dark Mode:** Sleek obsidian dark mode background with dark navy cards and custom scrollbars.
+- 🤖 **AI-Powered Destination Discovery:** Generate rich destination information including history, culture, food, best season, budget, and hidden attractions using Google Gemini AI
+- 🗺️ **AI Trip Planner:** Generate personalized day-by-day travel itineraries based on destination, budget, preferences, and travel style
+- 💎 **Hidden Gems Explorer:** Discover lesser-known destinations using vibe/wishlist or country/region-based searches
+- 🏛️ **Cultural Discovery:** Explore destination history, local culture, traditional food, and unique experiences
+- 🎭 **Events & Festivals:** Discover cultural festivals, food fairs, religious events, and traditional performances
+- 📸 **Real Destination Images:** Fetch authentic landmark photographs through Wikipedia/Wikimedia and store them using Cloudinary
+- 📍 **Interactive Maps:** Explore destinations and locations using Leaflet and OpenStreetMap
+- 🔖 **Bookmarks:** Save destinations, events, and trips for quick access
+- ⭐ **Reviews & Ratings:** Share travel experiences through ratings and reviews
+- 🔐 **Secure Authentication:** JWT-based authentication with access/refresh tokens and password recovery
+- 🌓 **Dark & Light Mode:** Modern responsive interface with persistent theme preferences
+- 📱 **PWA Support:** Install CultureQuest as an installable application on mobile and desktop
+
+---
+
+## 🤖 AI Features
+
+- 🌍 **Destination Recommendations:** Personalized destination suggestions using Google Gemini AI
+- 💎 **Hidden Gem Discovery:** Discover unique places based on user preferences, vibe, or region
+- 🗺️ **AI Trip Planning:** Generate structured day-by-day itineraries
+- 📖 **Cultural Intelligence:** Generate destination history, culture, food, and travel information
+- 💰 **Budget Information:** Provide estimated travel costs and budget-oriented suggestions
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React, Redux Toolkit, Tailwind CSS, Vite, Framer Motion, Recharts, React Hot Toast
-- **Backend:** Node.js, Express, MongoDB (Mongoose), Cloudinary SDK, Google Generative AI SDK, Nodemailer
-- **Maps:** Leaflet, React Leaflet, OpenStreetMap
+**Frontend 💻:**
+- ⚛️ **React.js 18** (Component-based frontend)
+- ⚡ **Vite** (Fast development and build tooling)
+- 🎨 **Tailwind CSS** (Modern and responsive UI styling)
+- 🧠 **Redux Toolkit** (State management)
+- 🎬 **Framer Motion** (Smooth UI animations)
+- 🗺️ **Leaflet + OpenStreetMap** (Interactive maps)
+- 🔗 **Axios** (API communication)
+
+**Backend ⚙️:**
+- 🟢 **Node.js & Express.js** (REST API and server)
+- 🍃 **MongoDB & Mongoose** (NoSQL database)
+- 🤖 **Google Gemini AI** (AI-powered travel intelligence)
+- ☁️ **Cloudinary** (Image storage and delivery)
+- 🔑 **JWT & bcryptjs** (Secure authentication and password hashing)
+- 🛡️ **Helmet & express-rate-limit** (API security)
+- ✅ **express-validator** (Request validation)
+- 📧 **Resend & Nodemailer** (Email delivery)
 
 ---
 
-## ⚙️ Configuration Setup
+## 📂 Project Structure
 
-Create a `.env` file inside both folders with the following configuration details:
+```text
+CultureQuest/
+│
+├── ⚙️ backend/                 # Express Server, API Routes & Database
+│   ├── config/                 # Database & Cloudinary configuration
+│   ├── controllers/            # Application controllers
+│   ├── middlewares/            # Authentication & error handling
+│   ├── models/                 # Mongoose database models
+│   ├── routes/                 # REST API routes
+│   ├── services/               # External services
+│   ├── utils/                  # AI & image utilities
+│   ├── validators/             # Request validation
+│   ├── scripts/                # Utility & maintenance scripts
+│   └── server.js               # Express server
+│
+├── 🎨 frontend/                # Vite React Application
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   ├── pages/              # Application pages
+│   │   ├── redux/              # Redux store & slices
+│   │   ├── services/           # API service layer
+│   │   ├── hooks/              # Custom React hooks
+│   │   └── layouts/            # Page layouts
+│   └── public/                 # PWA manifest & icons
+│
+├── 📄 AGENTS.md
+└── 📄 README.md
+```
 
-### 1. Backend Config (`backend/.env`)
+---
+
+## 🚀 Installation & Setup
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/your-username/culturequest.git
+cd culturequest
+```
+
+### 2️⃣ Setup Backend
+
+Open a terminal and navigate to the backend directory:
+
+```bash
+cd backend
+npm install
+```
+
+**🔑 Environment Variables:** Create a `.env` file in the `backend` directory:
+
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb+srv://himanshuagrawal7766_db_user:<db_password>@distination.3eoxfzj.mongodb.net/?appName=Distination
-JWT_SECRET=supersecretjwtkey123
-JWT_EXPIRE=30d
 
-# Cloudinary Storage
-CLOUDINARY_API_SECRET=cloudinary://[api_key]:[api_secret]@[cloud_name]
+MONGODB_URI=your_mongodb_connection_string
 
-# AI Services
-GEMINI_API_KEY=your_gemini_api_key_here
+JWT_SECRET=your_jwt_secret_key
+JWT_REFRESH_SECRET=your_refresh_secret_key
 
-# Mail Service
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=zlcu jrai yqaf xnsx
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+GEMINI_API_KEY=your_gemini_api_key
+
+RESEND_API_KEY=your_resend_api_key
+
+CLIENT_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 ```
 
-### 2. Frontend Config (`frontend/.env`)
-```env
-VITE_API_URL=http://localhost:5000/api
-```
+**▶️ Run the backend server:**
 
----
-
-## 🚀 Getting Started
-
-### 1. Install Dependencies
 ```bash
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-```
-
-### 2. Seed the Database
-Populate your MongoDB Atlas database with realistic travel destinations, hidden gems, reviews, and admin accounts:
-```bash
-cd backend
-npm run seed
-```
-
-### 3. Run the Development Servers
-Open two terminal windows to run both servers concurrently:
-```bash
-# Start Backend (on http://localhost:5000)
-cd backend
 npm run dev
+# Server generally starts on 🔗 http://localhost:5000
+```
 
-# Start Frontend (on http://localhost:5173)
+### 3️⃣ Setup Frontend
+
+Open a new terminal and navigate to the frontend directory:
+
+```bash
 cd frontend
-npm run dev
+npm install
 ```
+
+**▶️ Run the frontend app:**
+
+```bash
+npm run dev
+# Frontend generally starts on 🔗 http://localhost:5173
+```
+
+> 🔐 **Important:** Never commit `.env` files, API keys, database credentials, or JWT secrets to GitHub.
 
 ---
 
-## 🔐 Credentials for Local Testing
+## 🌐 Main API Modules
 
-Use the following seeded accounts to log in:
+- 🔐 **Authentication:** `/api/auth/*`
+- 🏛️ **Destinations:** `/api/destinations/*`
+- 🤖 **AI Recommendations:** `/api/ai/recommend`
+- 💎 **Hidden Gems:** `/api/ai/hidden-gems`
+- 🗺️ **AI Trip Planner:** `/api/ai/trip-plan`
+- 🧳 **Trips:** `/api/trips/*`
+- 🎭 **Events:** `/api/events/*`
+- ⭐ **Reviews:** `/api/reviews/*`
+- 🔖 **Bookmarks:** `/api/bookmarks/*`
 
-*   **Administrator Account:**
-    *   **Email:** `admin@culturequest.ai`
-    *   **Password:** `adminpassword123`
-*   **Standard User Account:**
-    *   **Email:** `user@culturequest.ai`
-    *   **Password:** `userpassword123`
+---
+
+## 🔮 Future Enhancements
+
+- 🧠 **RAG-Based Travel Intelligence:** Improve factual grounding of AI-generated information
+- 🌐 **Multilingual Support:** Provide destination information in multiple languages
+- 🎯 **Smarter Recommendations:** Improve personalization and destination ranking
+- 💰 **Advanced Budget Planning:** Optimize complete trips according to user budgets
+- 🧪 **Automated Testing & CI/CD:** Improve reliability and deployment workflows
+- ⚡ **Caching & Performance Optimization:** Improve application performance
+
+---
+
+## 📜 License & Purpose
+
+<p align="center">
+ This project is developed as an <strong>AI-powered full-stack application</strong> for learning, innovation, and demonstrating modern web development and AI integration. 🎓
+</p>
+
+---
+
+<p align="center">
+
+### 🧭 CultureQuest
+**Explore beyond the obvious.** 🌍
+
+Built with ❤️ using <strong>React, Node.js, MongoDB & Gemini AI</strong>.
+
+⭐ Star the repository if you find it useful!
+
+</p>
